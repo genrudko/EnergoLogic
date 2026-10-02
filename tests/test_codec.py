@@ -38,10 +38,13 @@ class CanonicalCodecTests(unittest.TestCase):
     def test_semantically_equivalent_identity_order_has_same_canonical_form(self):
         first = self._model_data()
         second = self._model_data()
-        second["elements"] = list(reversed(second["elements"]))
+        # Reorder every identity-set dimension independently. In particular,
+        # reverse the two-terminal element before reversing the element list so
+        # this test cannot accidentally pass without terminal canonicalization.
         second["elements"][0]["terminals"] = list(
             reversed(second["elements"][0]["terminals"])
         )
+        second["elements"] = list(reversed(second["elements"]))
         second["connections"][0]["endpoints"] = list(
             reversed(second["connections"][0]["endpoints"])
         )

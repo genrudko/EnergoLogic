@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "energologic"
+version = "0.1.0.dev0"
+description = "Deterministic canonical electrical model core for EnergoLogic"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+energologic = "energologic.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

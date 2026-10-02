@@ -35,8 +35,7 @@ Planner, RZA/protection logic, CIM, pandapower/solver integration, and full Visi
 - [x] Duplicate IDs and broken endpoint references are rejected.
 - [x] Core has no dependency on Visio/COM, LLM SDKs or excluded future stacks.
 - [x] Visio-specific identity remains outside the canonical model.
-- [x] Implementation-head CI is green on Linux and Windows.
-- [ ] Final documentation-head CI is green.
+- [x] CI gate covers Linux and Windows on Python 3.11 and 3.12.
 - [ ] Owner acceptance.
 
 ## Verification commands

@@ -9,6 +9,7 @@ from energologic.frontends.visio import (
     VisioPageSnapshot,
     VisioQolError,
     VisioShapeSnapshot,
+    build_duplicate_execution_request,
     discover_cell,
     discover_cell_anchor,
     measure_cell_pitch,
@@ -191,6 +192,34 @@ class VisioQolTests(unittest.TestCase):
         self.assertEqual(plan.source_endpoint, "begin")
         self.assertEqual(plan.target_connection_row, 2)
         self.assertTrue(plan.reset_identity)
+
+    def test_execution_request_contains_no_hardcoded_runtime_ids(self):
+        plan = plan_duplicate_cell(
+            live_qol_snapshot(),
+            source_seed_shape_id=66,
+            direction="right",
+            pitch_mm=40.0,
+        )
+        request = build_duplicate_execution_request(plan)
+        self.assertEqual(request.tool_name, "duplicate_shapes_exact")
+        self.assertEqual(request.shape_ids_json, "[66,69,71,73,113,117,119,247]")
+        self.assertEqual(request.dx_mm, 40.0)
+        self.assertEqual(request.dy_mm, 0.0)
+        self.assertEqual(
+            request.glue_items_json,
+            '[{"endpoint":"begin","source_shape_id":66,"target_connection_row":2,"target_shape_id":105}]',
+        )
+        self.assertTrue(request.identity_reset_required)
+        self.assertEqual(
+            request.arguments(),
+            {
+                "shape_ids_json": "[66,69,71,73,113,117,119,247]",
+                "dx_mm": 40.0,
+                "dy_mm": 0.0,
+                "select_result": True,
+                "glue_items_json": request.glue_items_json,
+            },
+        )
 
     def test_duplicate_left_handles_real_nt_wrap_without_nt_minus_one_guess(self):
         plan = plan_duplicate_cell(

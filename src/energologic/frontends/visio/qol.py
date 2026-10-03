@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import math
 import re
 from typing import Literal
@@ -40,6 +41,28 @@ class VisioCell:
     anchor: VisioCellAnchor
     member_shape_ids: tuple[int, ...]
     electrical_core_shape_ids: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class VisioDuplicateExecutionRequest:
+    """Bounded arguments for the qualified bridge duplicate primitive."""
+
+    tool_name: str
+    shape_ids_json: str
+    dx_mm: float
+    dy_mm: float
+    select_result: bool
+    glue_items_json: str
+    identity_reset_required: bool
+
+    def arguments(self) -> dict[str, object]:
+        return {
+            "shape_ids_json": self.shape_ids_json,
+            "dx_mm": self.dx_mm,
+            "dy_mm": self.dy_mm,
+            "select_result": self.select_result,
+            "glue_items_json": self.glue_items_json,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -487,4 +510,45 @@ def plan_duplicate_cell(
         target_connection_row=cell.anchor.target_connection_row,
         source_endpoint=cell.anchor.source_endpoint,
         reset_identity=True,
+    )
+
+
+def build_duplicate_execution_request(
+    plan: DuplicateCellPlan,
+    *,
+    select_result: bool = True,
+) -> VisioDuplicateExecutionRequest:
+    """Translate a validated plan into the qualified bridge tool arguments.
+
+    Shape IDs remain projection-only runtime references. The request explicitly
+    carries `identity_reset_required` because native Visio Duplicate copies human
+    labels and VTD data verbatim; canonical identity must not be inferred from the
+    duplicated projection until identity reset/renumber has been completed.
+    """
+
+    glue_items = [
+        {
+            "source_shape_id": plan.source_cell.seed_shape_id,
+            "endpoint": plan.source_endpoint,
+            "target_shape_id": plan.target_bus_terminal_shape_id,
+            "target_connection_row": plan.target_connection_row,
+        }
+    ]
+    return VisioDuplicateExecutionRequest(
+        tool_name="duplicate_shapes_exact",
+        shape_ids_json=json.dumps(
+            list(plan.shape_ids),
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        dx_mm=plan.dx_mm,
+        dy_mm=plan.dy_mm,
+        select_result=bool(select_result),
+        glue_items_json=json.dumps(
+            glue_items,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        identity_reset_required=plan.reset_identity,
     )

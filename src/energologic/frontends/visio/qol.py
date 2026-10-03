@@ -69,6 +69,42 @@ class VisioDuplicateExecutionRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class VisioConnectionPoint:
+    target_shape_id: int
+    target_connection_row: int
+    x_mm: float
+    y_mm: float
+
+
+@dataclass(frozen=True, slots=True)
+class VisioGlueCandidate:
+    target_shape_id: int
+    target_connection_row: int
+    x_mm: float
+    y_mm: float
+    distance_mm: float
+
+
+@dataclass(frozen=True, slots=True)
+class VisioGlueRepairPlan:
+    source_shape_id: int
+    source_endpoint: Literal["begin", "end"]
+    source_x_mm: float
+    source_y_mm: float
+    candidate: VisioGlueCandidate
+    tolerance_mm: float
+
+
+@dataclass(frozen=True, slots=True)
+class VisioGlueExecutionRequest:
+    tool_name: str
+    items_json: str
+
+    def arguments(self) -> dict[str, object]:
+        return {"items_json": self.items_json}
+
+
+@dataclass(frozen=True, slots=True)
 class VisioMoveExecutionRequest:
     """Bounded arguments for the qualified bridge exact-move primitive."""
 
@@ -793,6 +829,196 @@ def build_move_execution_request(
         ),
         glue_items_json=json.dumps(
             glue_items,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+    )
+
+
+def find_glue_candidates(
+    *,
+    source_shape_id: int,
+    source_endpoint: Literal["begin", "end"],
+    source_x_mm: float,
+    source_y_mm: float,
+    connection_points: tuple[VisioConnectionPoint, ...],
+    tolerance_mm: float = 1.0,
+) -> tuple[VisioGlueCandidate, ...]:
+    """Return geometry-only repair candidates without creating electrical truth."""
+
+    if source_endpoint not in {"begin", "end"}:
+        raise VisioQolError(
+            "invalid_endpoint",
+            f"source_endpoint must be begin/end, got {source_endpoint!r}",
+        )
+    x = float(source_x_mm)
+    y = float(source_y_mm)
+    tolerance = float(tolerance_mm)
+    if not math.isfinite(x) or not math.isfinite(y):
+        raise VisioQolError(
+            "invalid_endpoint_position",
+            "source endpoint coordinates must be finite",
+        )
+    if not math.isfinite(tolerance) or tolerance <= 0.0:
+        raise VisioQolError(
+            "invalid_glue_tolerance",
+            "tolerance_mm must be a finite positive number",
+        )
+
+    candidates: list[VisioGlueCandidate] = []
+    seen: set[tuple[int, int]] = set()
+    for point in connection_points:
+        key = (int(point.target_shape_id), int(point.target_connection_row))
+        if key in seen:
+            raise VisioQolError(
+                "duplicate_connection_point",
+                f"connection point {key[0]} row {key[1]} is repeated",
+            )
+        seen.add(key)
+        if key[0] == int(source_shape_id):
+            continue
+        px = float(point.x_mm)
+        py = float(point.y_mm)
+        if not math.isfinite(px) or not math.isfinite(py):
+            raise VisioQolError(
+                "invalid_connection_point_position",
+                f"connection point {key[0]} row {key[1]} has non-finite coordinates",
+            )
+        distance = math.hypot(px - x, py - y)
+        if distance <= tolerance:
+            candidates.append(
+                VisioGlueCandidate(
+                    target_shape_id=key[0],
+                    target_connection_row=key[1],
+                    x_mm=px,
+                    y_mm=py,
+                    distance_mm=distance,
+                )
+            )
+
+    return tuple(
+        sorted(
+            candidates,
+            key=lambda item: (
+                item.distance_mm,
+                item.target_shape_id,
+                item.target_connection_row,
+            ),
+        )
+    )
+
+
+def plan_repair_glue(
+    *,
+    source_shape_id: int,
+    source_endpoint: Literal["begin", "end"],
+    source_x_mm: float,
+    source_y_mm: float,
+    connection_points: tuple[VisioConnectionPoint, ...],
+    tolerance_mm: float = 1.0,
+    selected_target_shape_id: int | None = None,
+    selected_target_connection_row: int | None = None,
+    source_is_already_glued: bool = False,
+) -> VisioGlueRepairPlan:
+    """Choose one explicit repair target; never infer electrical truth silently."""
+
+    if source_is_already_glued:
+        raise VisioQolError(
+            "endpoint_already_glued",
+            f"shape {source_shape_id} {source_endpoint} is already glued",
+        )
+    candidates = find_glue_candidates(
+        source_shape_id=source_shape_id,
+        source_endpoint=source_endpoint,
+        source_x_mm=source_x_mm,
+        source_y_mm=source_y_mm,
+        connection_points=connection_points,
+        tolerance_mm=tolerance_mm,
+    )
+    if not candidates:
+        raise VisioQolError(
+            "no_glue_candidate",
+            (
+                f"shape {source_shape_id} {source_endpoint} has no native connection "
+                f"point within {float(tolerance_mm):.3f} mm"
+            ),
+        )
+
+    explicit = (
+        selected_target_shape_id is not None
+        or selected_target_connection_row is not None
+    )
+    if explicit:
+        if (
+            selected_target_shape_id is None
+            or selected_target_connection_row is None
+        ):
+            raise VisioQolError(
+                "incomplete_glue_target",
+                "target shape and connection row must be selected together",
+            )
+        selected = [
+            candidate
+            for candidate in candidates
+            if candidate.target_shape_id == int(selected_target_shape_id)
+            and candidate.target_connection_row
+            == int(selected_target_connection_row)
+        ]
+        if len(selected) != 1:
+            raise VisioQolError(
+                "selected_glue_target_not_candidate",
+                (
+                    f"selected target {selected_target_shape_id} row "
+                    f"{selected_target_connection_row} is not within tolerance"
+                ),
+            )
+        candidate = selected[0]
+    else:
+        if len(candidates) != 1:
+            description = ", ".join(
+                (
+                    f"{candidate.target_shape_id}:"
+                    f"{candidate.target_connection_row}@"
+                    f"{candidate.distance_mm:.3f}mm"
+                )
+                for candidate in candidates
+            )
+            raise VisioQolError(
+                "ambiguous_glue_candidate",
+                (
+                    "geometry found multiple possible native terminals; "
+                    f"explicit preview selection is required: {description}"
+                ),
+            )
+        candidate = candidates[0]
+
+    return VisioGlueRepairPlan(
+        source_shape_id=int(source_shape_id),
+        source_endpoint=source_endpoint,
+        source_x_mm=float(source_x_mm),
+        source_y_mm=float(source_y_mm),
+        candidate=candidate,
+        tolerance_mm=float(tolerance_mm),
+    )
+
+
+def build_glue_repair_execution_request(
+    plan: VisioGlueRepairPlan,
+) -> VisioGlueExecutionRequest:
+    """Build the explicit native Glue mutation after preview/selection."""
+
+    return VisioGlueExecutionRequest(
+        tool_name="batch_glue_endpoints",
+        items_json=json.dumps(
+            [
+                {
+                    "shape_id": plan.source_shape_id,
+                    "endpoint": plan.source_endpoint,
+                    "target_shape_id": plan.candidate.target_shape_id,
+                    "target_connection_row": plan.candidate.target_connection_row,
+                }
+            ],
             ensure_ascii=False,
             sort_keys=True,
             separators=(",", ":"),

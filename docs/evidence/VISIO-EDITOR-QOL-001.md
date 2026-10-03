@@ -164,3 +164,80 @@ Fail-closed условия включают:
 - несовпадение явно указанного terminal с направлением Left/Right.
 
 Геометрическое попадание фигуры в CELL никогда не создаёт электрическую связь.
+
+
+## Exact Move Cell — live qualification
+
+На отдельной странице `QoL-Move-Probe-32` исходная ячейка `В-1-35` была перенесена с видимого места 2 на место 3.
+
+Итоговые координаты anchor:
+
+- было: X = 110.0 мм;
+- стало: X = 150.0 мм;
+- точный сдвиг: **+40.0 мм**;
+- вертикальный сдвиг: **0.0 мм**.
+
+После операции:
+
+- старый внешний Glue к `Sheet.103` отсутствует;
+- новый внешний Glue: `shape 66 BeginX → Sheet.105 Connections.2.X`;
+- внутренние Glue сохранены:
+  - 69 → 66;
+  - 71 → 113;
+  - 73 → 113;
+  - 117 → 69;
+  - 119 → 117.
+
+То есть Move Cell реализуется как предметная операция:
+
+`detach old bus terminal → exact move whole cell → glue new bus terminal`
+
+а не как ручное перетаскивание отдельных фигур.
+
+## Repair Glue — live qualification
+
+На отдельной странице `QoL-Glue-Repair` был намеренно создан опасный случай:
+
+- endpoint верхнего аппарата оставлен **точно в тех же page coordinates**;
+- native Glue к шине удалён.
+
+Внешне схема при этом выглядит соединённой, но электрического `Connects` нет.
+
+После Repair Glue выбран точный native candidate:
+
+`Sheet.105 / Connections.2.X`
+
+и post-check подтвердил настоящий:
+
+`shape 66 BeginX → Sheet.105 Connections.2.X`.
+
+Это live-доказательство инварианта проекта:
+
+**геометрическое совпадение ≠ электрическая связь**.
+
+## Scheme Doctor — минимальный детерминированный слой
+
+Добавлен pure Scheme Doctor, который уже умеет детерминированно сообщать:
+
+- `visual_touch_without_glue` — endpoint находится у единственной native connection point, но реального Glue нет;
+- `ambiguous_visual_touch_without_glue` — рядом несколько кандидатов, автоисправление запрещено;
+- `bus_pitch_mismatch` — геометрия native bus slots не соответствует заданному pitch;
+- `duplicate_bus_slot`;
+- `duplicate_bus_terminal_nt`;
+- `duplicate_cell_identity` — один `EnergoLogicCellId` используется несколькими независимыми bus anchors;
+- ошибки некорректной explicit identity.
+
+Проверка отделена от исправления: Doctor только диагностирует; Repair Glue остаётся отдельным явным действием.
+
+## Финальная проверка внешнего Ctrl+Z
+
+После перехода Duplicate на штатную UI-команду Visio и отдельной отправки **реального Ctrl+Z** в корневое окно Visio:
+
+- Ctrl+Z был физически отправлен успешно;
+- `UndoEnabled = true`;
+- документ до Ctrl+Z: 52 shapes;
+- документ после одного Ctrl+Z: 52 shapes.
+
+То есть ограничение внешнего Automation path подтверждено уже не только COM/API-командой Undo, но и настоящим клавиатурным Ctrl+Z.
+
+Требование одного пользовательского Undo поэтому остаётся задачей для **in-Visio command host/custom UndoUnit** и не маскируется bridge-эмуляцией.

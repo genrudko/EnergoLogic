@@ -212,6 +212,17 @@ def voltage_specs_compatible(left: VoltageSpec, right: VoltageSpec) -> bool:
     return False
 
 
+def _voltage_definitely_lower(left: VoltageSpec, right: VoltageSpec) -> bool:
+    if left.nominal_voltage_v is not None and right.nominal_voltage_v is not None:
+        return left.nominal_voltage_v < right.nominal_voltage_v
+
+    if left.voltage_class == VOLTAGE_CLASS_BELOW_3000_V:
+        if right.nominal_voltage_v is not None:
+            return right.nominal_voltage_v >= 3000
+
+    return False
+
+
 def voltage_spec_for_terminal(
     element: Element,
     terminal_id: str,
@@ -404,6 +415,25 @@ def validate_electrical_model(
 
             if element.kind == TRANSFORMER_2W_KIND:
                 issues.extend(_validate_transformer_terminal(element, terminal))
+
+        if element.kind == TRANSFORMER_2W_KIND:
+            hv = voltage_by_endpoint.get(Endpoint(element.id, "hv"))
+            lv = voltage_by_endpoint.get(Endpoint(element.id, "lv"))
+            if (
+                hv is not None
+                and lv is not None
+                and _voltage_definitely_lower(hv, lv)
+            ):
+                issues.append(
+                    ValidationIssue(
+                        "invalid_transformer_voltage_order",
+                        f"{path}/terminals",
+                        (
+                            f"transformer hv side {hv.describe()} is definitely "
+                            f"below lv side {lv.describe()}"
+                        ),
+                    )
+                )
 
     pair_to_connection_ids: dict[tuple[Endpoint, Endpoint], list[str]] = {}
     terminal_degree: dict[Endpoint, int] = {}

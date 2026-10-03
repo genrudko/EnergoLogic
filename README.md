@@ -103,6 +103,9 @@ energologic validate examples/kru35-v1-cell.electrical-v1.json --profile electri
 # Коммутационные состояния:
 energologic validate examples/kru35-v1-cell.switching-state-v1.json --profile switching-state-v1
 
+# Двухобмоточный трансформатор:
+energologic validate examples/tsn2.transformer-v1.json --profile electrical-v1
+
 energologic canonicalize examples/minimal.energologic.json
 energologic fingerprint examples/minimal.energologic.json
 

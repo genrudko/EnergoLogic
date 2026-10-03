@@ -2,13 +2,13 @@
 
 EnergoLogic — инженерная платформа, в которой **каноническая электрическая модель является источником истины**, а пользовательские интерфейсы являются проекциями и адаптерами этой модели.
 
-Текущий этап: `ELECTRICAL-DOMAIN-PROFILE-V1-001`.
+Текущий этап: `SWITCHING-STATE-SEMANTICS-001`.
 
 ## Базовые архитектурные инварианты
 
 1. **Visio — первый frontend**, но не system of record.
 2. **VSDX/ShapeSheet/COM не являются canonical source of truth**.
-3. Каноническая schema и электрическая семантика разделены: schema задаёт структурный контракт, named domain profiles задают более строгие инженерные правила.
+3. Каноническая schema, electrical profile и switching-state semantics разделены на явные детерминированные слои.
 4. **Критический runtime детерминирован**: одинаковая модель даёт одинаковое каноническое представление, fingerprint и упорядоченный набор ошибок.
 5. **LLM/агенты не участвуют в критической электрической логике**.
 6. `energologic.core` не зависит от domain/frontend/solver слоёв; domain зависит только вниз от core.
@@ -33,34 +33,55 @@ Visio identity и geometry остаются projection-only.
 
 ### Electrical semantic profile v1
 
-Явно выбираемый профиль `electrical-v1` формализует первый поддержанный доменный subset:
+Явно выбираемый профиль `electrical-v1` формализует первый поддержанный статический subset:
 
 - `bus(node)`;
 - `circuit_breaker(a,b)`;
+- `disconnector(a,b)`;
 - `current_transformer(a,b)`;
 - `external_link(node)`.
 
-Профиль проверяет:
+Профиль проверяет terminal contracts, `nominal_voltage_v`, voltage consistency, terminal degree и базовую топологическую целостность.
 
-- exact terminal contracts;
-- каноническое `attributes.nominal_voltage_v`;
-- nominal-voltage consistency;
-- bounded terminal degree;
-- duplicate electrical edges;
-- intra-element external connections.
+Напряжение хранится в **целых вольтах** независимо от frontend display units: Visio/VTD `35 kV` → canonical `35000 V`.
 
-Напряжение хранится в **целых вольтах**, независимо от frontend display units. Например, Visio/VTD `35 kV` → canonical `35000 V`.
+### Switching-state semantics v1
+
+Профиль `switching-state-v1` добавляет к switchgear независимые факты:
+
+- `switch_state = open | closed`;
+- `mounting_type = fixed | withdrawable`;
+- для выкатных аппаратов:
+  `withdrawable_position = working | repair | control`.
+
+Для поддержанных аппаратов реализован детерминированный локальный predicate проводимости:
+
+- open → не проводит;
+- closed + fixed → проводит;
+- closed + withdrawable + working → проводит;
+- closed + withdrawable + repair/control → не проводит.
+
+Это **локальная семантика аппарата**, а не полный расчёт электрически связной/напряжённой сети.
+
+Native VTD mapping квалифицирован на реальном Visio:
+
+- `Actions.Row_1.Action TRUE/FALSE ↔ closed/open`;
+- `User.p 0/1/2 ↔ working/repair/control`;
+- breaker и `Разъединитель выдвижной`.
 
 ## Быстрый запуск
 
 ```bash
 python -m pip install -e .
 
-# Открытая структурная schema 0.1:
+# Открытая структурная schema:
 energologic validate examples/minimal.energologic.json
 
-# Строгая электрическая семантика:
+# Статическая электрическая семантика:
 energologic validate examples/kru35-v1-cell.electrical-v1.json --profile electrical-v1
+
+# Коммутационные состояния:
+energologic validate examples/kru35-v1-cell.switching-state-v1.json --profile switching-state-v1
 
 energologic canonicalize examples/minimal.energologic.json
 energologic fingerprint examples/minimal.energologic.json
@@ -72,7 +93,7 @@ python -m unittest discover -s tests -v
 
 ```text
 src/energologic/core/          structural canonical model + deterministic runtime
-src/energologic/domain/        explicit electrical semantic profiles
+src/energologic/domain/        electrical and switching semantic profiles
 src/energologic/frontends/     frontend contracts/adapters
 schema/                        external versioned structural contracts
 examples/                      canonical-model fixtures
@@ -83,18 +104,18 @@ tests/                         acceptance/regression tests
 
 ## Текущая граница
 
-`electrical-v1` намеренно **не** является полной таксономией оборудования.
-
 Пока отдельно остаются:
 
-- switching-state semantics;
+- grounding-switch / earthing semantics;
+- interlocks;
+- energized-network traversal;
 - multi-voltage transformer semantics;
 - Planner;
 - РЗА/protection;
 - CIM;
 - pandapower и другие solver-интеграции.
 
-Они должны добавляться отдельными work items с собственными контрактами и evidence.
+Они должны добавляться отдельными work items, а не протекать в уже квалифицированные контракты.
 
 ## Процесс изменений
 

@@ -1,0 +1,76 @@
+{
+  "schema_version": "0.1",
+  "model_id": "kru35:v1-cell-switching",
+  "elements": [
+    {
+      "id": "bus:section-1-35kv",
+      "kind": "bus",
+      "name": "1 С 35 кВ",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "breaker:v-1-35",
+      "kind": "circuit_breaker",
+      "name": "В-1-35",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "closed",
+        "mounting_type": "withdrawable",
+        "withdrawable_position": "working"
+      }
+    },
+    {
+      "id": "ct:v-1-35",
+      "kind": "current_transformer",
+      "name": "ТТ В-1-35",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "ctnp:v-1-35",
+      "kind": "current_transformer",
+      "name": "ТТ НП В-1-35",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "external:v-1",
+      "kind": "external_link",
+      "name": "В-1",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection:bus-breaker",
+      "endpoints": [
+        {"element_id": "bus:section-1-35kv", "terminal_id": "node"},
+        {"element_id": "breaker:v-1-35", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "connection:breaker-ct",
+      "endpoints": [
+        {"element_id": "breaker:v-1-35", "terminal_id": "b"},
+        {"element_id": "ct:v-1-35", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "connection:ct-ctnp",
+      "endpoints": [
+        {"element_id": "ct:v-1-35", "terminal_id": "b"},
+        {"element_id": "ctnp:v-1-35", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "connection:ctnp-external",
+      "endpoints": [
+        {"element_id": "ctnp:v-1-35", "terminal_id": "b"},
+        {"element_id": "external:v-1", "terminal_id": "node"}
+      ]
+    }
+  ]
+}

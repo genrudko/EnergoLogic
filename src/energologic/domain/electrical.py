@@ -38,6 +38,11 @@ ELECTRICAL_V1 = ElectricalProfile(
                 terminals=("a", "b"),
                 max_terminal_degree=MappingProxyType({"a": 1, "b": 1}),
             ),
+            "disconnector": ElectricalElementSpec(
+                kind="disconnector",
+                terminals=("a", "b"),
+                max_terminal_degree=MappingProxyType({"a": 1, "b": 1}),
+            ),
             "current_transformer": ElectricalElementSpec(
                 kind="current_transformer",
                 terminals=("a", "b"),

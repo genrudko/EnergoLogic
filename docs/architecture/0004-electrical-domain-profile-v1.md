@@ -23,6 +23,7 @@ The first profile is `electrical-v1`.
 | --- | --- | --- |
 | `bus` | `node` | unbounded |
 | `circuit_breaker` | `a`, `b` | max 1 each |
+| `disconnector` | `a`, `b` | max 1 each |
 | `current_transformer` | `a`, `b` | max 1 each |
 | `external_link` | `node` | max 1 |
 
@@ -59,3 +60,11 @@ Structural validation remains separately available and does not reject future un
 - Frontends translate presentation units into canonical SI-oriented values.
 - Future transformers require an explicit multi-voltage semantic design rather than bypassing voltage mismatch validation.
 - Switching-state semantics remain a separate work item.
+
+
+## Evolution in SWITCHING-STATE-SEMANTICS-001
+
+The static `electrical-v1` subset was extended with `disconnector(a,b)`.
+This is a backward-compatible profile extension: structural schema `0.1` is unchanged,
+and switching-state attributes remain governed by the separate
+`switching-state-v1` layer.

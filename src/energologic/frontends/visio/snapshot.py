@@ -15,6 +15,14 @@ class VisioGeometry:
 
 
 @dataclass(frozen=True, slots=True)
+class VisioVtdStateSnapshot:
+    """Qualified native VTD state needed for deterministic switch mapping."""
+
+    main_action_active: bool | None = None
+    cart_position_value: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class VisioShapeSnapshot:
     """Transport-neutral snapshot of one Visio shape relevant to an import slice."""
 
@@ -24,6 +32,7 @@ class VisioShapeSnapshot:
     shape_data: Mapping[str, str] = field(default_factory=dict)
     parent_shape_id: int | None = None
     geometry: VisioGeometry = field(default_factory=VisioGeometry)
+    vtd_state: VisioVtdStateSnapshot | None = None
 
 
 @dataclass(frozen=True, slots=True)

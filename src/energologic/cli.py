@@ -13,7 +13,12 @@ from .core import (
     load_model,
     validate_model,
 )
-from .domain import ELECTRICAL_V1_NAME, validate_electrical_model
+from .domain import (
+    ELECTRICAL_V1_NAME,
+    SWITCHING_STATE_V1_NAME,
+    validate_electrical_model,
+    validate_switching_state_model,
+)
 
 
 STRUCTURAL_PROFILE = "structural"
@@ -47,6 +52,8 @@ def _load_valid(path: Path, *, profile: str = STRUCTURAL_PROFILE):
         issues = validate_model(model)
     elif profile == ELECTRICAL_V1_NAME:
         issues = validate_electrical_model(model)
+    elif profile == SWITCHING_STATE_V1_NAME:
+        issues = validate_switching_state_model(model)
     else:
         raise AssertionError(f"unhandled validation profile: {profile}")
 
@@ -73,7 +80,7 @@ def _parser() -> argparse.ArgumentParser:
     validate.add_argument("path", type=Path)
     validate.add_argument(
         "--profile",
-        choices=(STRUCTURAL_PROFILE, ELECTRICAL_V1_NAME),
+        choices=(STRUCTURAL_PROFILE, ELECTRICAL_V1_NAME, SWITCHING_STATE_V1_NAME),
         default=STRUCTURAL_PROFILE,
     )
 

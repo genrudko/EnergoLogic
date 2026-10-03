@@ -17,6 +17,7 @@ from energologic.domain import (
     VOLTAGE_CLASS_BELOW_3000_V,
     VoltageSpec,
     validate_electrical_model,
+    validate_switching_state_model,
     voltage_spec_for_terminal,
     voltage_specs_compatible,
 )
@@ -77,6 +78,22 @@ class TransformerSemanticsTests(unittest.TestCase):
             fingerprint(model),
             "ae1156fe0898e6941109dd11af97a5fe3c6ec952657072b5b22cec5412c0f73b",
         )
+
+    def test_switching_profile_accepts_transformer_without_switch_attributes(self):
+        model = load_model(ROOT / "examples" / "tsn2.transformer-v1.json")
+        self.assertEqual(validate_switching_state_model(model), ())
+
+    def test_voltage_class_is_not_allowed_on_ordinary_element(self):
+        bus = Element(
+            id="bus",
+            kind="bus",
+            terminals=(Terminal("node"),),
+            attributes={"voltage_class": VOLTAGE_CLASS_BELOW_3000_V},
+        )
+        model = CanonicalModel("0.1", "test:bus-class", (bus,), ())
+        codes = {issue.code for issue in validate_electrical_model(model)}
+        self.assertIn("unexpected_element_voltage_class", codes)
+        self.assertIn("missing_nominal_voltage", codes)
 
     def test_transformer_uses_terminal_voltage_specs(self):
         element = transformer()

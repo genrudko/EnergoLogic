@@ -434,6 +434,52 @@ class VisioMappingTests(unittest.TestCase):
         with self.assertRaisesRegex(VisioMappingError, "ambiguous_identity"):
             capture_page_snapshot(snapshot, model_id="x")
 
+    def test_explicit_energologic_cell_id_disambiguates_duplicate_labels(self):
+        snapshot = VisioPageSnapshot(
+            "identity",
+            (
+                VisioShapeSnapshot(
+                    1,
+                    "ТТ",
+                    "ТТ В-1-35",
+                    {"u": U35},
+                    user_cells={"EnergoLogicCellId": '"cell:source"'},
+                ),
+                VisioShapeSnapshot(
+                    2,
+                    "ТТ",
+                    "ТТ В-1-35",
+                    {"u": U35},
+                    user_cells={"EnergoLogicCellId": '"cell:copy"'},
+                ),
+            ),
+            (),
+        )
+        captured = capture_page_snapshot(snapshot, model_id="identity:explicit")
+        self.assertEqual(len(captured.model.elements), 2)
+        self.assertEqual(len({item.id for item in captured.model.elements}), 2)
+        self.assertEqual(
+            {item.name for item in captured.model.elements},
+            {"ТТ В-1-35"},
+        )
+
+    def test_invalid_energologic_cell_id_fails_closed(self):
+        snapshot = VisioPageSnapshot(
+            "identity",
+            (
+                VisioShapeSnapshot(
+                    1,
+                    "ТТ",
+                    "ТТ В-1-35",
+                    {"u": U35},
+                    user_cells={"EnergoLogicCellId": '"bad id"'},
+                ),
+            ),
+            (),
+        )
+        with self.assertRaisesRegex(VisioMappingError, "invalid_energologic_cell_id"):
+            capture_page_snapshot(snapshot, model_id="identity:invalid")
+
     def test_visio_shape_ids_do_not_enter_canonical_identity(self):
         first = live_slice()
         remap = {shape.shape_id: shape.shape_id + 1000 for shape in first.shapes}

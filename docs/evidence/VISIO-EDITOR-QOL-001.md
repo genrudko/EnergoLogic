@@ -102,6 +102,25 @@ SHA-256 PNG evidence:
 
 `627a3fc2b3b247ca4a8c012e91aed56dc90498e83804c2bf9c1b35533bff9652`
 
+## Identity reset на копии
+
+Для новой ячейки введён instance-only metadata row:
+
+`User.EnergoLogicCellId`
+
+Правила:
+
+- строка добавляется только экземплярам фигур новой ячейки;
+- VTD master не изменяется;
+- исходная ячейка не получает новый ID;
+- значение ограничено безопасным токеном 1..128 символов;
+- native Duplicate может оставить прежние видимые подписи, но canonical import уже различает исходную и новую ячейку;
+- пользовательский `Renumber Cell` остаётся отдельной операцией и не является источником canonical identity.
+
+Live probe `cell:qol-v2-probe` подтвердил `User.EnergoLogicCellId` на всех 8 новых shape instances. У исходного shape 66 такой строки после операции нет.
+
+Canonical mapping остаётся backward-compatible: старые фигуры без `EnergoLogicCellId` используют прежнюю text-derived identity; новые/управляемые фигуры включают explicit cell identity в material canonical element ID.
+
 ## Transaction rollback и пользовательский Undo
 
 Внутренний rollback открытого UndoScope подтверждён: при ошибке внутри compound operation созданные фигуры удаляются целиком.

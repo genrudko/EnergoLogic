@@ -167,5 +167,6 @@ Merge и Ready for Review — только по явной команде вла
 - визуальный результат — подтверждён PNG snapshot;
 - fail-safe rollback при ошибке — подтверждён;
 - pure CELL/ANCHOR/Duplicate plan — реализован и покрыт тестами;
-- identity reset/renumber — ещё не реализован;
+- instance-only identity reset через `User.EnergoLogicCellId` — реализован и подтверждён live;
+- пользовательский Renumber Cell — ещё не реализован;
 - один пользовательский Ctrl+Z — требует in-Visio host/custom UndoUnit; внешний bridge этого не обеспечивает.

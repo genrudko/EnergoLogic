@@ -85,7 +85,7 @@ VTD masters массово не переписываются. Сначала ada
 - [x] Cell Pitch: measure / set / distribute — measure + deterministic distribution planner по реальным native bus slots;
 - [x] минимальный Scheme Doctor для Glue/pitch/identity structural checks.
 
-Для Copy with Base Point / generic Move with Base Point / Electrical Align / Cell Pitch distribute код и CI закрыты; отдельная live-квалификация на реальном Visio ещё остаётся.
+Copy/Move with Base Point, Exact Offset, Smart Nudge, Coordinates, Align X/Y, Select Cell, Renumber Cell и измерение шага уже прошли live acceptance в реальном Visio. Cell Pitch distribute остаётся незакрытым только по topology-safety: геометрия 40 мм работает, но восстановление одного внутреннего VTD Glue edge ещё требует ремонта.
 
 ### R3 — P1
 
@@ -127,7 +127,7 @@ Live-квалификация подтвердила rollback внутри от�
 - его `CommandBarButton.Execute()` реально выполняет Duplicate внутри add-in (`44 → 52`), но последующий физический Ctrl+Z оставляет `52`;
 - попытка физически кликнуть кнопку синхронно из активного bridge COM-вызова приводит к reentrancy deadlock.
 
-Следующая квалификация использует detached local helper: bridge только готовит selection/координаты и возвращается, а физический click/Undo происходит уже после завершения COM-вызова. Это позволяет проверить настоящий user-context без удержания внешнего Automation call.
+One-user-Undo больше не блокирует завершение Editor UI: исследование зафиксировано как отдельный технический хвост. Текущий acceptance blocker — только topology-safe завершение Cell Pitch distribute на реальной VTD-ячейке.
 
 ## Acceptance benchmark
 
@@ -174,28 +174,17 @@ Merge и Ready for Review — только по явной команде вла
 
 Текущее состояние:
 
-- R0 исследование реального Visio/MCP-v2 — выполнено;
-- exact native duplicate с компенсацией скрытого paste offset — подтверждён;
-- pitch 40 мм — подтверждён;
-- внутренние Glue после native Duplicate — подтверждены;
-- явный Glue новой ячейки к следующей native bus terminal — подтверждён;
-- визуальный результат — подтверждён PNG snapshot;
-- fail-safe rollback при ошибке — подтверждён;
-- pure CELL/ANCHOR/Duplicate plan — реализован и покрыт тестами;
-- instance-only identity reset через `User.EnergoLogicCellId` — реализован и подтверждён live;
-- пользовательский Renumber Cell — ещё не реализован;
-- Move Cell Right + exact detach/re-glue — подтверждён live;
-- Repair Glue на визуально совпадающем, но electrically disconnected endpoint — подтверждён live;
-- минимальный Scheme Doctor — реализован;
-- Copy/Move with Base Point и Exact Offset — реализованы как transport-neutral planners с fail-closed защитой topology/identity;
-- Electrical Align — реализован для свободных фигур; generic alignment glued equipment запрещён;
-- Cell Pitch distribute — реализован по реальным native bus slots без создания фиктивных electrical points;
-- EnergoLogic VBA host успешно устанавливается в отдельную `.vsdm` qualification copy;
-- запуск этого VBA host через внешний `ExecuteLine` не даёт пользовательского Undo;
-- запуск через Visio Macros UI, ShapeSheet Action и внешний `Cell.Trigger()` не дал надёжного user-context результата;
-- explicit custom `IVBUndoUnit` не сделал внешний transaction доступным обычному Undo;
-- Ribbon classic COM add-in startup-load признан небезопасным и удалён;
-- command-bar-only COM add-in с `LoadBehavior=0` стабилен и выполняет callback внутри Visio, но программный `CommandBarButton.Execute()` всё ещё не создаёт обычный пользовательский Undo;
-- synchronous physical click из активного COM-вызова запрещён как reentrancy-deadlock pattern;
-- bridge `.73` реализует bounded asynchronous physical click/Undo helper, который срабатывает после возврата COM-вызова; live qualification ожидает восстановления локального агента;
-- один пользовательский Ctrl+Z остаётся acceptance blocker до результата этого async user-context probe.
+- текущий live Editor: **v3.13** (`EnergoLogic.VisioEditorAddinV313`, API `0.3.13`);
+- текущий managed bridge: **2026.10.03.111**; bridge branch HEAD `05a877e`;
+- Coordinates, Copy/Move with Base Point, Exact Offset, Smart Nudge, Align X/Y, Select Cell, Renumber Cell, Duplicate/Move Cell, Repair Glue, Scheme Doctor и Measure Pitch — подтверждены live;
+- реальный pitch шины: **40 мм**;
+- TSN cell anchor `155` корректно раскрывается в 11 top-level members: `[155,158,160,162,166,182,240,242,244,249,250]`;
+- Cell Pitch distribute в v3.13 разделён на geometry phase и explicit topology-completion phase с operation status;
+- deliberate 10-second delay между phase 1 и phase 2 **не устраняет** дефект; гипотеза «VTD просто не успевает стабилизироваться» отвергнута;
+- точный remaining failure: `244.End → 166/Connections.1`;
+- после failure endpoint остаётся half-glued: `EndX = 190 mm`, а `EndY = PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))`;
+- тот же edge на той же странице немедленно восстанавливается low-level `batch_glue_endpoints`, после чего `get_connections` подтверждает настоящий `244.EndX → 166/Connections.1.X`;
+- следовательно, native `GlueTo` и connection point исправны; дефект локализован в C# add-in restoration/detach path, а не в тайминге;
+- исходная `MCP-v2` не мутируется; acceptance выполняется только на disposable copies;
+- Undo остаётся deferred technical debt и не должен снова вытеснять работу над пользовательским Editor;
+- PR #12 остаётся **Draft**; Ready/merge только по явной команде владельца.

@@ -13,7 +13,7 @@ from energologic.core import (
     load_model,
     validate_model,
 )
-from energologic.domain import validate_electrical_model
+from energologic.domain import ELECTRICAL_V1, validate_electrical_model
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,6 +61,12 @@ def _valid_model() -> CanonicalModel:
 
 
 class ElectricalDomainTests(unittest.TestCase):
+    def test_profile_registry_is_read_only(self):
+        with self.assertRaises(TypeError):
+            ELECTRICAL_V1.specs["future"] = ELECTRICAL_V1.specs["bus"]  # type: ignore[index]
+        with self.assertRaises(TypeError):
+            ELECTRICAL_V1.specs["bus"].max_terminal_degree["node"] = 1  # type: ignore[index]
+
     def test_valid_profile_model_has_no_issues(self):
         self.assertEqual(validate_electrical_model(_valid_model()), ())
 

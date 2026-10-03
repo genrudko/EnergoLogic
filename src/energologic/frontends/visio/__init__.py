@@ -1,3 +1,10 @@
+from .doctor import (
+    VisioDoctorIssue,
+    VisioEndpointProbe,
+    diagnose_endpoint_glue,
+    diagnose_page_structure,
+    diagnose_scheme,
+)
 from .contracts import VisioFrontend, VisioShapeBinding
 from .identity import (
     CELL_ID_USER_CELL,
@@ -48,6 +55,8 @@ from .snapshot import (
 __all__ = [
     "CELL_ID_USER_CELL",
     "DuplicateCellPlan",
+    "VisioDoctorIssue",
+    "VisioEndpointProbe",
     "MoveCellPlan",
     "VisioCaptureResult",
     "VisioCell",
@@ -78,6 +87,9 @@ __all__ = [
     "capture_page_snapshot",
     "discover_cell",
     "discover_cell_anchor",
+    "diagnose_endpoint_glue",
+    "diagnose_page_structure",
+    "diagnose_scheme",
     "find_glue_candidates",
     "measure_cell_pitch",
     "plan_duplicate_cell",

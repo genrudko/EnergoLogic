@@ -19,12 +19,12 @@
 Порядок:
 
 - R0: исследование API / bridge / реальной MCP-v2 — **done**;
-- R1: Duplicate Cell Right / Left — **in progress**: planner + exact duplicate + Glue + identity reset подтверждены; VBA/ShapeSheet/custom UndoUnit/Ribbon/CommandBar invocation paths исследованы, а последний one-Undo blocker сейчас проверяется через detached physical UI probe после возврата COM-вызова;
-- R2: остальные P0 QoL-команды — **implementation complete / live qualification partial**: Base Point copy/move, Exact Offset, topology-safe Align, native-slot Cell Pitch distribute и Scheme Doctor реализованы; Move Cell/Repair Glue подтверждены live, остальные P0 ещё требуют live acceptance;
-- R3: P1 cell/model diagnostics;
+- R1: Duplicate Cell Right / Left — **live-qualified core / polish remains**: exact duplicate, Glue, identity reset и реальный Editor UI работают; one-user-Undo вынесен в deferred technical debt и не блокирует продукт;
+- R2: остальные P0 QoL-команды — **почти закрыты live**: Coordinates, Base Point copy/move, Exact Offset, Smart Nudge, Align X/Y, Select/Renumber Cell, Move Cell, Repair Glue, Scheme Doctor и Measure Pitch приняты live. Remaining blocker — topology-safe Cell Pitch distribute: v3.13 geometry phase работает, но C# restoration оставляет `244.End → 166/Connections.1` half-glued; 10-second delay не помогает, low-level `batch_glue_endpoints` тот же edge восстанавливает сразу;
+- R3: P1 cell/model diagnostics / Replace & Insert Equipment / bus editing — после закрытия topology-safe pitch;
 - R4: P2 Ribbon/context menu/shortcuts/presets.
 
-Главный критерий первого релиза — реальный benchmark Duplicate Cell Right на MCP-v2.
+Текущая точка релиза — довести уже работающий Editor v3.13 до topology-safe поведения и завершить пользовательский polish. Главный незакрытый acceptance case: Cell Pitch distribute на TSN cell с обязательной проверкой реального Glue.
 
 ## Следующий основной архитектурный этап
 

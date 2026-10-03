@@ -126,6 +126,10 @@ class VisioMappingTests(unittest.TestCase):
                 for element in result.model.elements
             )
         )
+        self.assertEqual(
+            fingerprint(result.model),
+            "364a379c2756d7801090d7602dc2f1ddadca3203069b779a248e3ed7652e053b",
+        )
 
     def test_geometry_changes_do_not_change_canonical_fingerprint(self):
         original = live_slice()

@@ -117,7 +117,17 @@ VTD masters массово не переписываются. Сначала ada
 
 Live-квалификация подтвердила rollback внутри открытого scope, но показала, что текущий внешний Automation bridge не добавляет успешно завершённые мутации в обычный пользовательский undo stack Visio. Это воспроизводится даже на одиночном `move_shape`, поэтому не является дефектом алгоритма Duplicate Cell.
 
-Дополнительно подтверждено: отдельный VBA-host можно установить в изолированную macro-enabled `.vsdm` копию, но запуск его процедуры через внешний `Document.ExecuteLine` всё ещё не создаёт пользовательский Undo. Значит для финального требования «один Ctrl+Z» нужен реальный user-context запуск внутри Visio (UI/Ribbon/COM add-in) либо custom UndoUnit.
+Дополнительно подтверждено: отдельный VBA-host можно установить в изолированную macro-enabled `.vsdm` копию, но запуск его процедуры через внешний `Document.ExecuteLine` всё ещё не создаёт пользовательский Undo.
+
+Дальнейшая квалификация показала более жёсткую границу:
+
+- explicit `IVBUndoUnit` через внешний bridge добавляется, но ни физический Ctrl+Z, ни `Application.Undo()` не вызывают ожидаемый откат;
+- classic COM add-in с Ribbon XML оказался небезопасным при startup-load и был полностью удалён после qualification crashes;
+- отдельный command-bar-only COM add-in без `IRibbonExtensibility`, с `LoadBehavior=0`, стабильно подключается после старта Visio;
+- его `CommandBarButton.Execute()` реально выполняет Duplicate внутри add-in (`44 → 52`), но последующий физический Ctrl+Z оставляет `52`;
+- попытка физически кликнуть кнопку синхронно из активного bridge COM-вызова приводит к reentrancy deadlock.
+
+Следующая квалификация использует detached local helper: bridge только готовит selection/координаты и возвращается, а физический click/Undo происходит уже после завершения COM-вызова. Это позволяет проверить настоящий user-context без удержания внешнего Automation call.
 
 ## Acceptance benchmark
 
@@ -182,5 +192,10 @@ Merge и Ready for Review — только по явной команде вла
 - Cell Pitch distribute — реализован по реальным native bus slots без создания фиктивных electrical points;
 - EnergoLogic VBA host успешно устанавливается в отдельную `.vsdm` qualification copy;
 - запуск этого VBA host через внешний `ExecuteLine` не даёт пользовательского Undo;
-- квалификация запуска через реальное окно Visio Macros остаётся незавершённой из-за временной потери live ROT binding после bridge update;
-- один пользовательский Ctrl+Z остаётся acceptance blocker для in-Visio command host.
+- запуск через Visio Macros UI, ShapeSheet Action и внешний `Cell.Trigger()` не дал надёжного user-context результата;
+- explicit custom `IVBUndoUnit` не сделал внешний transaction доступным обычному Undo;
+- Ribbon classic COM add-in startup-load признан небезопасным и удалён;
+- command-bar-only COM add-in с `LoadBehavior=0` стабилен и выполняет callback внутри Visio, но программный `CommandBarButton.Execute()` всё ещё не создаёт обычный пользовательский Undo;
+- synchronous physical click из активного COM-вызова запрещён как reentrancy-deadlock pattern;
+- bridge `.73` реализует bounded asynchronous physical click/Undo helper, который срабатывает после возврата COM-вызова; live qualification ожидает восстановления локального агента;
+- один пользовательский Ctrl+Z остаётся acceptance blocker до результата этого async user-context probe.

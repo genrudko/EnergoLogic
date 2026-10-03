@@ -76,14 +76,16 @@ VTD masters массово не переписываются. Сначала ada
 
 ### R2 — остальные P0 — In progress
 
-- Copy with Base Point;
-- [x] Move with Base Point / Move Cell to adjacent native slot;
-- [x] Exact Offset в мм — bridge primitive + deterministic verification;
+- [x] Copy with Base Point — pure planner + exact bridge request; external electrical Glue и managed identity обрабатываются fail-closed;
+- [x] Move with Base Point — pure planner для свободного selection + отдельный cell-aware Move Cell;
+- [x] Exact Offset в мм — pure planner + bridge primitive + deterministic verification;
 - [x] Auto Glue to Bus для квалифицированного cell anchor;
 - [x] Repair Glue: Find → Preview → Fix — pure planner + live repair;
-- Electrical Align;
-- Cell Pitch: measure / set / distribute — measure already implemented;
+- [x] Electrical Align — exact PinX/PinY planner для свободных shapes; glued equipment generic Align намеренно блокирует;
+- [x] Cell Pitch: measure / set / distribute — measure + deterministic distribution planner по реальным native bus slots;
 - [x] минимальный Scheme Doctor для Glue/pitch/identity structural checks.
+
+Для Copy with Base Point / generic Move with Base Point / Electrical Align / Cell Pitch distribute код и CI закрыты; отдельная live-квалификация на реальном Visio ещё остаётся.
 
 ### R3 — P1
 
@@ -113,7 +115,9 @@ VTD masters массово не переписываются. Сначала ada
 
 Если операция выполнилась частично, она не должна оставлять поломанный промежуточный результат.
 
-Live-квалификация подтвердила rollback внутри открытого scope, но показала, что текущий внешний Automation bridge не добавляет успешно завершённые мутации в обычный пользовательский undo stack Visio. Это воспроизводится даже на одиночном `move_shape`, поэтому не является дефектом алгоритма Duplicate Cell. Для финального требования «один Ctrl+Z» нужен in-Visio command host/custom UndoUnit.
+Live-квалификация подтвердила rollback внутри открытого scope, но показала, что текущий внешний Automation bridge не добавляет успешно завершённые мутации в обычный пользовательский undo stack Visio. Это воспроизводится даже на одиночном `move_shape`, поэтому не является дефектом алгоритма Duplicate Cell.
+
+Дополнительно подтверждено: отдельный VBA-host можно установить в изолированную macro-enabled `.vsdm` копию, но запуск его процедуры через внешний `Document.ExecuteLine` всё ещё не создаёт пользовательский Undo. Значит для финального требования «один Ctrl+Z» нужен реальный user-context запуск внутри Visio (UI/Ribbon/COM add-in) либо custom UndoUnit.
 
 ## Acceptance benchmark
 
@@ -173,4 +177,10 @@ Merge и Ready for Review — только по явной команде вла
 - Move Cell Right + exact detach/re-glue — подтверждён live;
 - Repair Glue на визуально совпадающем, но electrically disconnected endpoint — подтверждён live;
 - минимальный Scheme Doctor — реализован;
-- один пользовательский Ctrl+Z — требует in-Visio host/custom UndoUnit; внешний bridge этого не обеспечивает даже при реальной отправке Ctrl+Z.
+- Copy/Move with Base Point и Exact Offset — реализованы как transport-neutral planners с fail-closed защитой topology/identity;
+- Electrical Align — реализован для свободных фигур; generic alignment glued equipment запрещён;
+- Cell Pitch distribute — реализован по реальным native bus slots без создания фиктивных electrical points;
+- EnergoLogic VBA host успешно устанавливается в отдельную `.vsdm` qualification copy;
+- запуск этого VBA host через внешний `ExecuteLine` не даёт пользовательского Undo;
+- квалификация запуска через реальное окно Visio Macros остаётся незавершённой из-за временной потери live ROT binding после bridge update;
+- один пользовательский Ctrl+Z остаётся acceptance blocker для in-Visio command host.

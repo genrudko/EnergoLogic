@@ -4,18 +4,22 @@ from dataclasses import replace
 import unittest
 
 from energologic.frontends.visio import (
+    VisioConnectionPoint,
     VisioGeometry,
     VisioGlueSnapshot,
     VisioPageSnapshot,
     VisioQolError,
     VisioShapeSnapshot,
     build_duplicate_execution_request,
+    build_glue_repair_execution_request,
     build_move_execution_request,
     discover_cell,
     discover_cell_anchor,
+    find_glue_candidates,
     measure_cell_pitch,
     plan_duplicate_cell,
     plan_move_cell_to_adjacent_slot,
+    plan_repair_glue,
 )
 
 
@@ -415,6 +419,121 @@ class VisioQolTests(unittest.TestCase):
                 source_seed_shape_id=66,
                 direction="right",
                 pitch_mm=40.0,
+            )
+
+
+
+    def test_find_glue_candidates_uses_page_coordinates_not_visual_touching(self):
+        points = (
+            VisioConnectionPoint(105, 1, 150.0, 255.75),
+            VisioConnectionPoint(105, 2, 150.0, 254.25),
+        )
+        candidates = find_glue_candidates(
+            source_shape_id=66,
+            source_endpoint="begin",
+            source_x_mm=150.0,
+            source_y_mm=254.25,
+            connection_points=points,
+            tolerance_mm=1.0,
+        )
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0].target_shape_id, 105)
+        self.assertEqual(candidates[0].target_connection_row, 2)
+        self.assertAlmostEqual(candidates[0].distance_mm, 0.0, places=9)
+
+    def test_repair_glue_auto_plan_requires_exactly_one_candidate(self):
+        points = (
+            VisioConnectionPoint(105, 1, 150.0, 255.75),
+            VisioConnectionPoint(105, 2, 150.0, 254.25),
+        )
+        plan = plan_repair_glue(
+            source_shape_id=66,
+            source_endpoint="begin",
+            source_x_mm=150.0,
+            source_y_mm=254.25,
+            connection_points=points,
+            tolerance_mm=1.0,
+        )
+        self.assertEqual(plan.candidate.target_shape_id, 105)
+        self.assertEqual(plan.candidate.target_connection_row, 2)
+
+        with self.assertRaisesRegex(
+            VisioQolError,
+            "ambiguous_glue_candidate",
+        ):
+            plan_repair_glue(
+                source_shape_id=66,
+                source_endpoint="begin",
+                source_x_mm=150.0,
+                source_y_mm=254.25,
+                connection_points=points,
+                tolerance_mm=2.0,
+            )
+
+    def test_repair_glue_allows_explicit_preview_selection_when_ambiguous(self):
+        points = (
+            VisioConnectionPoint(105, 1, 150.0, 255.75),
+            VisioConnectionPoint(105, 2, 150.0, 254.25),
+        )
+        plan = plan_repair_glue(
+            source_shape_id=66,
+            source_endpoint="begin",
+            source_x_mm=150.0,
+            source_y_mm=254.25,
+            connection_points=points,
+            tolerance_mm=2.0,
+            selected_target_shape_id=105,
+            selected_target_connection_row=2,
+        )
+        self.assertEqual(plan.candidate.target_connection_row, 2)
+        self.assertAlmostEqual(plan.candidate.distance_mm, 0.0, places=9)
+
+    def test_repair_glue_refuses_already_glued_endpoint(self):
+        with self.assertRaisesRegex(VisioQolError, "endpoint_already_glued"):
+            plan_repair_glue(
+                source_shape_id=66,
+                source_endpoint="begin",
+                source_x_mm=150.0,
+                source_y_mm=254.25,
+                connection_points=(
+                    VisioConnectionPoint(105, 2, 150.0, 254.25),
+                ),
+                source_is_already_glued=True,
+            )
+
+    def test_glue_repair_execution_request_is_explicit_native_glue(self):
+        plan = plan_repair_glue(
+            source_shape_id=66,
+            source_endpoint="begin",
+            source_x_mm=150.0,
+            source_y_mm=254.25,
+            connection_points=(
+                VisioConnectionPoint(105, 2, 150.0, 254.25),
+            ),
+        )
+        request = build_glue_repair_execution_request(plan)
+        self.assertEqual(request.tool_name, "batch_glue_endpoints")
+        self.assertEqual(
+            request.items_json,
+            '[{"endpoint":"begin","shape_id":66,'
+            '"target_connection_row":2,"target_shape_id":105}]',
+        )
+        self.assertEqual(
+            request.arguments(),
+            {"items_json": request.items_json},
+        )
+
+    def test_repair_glue_reports_no_candidate_outside_tolerance(self):
+        with self.assertRaisesRegex(VisioQolError, "no_glue_candidate"):
+            plan_repair_glue(
+                source_shape_id=66,
+                source_endpoint="begin",
+                source_x_mm=150.0,
+                source_y_mm=250.0,
+                connection_points=(
+                    VisioConnectionPoint(105, 2, 150.0, 254.25),
+                ),
+                tolerance_mm=1.0,
             )
 
 

@@ -1537,3 +1537,155 @@ def build_distribution_execution_requests(
         build_move_execution_request(move, select_result=select_result)
         for move in plan.moves
     )
+
+
+@dataclass(frozen=True, slots=True)
+class VisioAlignmentMove:
+    shape_id: int
+    dx_mm: float
+    dy_mm: float
+
+
+@dataclass(frozen=True, slots=True)
+class VisioAlignmentPlan:
+    """Exact PinX/PinY alignment for non-glued top-level shapes."""
+
+    page_name: str
+    axis: Literal["x", "y"]
+    target_mm: float
+    reference_shape_id: int | None
+    moves: tuple[VisioAlignmentMove, ...]
+
+
+def _shape_participates_in_glue(
+    snapshot: VisioPageSnapshot,
+    shape_id: int,
+) -> bool:
+    return any(
+        glue.from_shape_id == shape_id or glue.to_shape_id == shape_id
+        for glue in snapshot.connections
+    )
+
+
+def plan_align_free_shapes(
+    snapshot: VisioPageSnapshot,
+    *,
+    shape_ids: tuple[int, ...],
+    axis: Literal["x", "y"],
+    reference_shape_id: int | None = None,
+    target_mm: float | None = None,
+    tolerance_mm: float = 0.01,
+) -> VisioAlignmentPlan:
+    """Align free top-level shapes by their Visio reference points.
+
+    Glued electrical objects are intentionally rejected. They must be aligned through
+    cell/bus-aware operations so visual cleanup cannot silently break topology.
+    """
+
+    if axis not in {"x", "y"}:
+        raise VisioQolError(
+            "invalid_alignment_axis",
+            f"axis must be 'x' or 'y', got {axis!r}",
+        )
+    selected = _validate_base_point_selection(snapshot, shape_ids=shape_ids)
+    if len(selected) < 2 and target_mm is None:
+        raise VisioQolError(
+            "insufficient_alignment_selection",
+            "alignment requires at least two shapes or an explicit target_mm",
+        )
+    if reference_shape_id is not None and target_mm is not None:
+        raise VisioQolError(
+            "ambiguous_alignment_target",
+            "specify reference_shape_id or target_mm, not both",
+        )
+
+    shapes = _shape_index(snapshot)
+    reference_id: int | None = None
+    if reference_shape_id is not None:
+        reference_id = int(reference_shape_id)
+        if reference_id not in set(shape_ids):
+            raise VisioQolError(
+                "reference_not_selected",
+                f"reference shape {reference_id} is not in shape_ids",
+            )
+        reference = shapes[reference_id]
+        target = _mm(
+            reference.geometry.pin_x if axis == "x" else reference.geometry.pin_y
+        )
+    elif target_mm is not None:
+        target = float(target_mm)
+        if not math.isfinite(target):
+            raise VisioQolError(
+                "invalid_alignment_target",
+                "target_mm must be finite",
+            )
+    else:
+        reference = selected[0]
+        reference_id = reference.shape_id
+        target = _mm(
+            reference.geometry.pin_x if axis == "x" else reference.geometry.pin_y
+        )
+
+    tolerance = float(tolerance_mm)
+    if not math.isfinite(tolerance) or tolerance < 0:
+        raise VisioQolError(
+            "invalid_tolerance",
+            "tolerance_mm must be a finite non-negative number",
+        )
+
+    moves: list[VisioAlignmentMove] = []
+    for shape in selected:
+        current = _mm(
+            shape.geometry.pin_x if axis == "x" else shape.geometry.pin_y
+        )
+        delta = target - current
+        if abs(delta) <= tolerance:
+            continue
+        if _shape_participates_in_glue(snapshot, shape.shape_id):
+            raise VisioQolError(
+                "glued_shape_requires_electrical_alignment",
+                (
+                    f"shape {shape.shape_id} participates in native Glue; "
+                    "use a cell/bus-aware alignment operation"
+                ),
+            )
+        moves.append(
+            VisioAlignmentMove(
+                shape_id=shape.shape_id,
+                dx_mm=delta if axis == "x" else 0.0,
+                dy_mm=delta if axis == "y" else 0.0,
+            )
+        )
+
+    return VisioAlignmentPlan(
+        page_name=snapshot.page_name,
+        axis=axis,
+        target_mm=target,
+        reference_shape_id=reference_id,
+        moves=tuple(moves),
+    )
+
+
+def build_alignment_execution_requests(
+    plan: VisioAlignmentPlan,
+    *,
+    select_result: bool = False,
+) -> tuple[VisioMoveExecutionRequest, ...]:
+    """Translate a safe free-shape alignment into exact bridge moves."""
+
+    return tuple(
+        VisioMoveExecutionRequest(
+            tool_name="move_shapes_exact",
+            shape_ids_json=json.dumps(
+                [move.shape_id],
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            dx_mm=move.dx_mm,
+            dy_mm=move.dy_mm,
+            select_result=bool(select_result),
+            detach_items_json="[]",
+            glue_items_json="[]",
+        )
+        for move in plan.moves
+    )

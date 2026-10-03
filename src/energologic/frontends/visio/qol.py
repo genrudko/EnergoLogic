@@ -1,0 +1,490 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+import math
+import re
+from typing import Literal
+
+from .snapshot import VisioGlueSnapshot, VisioPageSnapshot, VisioShapeSnapshot
+
+
+_MM_PER_INCH = 25.4
+_CONNECTION_ROW = re.compile(r"^Connections\.(\d+)\.X$", re.IGNORECASE)
+
+
+class VisioQolError(ValueError):
+    """Deterministic planning failure for Visio editor QoL operations."""
+
+    def __init__(self, code: str, message: str):
+        self.code = code
+        super().__init__(f"{code}: {message}")
+
+
+@dataclass(frozen=True, slots=True)
+class VisioCellAnchor:
+    shape_id: int
+    x_mm: float
+    y_mm: float
+    bus_shape_id: int
+    bus_terminal_shape_id: int
+    bus_terminal_nt: int
+    bus_slot_index: int
+    source_endpoint: Literal["begin", "end"]
+    target_connection_row: int
+
+
+@dataclass(frozen=True, slots=True)
+class VisioCell:
+    page_name: str
+    seed_shape_id: int
+    anchor: VisioCellAnchor
+    member_shape_ids: tuple[int, ...]
+    electrical_core_shape_ids: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class DuplicateCellPlan:
+    page_name: str
+    source_cell: VisioCell
+    direction: Literal["left", "right"]
+    pitch_mm: float
+    dx_mm: float
+    dy_mm: float
+    target_bus_terminal_shape_id: int
+    target_bus_terminal_nt: int
+    source_bus_slot_index: int
+    target_bus_slot_index: int
+    target_connection_row: int
+    source_endpoint: Literal["begin", "end"]
+    reset_identity: bool = True
+
+    @property
+    def shape_ids(self) -> tuple[int, ...]:
+        return self.source_cell.member_shape_ids
+
+
+def _mm(value_in: float) -> float:
+    return float(value_in) * _MM_PER_INCH
+
+
+def _shape_index(snapshot: VisioPageSnapshot) -> dict[int, VisioShapeSnapshot]:
+    result: dict[int, VisioShapeSnapshot] = {}
+    for shape in snapshot.shapes:
+        if shape.shape_id in result:
+            raise VisioQolError(
+                "duplicate_shape_id",
+                f"page {snapshot.page_name!r} contains duplicate shape id {shape.shape_id}",
+            )
+        result[shape.shape_id] = shape
+    return result
+
+
+def _user_int(shape: VisioShapeSnapshot, name: str) -> int:
+    raw = shape.user_cells.get(name)
+    if raw is None:
+        raise VisioQolError(
+            "missing_user_cell",
+            f"shape {shape.shape_id} has no User.{name} snapshot",
+        )
+    value = str(raw).strip()
+    if value.startswith("="):
+        value = value[1:].strip()
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise VisioQolError(
+            "invalid_user_cell",
+            f"shape {shape.shape_id} User.{name} must be an integer, got {raw!r}",
+        ) from exc
+    return parsed
+
+
+
+def _bus_slot_index(shape: VisioShapeSnapshot) -> int:
+    raw = shape.user_cells.get("slot")
+    if raw is None:
+        raw = shape.text
+    value = str(raw).strip()
+    if value.startswith("="):
+        value = value[1:].strip()
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise VisioQolError(
+            "missing_bus_slot_index",
+            (
+                f"bus terminal shape {shape.shape_id} must expose an integer slot "
+                f"through User.slot or its text; got {raw!r}"
+            ),
+        ) from exc
+    if parsed <= 0:
+        raise VisioQolError(
+            "invalid_bus_slot_index",
+            f"bus terminal shape {shape.shape_id} has non-positive slot {parsed}",
+        )
+    return parsed
+
+def _endpoint_name(cell_name: str) -> Literal["begin", "end"]:
+    normalized = cell_name.strip().casefold()
+    if normalized == "beginx":
+        return "begin"
+    if normalized == "endx":
+        return "end"
+    raise VisioQolError(
+        "unsupported_bus_endpoint",
+        f"bus attachment must use BeginX or EndX, got {cell_name!r}",
+    )
+
+
+def _connection_row(cell_name: str) -> int:
+    match = _CONNECTION_ROW.fullmatch(cell_name.strip())
+    if match is None:
+        raise VisioQolError(
+            "unsupported_bus_connection_cell",
+            f"expected Connections.N.X, got {cell_name!r}",
+        )
+    return int(match.group(1))
+
+
+def discover_cell_anchor(
+    snapshot: VisioPageSnapshot,
+    *,
+    seed_shape_id: int,
+) -> VisioCellAnchor:
+    """Resolve the seed's real native Glue to a child terminal of a bus shape."""
+
+    shapes = _shape_index(snapshot)
+    try:
+        seed = shapes[seed_shape_id]
+    except KeyError as exc:
+        raise VisioQolError(
+            "unknown_seed_shape",
+            f"shape {seed_shape_id} is not present on page {snapshot.page_name!r}",
+        ) from exc
+    if seed.parent_shape_id is not None:
+        raise VisioQolError(
+            "invalid_seed_shape",
+            f"shape {seed_shape_id} is a group child and cannot anchor a cell",
+        )
+
+    candidates: list[tuple[VisioGlueSnapshot, VisioShapeSnapshot, VisioShapeSnapshot]] = []
+    for glue in snapshot.connections:
+        if glue.from_shape_id != seed_shape_id:
+            continue
+        target = shapes.get(glue.to_shape_id)
+        if target is None or target.parent_shape_id is None:
+            continue
+        parent = shapes.get(target.parent_shape_id)
+        if parent is None:
+            raise VisioQolError(
+                "orphan_bus_terminal",
+                f"bus terminal shape {target.shape_id} has missing parent {target.parent_shape_id}",
+            )
+        candidates.append((glue, target, parent))
+
+    if len(candidates) != 1:
+        raise VisioQolError(
+            "ambiguous_bus_attachment",
+            (
+                f"seed shape {seed_shape_id} must have exactly one Glue to a child bus "
+                f"terminal, found {len(candidates)}"
+            ),
+        )
+
+    glue, terminal, bus = candidates[0]
+    return VisioCellAnchor(
+        shape_id=seed_shape_id,
+        x_mm=_mm(seed.geometry.pin_x),
+        y_mm=_mm(seed.geometry.pin_y),
+        bus_shape_id=bus.shape_id,
+        bus_terminal_shape_id=terminal.shape_id,
+        bus_terminal_nt=_user_int(terminal, "nt"),
+        bus_slot_index=_bus_slot_index(terminal),
+        source_endpoint=_endpoint_name(glue.from_cell),
+        target_connection_row=_connection_row(glue.to_cell),
+    )
+
+
+def _electrical_core(
+    snapshot: VisioPageSnapshot,
+    *,
+    seed_shape_id: int,
+    bus_shape_id: int,
+) -> tuple[int, ...]:
+    """Return the Glue-connected top-level component without the external bus."""
+
+    shapes = _shape_index(snapshot)
+    adjacency: dict[int, set[int]] = {
+        sid: set()
+        for sid, shape in shapes.items()
+        if shape.parent_shape_id is None and sid != bus_shape_id
+    }
+    for glue in snapshot.connections:
+        left = shapes.get(glue.from_shape_id)
+        right = shapes.get(glue.to_shape_id)
+        if left is None or right is None:
+            raise VisioQolError(
+                "unknown_shape_reference",
+                f"Glue {glue.from_shape_id}->{glue.to_shape_id} references an unknown shape",
+            )
+        if left.parent_shape_id is not None or right.parent_shape_id is not None:
+            continue
+        if left.shape_id == bus_shape_id or right.shape_id == bus_shape_id:
+            continue
+        if left.shape_id in adjacency and right.shape_id in adjacency:
+            adjacency[left.shape_id].add(right.shape_id)
+            adjacency[right.shape_id].add(left.shape_id)
+
+    if seed_shape_id not in adjacency:
+        raise VisioQolError(
+            "invalid_seed_shape",
+            f"shape {seed_shape_id} is not a top-level non-bus shape",
+        )
+
+    seen: set[int] = set()
+    stack = [seed_shape_id]
+    while stack:
+        current = stack.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        stack.extend(sorted(adjacency[current] - seen, reverse=True))
+    return tuple(sorted(seen))
+
+
+def discover_cell(
+    snapshot: VisioPageSnapshot,
+    *,
+    seed_shape_id: int,
+    pitch_mm: float,
+    vertical_margin_mm: float = 10.0,
+) -> VisioCell:
+    """Discover one visual cell while keeping electrical topology Glue-only.
+
+    The electrical core is discovered only from native Glue. Additional projection
+    members (labels, side equipment, helper shapes) may be included by the cell's
+    geometric column, but that inclusion never creates an electrical connection.
+    """
+
+    pitch = float(pitch_mm)
+    margin = float(vertical_margin_mm)
+    if not math.isfinite(pitch) or pitch <= 0.0:
+        raise VisioQolError("invalid_pitch", "pitch_mm must be a finite positive number")
+    if not math.isfinite(margin) or margin < 0.0:
+        raise VisioQolError(
+            "invalid_vertical_margin",
+            "vertical_margin_mm must be a finite non-negative number",
+        )
+
+    shapes = _shape_index(snapshot)
+    anchor = discover_cell_anchor(snapshot, seed_shape_id=seed_shape_id)
+    core_ids = _electrical_core(
+        snapshot,
+        seed_shape_id=seed_shape_id,
+        bus_shape_id=anchor.bus_shape_id,
+    )
+    core_shapes = [shapes[sid] for sid in core_ids]
+    core_y = [_mm(shape.geometry.pin_y) for shape in core_shapes]
+    y_min = min(core_y) - margin
+    y_max = max(core_y) + margin
+    half_pitch = pitch / 2.0
+    boundary_tolerance = 0.01
+
+    members: set[int] = set(core_ids)
+    for shape in snapshot.shapes:
+        if shape.parent_shape_id is not None or shape.shape_id == anchor.bus_shape_id:
+            continue
+        x_mm = _mm(shape.geometry.pin_x)
+        y_mm = _mm(shape.geometry.pin_y)
+        distance = abs(x_mm - anchor.x_mm)
+        if abs(distance - half_pitch) <= boundary_tolerance and y_min <= y_mm <= y_max:
+            raise VisioQolError(
+                "ambiguous_cell_boundary",
+                (
+                    f"shape {shape.shape_id} lies on the cell boundary at "
+                    f"{distance:.3f} mm from anchor {seed_shape_id}"
+                ),
+            )
+        if distance < half_pitch - boundary_tolerance and y_min <= y_mm <= y_max:
+            members.add(shape.shape_id)
+
+    return VisioCell(
+        page_name=snapshot.page_name,
+        seed_shape_id=seed_shape_id,
+        anchor=anchor,
+        member_shape_ids=tuple(sorted(members)),
+        electrical_core_shape_ids=core_ids,
+    )
+
+
+def measure_cell_pitch(
+    snapshot: VisioPageSnapshot,
+    *,
+    first_seed_shape_id: int,
+    second_seed_shape_id: int,
+) -> float:
+    """Measure horizontal anchor-to-anchor pitch in millimetres."""
+
+    first = discover_cell_anchor(snapshot, seed_shape_id=first_seed_shape_id)
+    second = discover_cell_anchor(snapshot, seed_shape_id=second_seed_shape_id)
+    if first.bus_shape_id != second.bus_shape_id:
+        raise VisioQolError(
+            "different_buses",
+            "cell pitch can only be measured between anchors attached to the same bus",
+        )
+    delta = abs(second.x_mm - first.x_mm)
+    if delta <= 0.01:
+        raise VisioQolError(
+            "invalid_pitch",
+            f"cell anchors are only {delta:.6f} mm apart",
+        )
+    return delta
+
+
+def _bus_terminal_by_nt(
+    snapshot: VisioPageSnapshot,
+    *,
+    bus_shape_id: int,
+    terminal_nt: int,
+) -> VisioShapeSnapshot:
+    matches = [
+        shape
+        for shape in snapshot.shapes
+        if shape.parent_shape_id == bus_shape_id
+        and shape.user_cells.get("nt") is not None
+        and _user_int(shape, "nt") == terminal_nt
+    ]
+    if len(matches) != 1:
+        raise VisioQolError(
+            "ambiguous_bus_terminal",
+            (
+                f"bus {bus_shape_id} must expose exactly one child with User.nt="
+                f"{terminal_nt}, found {len(matches)}"
+            ),
+        )
+    return matches[0]
+
+
+
+def _bus_terminal_by_slot(
+    snapshot: VisioPageSnapshot,
+    *,
+    bus_shape_id: int,
+    slot_index: int,
+) -> VisioShapeSnapshot:
+    matches: list[VisioShapeSnapshot] = []
+    for shape in snapshot.shapes:
+        if shape.parent_shape_id != bus_shape_id:
+            continue
+        try:
+            candidate_slot = _bus_slot_index(shape)
+        except VisioQolError as exc:
+            if exc.code == "missing_bus_slot_index":
+                continue
+            raise
+        if candidate_slot == slot_index:
+            matches.append(shape)
+    if len(matches) != 1:
+        raise VisioQolError(
+            "ambiguous_bus_slot",
+            (
+                f"bus {bus_shape_id} must expose exactly one child for slot "
+                f"{slot_index}, found {len(matches)}"
+            ),
+        )
+    return matches[0]
+
+def _terminal_is_occupied(
+    snapshot: VisioPageSnapshot,
+    *,
+    terminal_shape_id: int,
+) -> tuple[int, ...]:
+    occupants: set[int] = set()
+    for glue in snapshot.connections:
+        if glue.to_shape_id == terminal_shape_id:
+            occupants.add(glue.from_shape_id)
+        if glue.from_shape_id == terminal_shape_id:
+            occupants.add(glue.to_shape_id)
+    return tuple(sorted(occupants))
+
+
+def plan_duplicate_cell(
+    snapshot: VisioPageSnapshot,
+    *,
+    source_seed_shape_id: int,
+    direction: Literal["left", "right"],
+    pitch_mm: float,
+    target_bus_terminal_nt: int | None = None,
+    vertical_margin_mm: float = 10.0,
+) -> DuplicateCellPlan:
+    """Build a fail-closed, transport-neutral duplicate operation plan."""
+
+    if direction not in {"left", "right"}:
+        raise VisioQolError(
+            "invalid_direction",
+            f"direction must be 'left' or 'right', got {direction!r}",
+        )
+    cell = discover_cell(
+        snapshot,
+        seed_shape_id=source_seed_shape_id,
+        pitch_mm=pitch_mm,
+        vertical_margin_mm=vertical_margin_mm,
+    )
+    slot_delta = 1 if direction == "right" else -1
+    target_slot_index = cell.anchor.bus_slot_index + slot_delta
+    target_by_slot = _bus_terminal_by_slot(
+        snapshot,
+        bus_shape_id=cell.anchor.bus_shape_id,
+        slot_index=target_slot_index,
+    )
+    if target_bus_terminal_nt is None:
+        target = target_by_slot
+        target_nt = _user_int(target, "nt")
+    else:
+        target_nt = int(target_bus_terminal_nt)
+        target = _bus_terminal_by_nt(
+            snapshot,
+            bus_shape_id=cell.anchor.bus_shape_id,
+            terminal_nt=target_nt,
+        )
+        if target.shape_id != target_by_slot.shape_id:
+            raise VisioQolError(
+                "bus_terminal_direction_mismatch",
+                (
+                    f"direction {direction!r} from slot {cell.anchor.bus_slot_index} "
+                    f"requires slot {target_slot_index} (shape {target_by_slot.shape_id}), "
+                    f"but User.nt={target_nt} resolves to shape {target.shape_id}"
+                ),
+            )
+    if target.shape_id == cell.anchor.bus_terminal_shape_id:
+        raise VisioQolError(
+            "same_bus_terminal",
+            "duplicate target must not reuse the source bus terminal",
+        )
+    occupants = _terminal_is_occupied(snapshot, terminal_shape_id=target.shape_id)
+    if occupants:
+        raise VisioQolError(
+            "target_bus_terminal_occupied",
+            (
+                f"bus terminal shape {target.shape_id} (User.nt={target_nt}) "
+                f"is already connected to shape(s) {occupants}"
+            ),
+        )
+
+    pitch = float(pitch_mm)
+    dx = pitch if direction == "right" else -pitch
+    return DuplicateCellPlan(
+        page_name=snapshot.page_name,
+        source_cell=cell,
+        direction=direction,
+        pitch_mm=pitch,
+        dx_mm=dx,
+        dy_mm=0.0,
+        target_bus_terminal_shape_id=target.shape_id,
+        target_bus_terminal_nt=target_nt,
+        source_bus_slot_index=cell.anchor.bus_slot_index,
+        target_bus_slot_index=target_slot_index,
+        target_connection_row=cell.anchor.target_connection_row,
+        source_endpoint=cell.anchor.source_endpoint,
+        reset_identity=True,
+    )

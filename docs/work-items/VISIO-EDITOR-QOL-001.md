@@ -28,7 +28,7 @@ VTD masters массово не переписываются. Сначала ada
 
 ## План работ
 
-### R0 — исследование
+### R0 — исследование ✅
 
 Проверить по официальной документации и на реальном Visio:
 
@@ -53,7 +53,7 @@ VTD masters массово не переписываются. Сначала ada
 - устойчивый anchor;
 - VTD groups / Actions / ShapeSheet.
 
-### R1 — главный P0 benchmark
+### R1 — главный P0 benchmark — In progress
 
 Сделать первую рабочую команду:
 
@@ -112,6 +112,8 @@ VTD masters массово не переписываются. Сначала ada
 
 Если операция выполнилась частично, она не должна оставлять поломанный промежуточный результат.
 
+Live-квалификация подтвердила rollback внутри открытого scope, но показала, что текущий внешний Automation bridge не добавляет успешно завершённые мутации в обычный пользовательский undo stack Visio. Это воспроизводится даже на одиночном `move_shape`, поэтому не является дефектом алгоритма Duplicate Cell. Для финального требования «один Ctrl+Z» нужен in-Visio command host/custom UndoUnit.
+
 ## Acceptance benchmark
 
 На реальной `MCP-v2`:
@@ -153,4 +155,17 @@ Merge и Ready for Review — только по явной команде вла
 
 ## Evidence
 
-Pending R0 research and P0 implementation.
+Подробный live evidence: `docs/evidence/VISIO-EDITOR-QOL-001.md`.
+
+Текущее состояние:
+
+- R0 исследование реального Visio/MCP-v2 — выполнено;
+- exact native duplicate с компенсацией скрытого paste offset — подтверждён;
+- pitch 40 мм — подтверждён;
+- внутренние Glue после native Duplicate — подтверждены;
+- явный Glue новой ячейки к следующей native bus terminal — подтверждён;
+- визуальный результат — подтверждён PNG snapshot;
+- fail-safe rollback при ошибке — подтверждён;
+- pure CELL/ANCHOR/Duplicate plan — реализован и покрыт тестами;
+- identity reset/renumber — ещё не реализован;
+- один пользовательский Ctrl+Z — требует in-Visio host/custom UndoUnit; внешний bridge этого не обеспечивает.

@@ -457,3 +457,119 @@ Bridge branch:
 
 - managed extension `2026.10.03.73`;
 - focused unit/contract suite: **39/39 PASS**.
+
+
+## Editor v3.13 — end-of-session live topology checkpoint (2026-10-04)
+
+Этот checkpoint является текущей точкой продолжения и supersede'ит старые operational notes про bridge `.73` / Undo blocker.
+
+### Текущий runtime
+
+- live add-in: `EnergoLogic.VisioEditorAddinV313`;
+- API: `0.3.13`;
+- managed Visio extension: `2026.10.03.111`;
+- development-bridge branch HEAD: `05a877e` (`fix: complete editor topology in explicit second phase`);
+- `visio-workstation` online;
+- исходная `MCP-v2` сохранена неизменной.
+
+К v3.13 live-приёмку уже прошли пользовательские команды:
+
+- Coordinates;
+- Copy with Base Point;
+- Move with Base Point;
+- Exact Offset;
+- Smart Nudge;
+- Align X/Y;
+- Select Cell;
+- Renumber Cell;
+- Duplicate Cell Left/Right;
+- Move Cell Left/Right;
+- Repair Glue;
+- Scheme Doctor;
+- Measure Pitch.
+
+TSN cell с anchor `155` корректно определяется как 11 top-level members:
+
+`[155,158,160,162,166,182,240,242,244,249,250]`.
+
+### Cell Pitch distribute: точная незакрытая проблема
+
+v3.13 выполняет распределение в две фазы:
+
+1. geometry phase перемещает ячейки и сохраняет pending topology plan;
+2. `ApiCompletePendingTopology` отдельно восстанавливает и проверяет electrical Glue.
+
+На disposable page `UI-V313-Pitch-Delay-Probe`:
+
+- slot 3 был полностью освобождён;
+- page shape count: **44**;
+- `SelectCell(155)` подтвердил 11-member TSN cell;
+- `MeasurePitch([66,155])` вернул **80 мм**;
+- `DistributePitch(40)` успешно завершил geometry phase;
+- pending token: `topology:106a58e76ead48a0b1053237e282eaff`.
+
+Для проверки timing-гипотезы между phase 1 и phase 2 намеренно выдержано **10 секунд**.
+
+Результат: phase 2 всё равно упал на том же внутреннем edge:
+
+`shape 244 End → shape 166 / Connections.1`.
+
+Диагностика после попытки восстановления:
+
+- native target: none;
+- formula target: none;
+- `244.EndX FormulaU = 190 mm`.
+
+Компенсация вернула геометрию назад, но также не смогла восстановить тот же edge; после compensation `EndX` оставался numeric `150 mm`.
+
+**Вывод:** гипотеза «350 ms мало, VTD просто нужно дольше подождать» отвергнута. Проблема структурная в add-in Glue restoration path.
+
+### Half-Glue — ключевое новое evidence
+
+Сразу после failure на той же странице endpoint `244.End` оказался в несогласованном состоянии:
+
+- `EndX FormulaU = "190 mm"`;
+- `EndY FormulaU = "PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))"`.
+
+То есть Y уже содержит VTD reference, а X остаётся обычной координатой — реального `Connects` для End endpoint нет.
+
+После этого **без дополнительного ожидания** low-level bridge вызов:
+
+`batch_glue_endpoints([{shape_id:244, endpoint:"end", target_shape_id:166, target_connection_row:1}])`
+
+на той же странице успешно восстановил connection.
+
+Authoritative `get_connections` после вызова подтвердил:
+
+`244.EndX → 166/Connections.1.X`.
+
+Одновременно существующий внутренний edge:
+
+`244.BeginX → 242/Connections.2.X`
+
+остался корректным.
+
+Это разделяет гипотезы:
+
+- native `GlueTo` работает;
+- `ТСН2 / Connections.1` валиден;
+- дополнительный settle delay не нужен для самого Glue;
+- remaining defect находится именно в C# add-in path — `DetachEndpoint / GlueEndpointWithRetry / endpoint X/Y normalization`.
+
+Особенно подозрительно, что `DetachEndpoint` записывает numeric значения и в X, и в Y, а `GlueEndpoint` вызывает `GlueTo` только на X cell. Следующая сессия должна сравнивать формулы X/Y до/после detach и каждой GlueTo-попытки, а не добавлять blind sleeps.
+
+### Следующая точка продолжения
+
+1. Не возвращаться к Undo research — это deferred technical debt.
+2. Создать свежую disposable copy от `MCP-v2`.
+3. Инструментировать `244.EndX/EndY` до detach, после detach и после каждого GlueTo.
+4. Сравнить C# path с уже доказанным Python `batch_glue_endpoints`.
+5. Исправить endpoint normalization / restore semantics.
+6. Принимать Cell Pitch distribute только после реального post-check:
+   - `244.EndX → 166/Connections.1.X`;
+   - полный внутренний TSN topology сохранён;
+   - внешний bus Glue корректен;
+   - geometry = 40 мм.
+7. После этого вернуться к общему UI/product polish.
+
+PR #12 остаётся Draft; Ready/merge без явной команды владельца запрещены.

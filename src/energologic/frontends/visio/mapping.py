@@ -7,6 +7,7 @@ import unicodedata
 from typing import Mapping
 
 from energologic.core.model import CanonicalModel, Connection, Element, Endpoint, Terminal
+from energologic.domain import validate_electrical_model
 
 from .contracts import VisioShapeBinding
 from .snapshot import VisioPageSnapshot, VisioShapeSnapshot
@@ -446,6 +447,14 @@ def _render_connections(
 
 
 def build_render_plan(model: CanonicalModel, *, page_name: str) -> VisioRenderPlan:
+    electrical_issues = validate_electrical_model(model)
+    if electrical_issues:
+        issue = electrical_issues[0]
+        raise VisioMappingError(
+            "invalid_electrical_model",
+            f"{issue.code} at {issue.path}: {issue.message}",
+        )
+
     elements = {element.id: element for element in model.elements}
     order = _path_order(model)
     x_mm = 110.0

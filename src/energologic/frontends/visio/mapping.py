@@ -78,7 +78,13 @@ class VisioRenderShape:
 
 @dataclass(frozen=True, slots=True)
 class VisioRenderConnection:
-    endpoints: tuple[Endpoint, Endpoint]
+    """Executable native-glue instruction for the supported Visio slice."""
+
+    source: Endpoint
+    target: Endpoint
+    source_endpoint: str
+    target_connection_row: int
+    target_child_user_nt: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -381,6 +387,62 @@ def _path_order(model: CanonicalModel) -> tuple[str, ...]:
     return tuple(order)
 
 
+def _render_connections(
+    model: CanonicalModel, order: tuple[str, ...]
+) -> tuple[VisioRenderConnection, ...]:
+    elements = {element.id: element for element in model.elements}
+    connections_by_pair: dict[frozenset[str], list[Connection]] = {}
+    for connection in model.connections:
+        pair = frozenset(endpoint.element_id for endpoint in connection.endpoints)
+        connections_by_pair.setdefault(pair, []).append(connection)
+
+    result: list[VisioRenderConnection] = []
+    for upper_id, lower_id in zip(order, order[1:]):
+        matches = connections_by_pair.get(frozenset((upper_id, lower_id)), [])
+        if len(matches) != 1:
+            raise VisioMappingError(
+                "unsupported_slice_topology",
+                (
+                    f"expected exactly one connection between {upper_id} and "
+                    f"{lower_id}, found {len(matches)}"
+                ),
+            )
+        connection = matches[0]
+        endpoints = {endpoint.element_id: endpoint for endpoint in connection.endpoints}
+        source = endpoints[lower_id]
+        target = endpoints[upper_id]
+
+        if source.terminal_id not in {"a", "node"}:
+            raise VisioMappingError(
+                "unsupported_terminal_orientation",
+                (
+                    f"lower element {lower_id} must expose terminal a/node to "
+                    f"Visio BeginX, got {source.terminal_id!r}"
+                ),
+            )
+        if target.terminal_id not in {"b", "node"}:
+            raise VisioMappingError(
+                "unsupported_terminal_orientation",
+                (
+                    f"upper element {upper_id} must expose terminal b/node at "
+                    f"native connection row 2, got {target.terminal_id!r}"
+                ),
+            )
+
+        result.append(
+            VisioRenderConnection(
+                source=source,
+                target=target,
+                source_endpoint="begin",
+                target_connection_row=2,
+                target_child_user_nt=(
+                    1 if elements[upper_id].kind == "bus" else None
+                ),
+            )
+        )
+    return tuple(result)
+
+
 def build_render_plan(model: CanonicalModel, *, page_name: str) -> VisioRenderPlan:
     elements = {element.id: element for element in model.elements}
     order = _path_order(model)
@@ -423,10 +485,7 @@ def build_render_plan(model: CanonicalModel, *, page_name: str) -> VisioRenderPl
             )
         )
 
-    connections = tuple(
-        VisioRenderConnection(endpoints=tuple(sorted(connection.endpoints)))
-        for connection in sorted(model.connections, key=lambda item: item.id)
-    )
+    connections = _render_connections(model, order)
     return VisioRenderPlan(
         page_name=page_name,
         shapes=tuple(shapes),

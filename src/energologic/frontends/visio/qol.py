@@ -69,6 +69,29 @@ class VisioDuplicateExecutionRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class VisioMoveExecutionRequest:
+    """Bounded arguments for the qualified bridge exact-move primitive."""
+
+    tool_name: str
+    shape_ids_json: str
+    dx_mm: float
+    dy_mm: float
+    select_result: bool
+    detach_items_json: str
+    glue_items_json: str
+
+    def arguments(self) -> dict[str, object]:
+        return {
+            "shape_ids_json": self.shape_ids_json,
+            "dx_mm": self.dx_mm,
+            "dy_mm": self.dy_mm,
+            "select_result": self.select_result,
+            "detach_items_json": self.detach_items_json,
+            "glue_items_json": self.glue_items_json,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class DuplicateCellPlan:
     page_name: str
     source_cell: VisioCell
@@ -84,6 +107,28 @@ class DuplicateCellPlan:
     source_endpoint: Literal["begin", "end"]
     new_cell_id: str
     reset_identity: bool = True
+
+    @property
+    def shape_ids(self) -> tuple[int, ...]:
+        return self.source_cell.member_shape_ids
+
+
+@dataclass(frozen=True, slots=True)
+class MoveCellPlan:
+    page_name: str
+    source_cell: VisioCell
+    direction: Literal["left", "right"]
+    pitch_mm: float
+    dx_mm: float
+    dy_mm: float
+    source_bus_terminal_shape_id: int
+    source_bus_terminal_nt: int
+    target_bus_terminal_shape_id: int
+    target_bus_terminal_nt: int
+    source_bus_slot_index: int
+    target_bus_slot_index: int
+    target_connection_row: int
+    source_endpoint: Literal["begin", "end"]
 
     @property
     def shape_ids(self) -> tuple[int, ...]:
@@ -562,4 +607,194 @@ def build_duplicate_execution_request(
         ),
         new_cell_id=plan.new_cell_id,
         identity_reset_required=plan.reset_identity,
+    )
+
+
+def plan_move_cell_to_adjacent_slot(
+    snapshot: VisioPageSnapshot,
+    *,
+    source_seed_shape_id: int,
+    direction: Literal["left", "right"],
+    pitch_mm: float,
+    target_bus_terminal_nt: int | None = None,
+    vertical_margin_mm: float = 10.0,
+    tolerance_mm: float = 0.01,
+) -> MoveCellPlan:
+    """Plan moving an existing cell to the adjacent native bus slot.
+
+    The actual move vector comes from source/target bus-terminal geometry.
+    pitch_mm is an engineering invariant used to verify that the row itself is
+    regular; it is not blindly applied as the movement vector.
+    """
+
+    if direction not in {"left", "right"}:
+        raise VisioQolError(
+            "invalid_direction",
+            f"direction must be 'left' or 'right', got {direction!r}",
+        )
+    pitch = float(pitch_mm)
+    tolerance = float(tolerance_mm)
+    if not math.isfinite(pitch) or pitch <= 0.0:
+        raise VisioQolError("invalid_pitch", "pitch_mm must be a finite positive number")
+    if not math.isfinite(tolerance) or tolerance < 0.0:
+        raise VisioQolError(
+            "invalid_tolerance",
+            "tolerance_mm must be a finite non-negative number",
+        )
+
+    cell = discover_cell(
+        snapshot,
+        seed_shape_id=source_seed_shape_id,
+        pitch_mm=pitch,
+        vertical_margin_mm=vertical_margin_mm,
+    )
+    shapes = _shape_index(snapshot)
+    source_terminal = shapes.get(cell.anchor.bus_terminal_shape_id)
+    if source_terminal is None:
+        raise VisioQolError(
+            "missing_source_bus_terminal",
+            f"source bus terminal {cell.anchor.bus_terminal_shape_id} is missing",
+        )
+
+    source_occupants = _terminal_is_occupied(
+        snapshot,
+        terminal_shape_id=source_terminal.shape_id,
+    )
+    if source_occupants != (cell.seed_shape_id,):
+        raise VisioQolError(
+            "source_bus_terminal_shared",
+            (
+                f"source bus terminal {source_terminal.shape_id} must be connected "
+                f"only to seed shape {cell.seed_shape_id}; got {source_occupants}"
+            ),
+        )
+
+    slot_delta = 1 if direction == "right" else -1
+    target_slot_index = cell.anchor.bus_slot_index + slot_delta
+    target_by_slot = _bus_terminal_by_slot(
+        snapshot,
+        bus_shape_id=cell.anchor.bus_shape_id,
+        slot_index=target_slot_index,
+    )
+    if target_bus_terminal_nt is None:
+        target = target_by_slot
+        target_nt = _user_int(target, "nt")
+    else:
+        target_nt = int(target_bus_terminal_nt)
+        target = _bus_terminal_by_nt(
+            snapshot,
+            bus_shape_id=cell.anchor.bus_shape_id,
+            terminal_nt=target_nt,
+        )
+        if target.shape_id != target_by_slot.shape_id:
+            raise VisioQolError(
+                "bus_terminal_direction_mismatch",
+                (
+                    f"direction {direction!r} from slot {cell.anchor.bus_slot_index} "
+                    f"requires slot {target_slot_index} (shape {target_by_slot.shape_id}), "
+                    f"but User.nt={target_nt} resolves to shape {target.shape_id}"
+                ),
+            )
+
+    occupants = _terminal_is_occupied(snapshot, terminal_shape_id=target.shape_id)
+    if occupants:
+        raise VisioQolError(
+            "target_bus_terminal_occupied",
+            (
+                f"bus terminal shape {target.shape_id} (User.nt={target_nt}) "
+                f"is already connected to shape(s) {occupants}"
+            ),
+        )
+
+    dx = _mm(target.geometry.pin_x) - _mm(source_terminal.geometry.pin_x)
+    dy = _mm(target.geometry.pin_y) - _mm(source_terminal.geometry.pin_y)
+    if abs(abs(dx) - pitch) > tolerance:
+        raise VisioQolError(
+            "bus_pitch_mismatch",
+            (
+                f"native bus slots imply {abs(dx):.6f} mm horizontal pitch, "
+                f"expected {pitch:.6f} mm"
+            ),
+        )
+    expected_sign = 1.0 if direction == "right" else -1.0
+    if dx * expected_sign <= 0.0:
+        raise VisioQolError(
+            "bus_direction_mismatch",
+            (
+                f"target slot {target_slot_index} is not geometrically "
+                f"{direction} of source slot {cell.anchor.bus_slot_index}"
+            ),
+        )
+    if abs(dy) > tolerance:
+        raise VisioQolError(
+            "bus_row_misaligned",
+            (
+                f"source and target bus terminals differ by {dy:.6f} mm vertically; "
+                f"tolerance is {tolerance:.6f} mm"
+            ),
+        )
+
+    return MoveCellPlan(
+        page_name=snapshot.page_name,
+        source_cell=cell,
+        direction=direction,
+        pitch_mm=pitch,
+        dx_mm=dx,
+        dy_mm=dy,
+        source_bus_terminal_shape_id=source_terminal.shape_id,
+        source_bus_terminal_nt=cell.anchor.bus_terminal_nt,
+        target_bus_terminal_shape_id=target.shape_id,
+        target_bus_terminal_nt=target_nt,
+        source_bus_slot_index=cell.anchor.bus_slot_index,
+        target_bus_slot_index=target_slot_index,
+        target_connection_row=cell.anchor.target_connection_row,
+        source_endpoint=cell.anchor.source_endpoint,
+    )
+
+
+def build_move_execution_request(
+    plan: MoveCellPlan,
+    *,
+    select_result: bool = True,
+) -> VisioMoveExecutionRequest:
+    """Translate a validated cell move into the bounded bridge primitive."""
+
+    detach_items = [
+        {
+            "shape_id": plan.source_cell.seed_shape_id,
+            "endpoint": plan.source_endpoint,
+            "expected_target_shape_id": plan.source_bus_terminal_shape_id,
+            "expected_target_connection_row": plan.target_connection_row,
+        }
+    ]
+    glue_items = [
+        {
+            "shape_id": plan.source_cell.seed_shape_id,
+            "endpoint": plan.source_endpoint,
+            "target_shape_id": plan.target_bus_terminal_shape_id,
+            "target_connection_row": plan.target_connection_row,
+        }
+    ]
+    return VisioMoveExecutionRequest(
+        tool_name="move_shapes_exact",
+        shape_ids_json=json.dumps(
+            list(plan.shape_ids),
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        dx_mm=plan.dx_mm,
+        dy_mm=plan.dy_mm,
+        select_result=bool(select_result),
+        detach_items_json=json.dumps(
+            detach_items,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        glue_items_json=json.dumps(
+            glue_items,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
     )

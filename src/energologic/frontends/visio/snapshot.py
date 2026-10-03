@@ -30,6 +30,7 @@ class VisioShapeSnapshot:
     master_name: str
     text: str = ""
     shape_data: Mapping[str, str] = field(default_factory=dict)
+    user_cells: Mapping[str, str] = field(default_factory=dict)
     parent_shape_id: int | None = None
     geometry: VisioGeometry = field(default_factory=VisioGeometry)
     vtd_state: VisioVtdStateSnapshot | None = None

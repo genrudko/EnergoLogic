@@ -256,6 +256,68 @@ class VisioMappingTests(unittest.TestCase):
         self.assertEqual(breaker.attributes["switch_state"], "open")
         self.assertEqual(breaker.attributes["withdrawable_position"], "repair")
 
+        plan = build_render_plan(b, page_name="open-repair")
+        rendered_breaker = next(
+            shape for shape in plan.shapes if shape.kind == "circuit_breaker"
+        )
+        self.assertEqual(
+            rendered_breaker.vtd_state,
+            VisioVtdStateSnapshot(
+                main_action_active=False,
+                cart_position_value=1,
+            ),
+        )
+
+    def test_all_native_cart_positions_round_trip_exactly(self):
+        expected = {
+            0: "working",
+            1: "repair",
+            2: "control",
+        }
+        for native_value, canonical_value in expected.items():
+            with self.subTest(native_value=native_value):
+                original = live_slice()
+                shapes = list(original.shapes)
+                breaker_index = next(
+                    i for i, shape in enumerate(shapes) if shape.shape_id == 66
+                )
+                shapes[breaker_index] = replace(
+                    shapes[breaker_index],
+                    vtd_state=VisioVtdStateSnapshot(
+                        main_action_active=True,
+                        cart_position_value=native_value,
+                    ),
+                )
+                snapshot = replace(original, shapes=tuple(shapes))
+                captured = capture_page_snapshot(
+                    snapshot,
+                    model_id=f"kru35:cart-{native_value}",
+                ).model
+                breaker = next(
+                    element for element in captured.elements
+                    if element.kind == "circuit_breaker"
+                )
+                self.assertEqual(
+                    breaker.attributes["withdrawable_position"],
+                    canonical_value,
+                )
+
+                plan = build_render_plan(
+                    captured,
+                    page_name=f"cart-{native_value}",
+                )
+                rendered = next(
+                    shape for shape in plan.shapes
+                    if shape.kind == "circuit_breaker"
+                )
+                self.assertEqual(
+                    rendered.vtd_state,
+                    VisioVtdStateSnapshot(
+                        main_action_active=True,
+                        cart_position_value=native_value,
+                    ),
+                )
+
     def test_disconnector_native_state_maps_and_round_trips(self):
         snapshot = VisioPageSnapshot(
             page_name="MCP-v2",

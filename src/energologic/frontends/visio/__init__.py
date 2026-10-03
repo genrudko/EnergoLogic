@@ -13,6 +13,7 @@ from .snapshot import (
     VisioGlueSnapshot,
     VisioPageSnapshot,
     VisioShapeSnapshot,
+    VisioVtdStateSnapshot,
 )
 
 __all__ = [
@@ -27,6 +28,7 @@ __all__ = [
     "VisioRenderShape",
     "VisioShapeBinding",
     "VisioShapeSnapshot",
+    "VisioVtdStateSnapshot",
     "build_render_plan",
     "capture_page_snapshot",
 ]

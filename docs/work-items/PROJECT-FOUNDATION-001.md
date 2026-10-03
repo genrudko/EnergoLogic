@@ -1,8 +1,8 @@
 # PROJECT-FOUNDATION-001
 
-Status: Awaiting owner acceptance  
+Status: Accepted and merged  
 Issue: #1  
-Draft PR: #2
+PR: #2
 
 ## Objective
 
@@ -36,7 +36,7 @@ Planner, RZA/protection logic, CIM, pandapower/solver integration, and full Visi
 - [x] Core has no dependency on Visio/COM, LLM SDKs or excluded future stacks.
 - [x] Visio-specific identity remains outside the canonical model.
 - [x] CI gate covers Linux and Windows on Python 3.11 and 3.12.
-- [ ] Owner acceptance.
+- [x] Owner acceptance.
 
 ## Verification commands
 
@@ -91,4 +91,4 @@ The GitHub tree for implementation head was compared against the locally verifie
 
 ## Acceptance state
 
-Implementation and evidence are complete. The Draft PR must remain Draft and unmerged until explicit owner acceptance.
+Owner acceptance was given and PR #2 was merged to `main` as `8de6b8184bc82720e48bc2e71042e0c231c3f985`.

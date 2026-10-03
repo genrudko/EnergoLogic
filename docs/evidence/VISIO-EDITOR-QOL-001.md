@@ -354,3 +354,106 @@ EnergoLogic head `742848bd355f39bef57986f92a73a527ebb1ed23`:
 
 - CI run `37124461821`;
 - conclusion: **success**.
+
+
+## Продолжение квалификации user-context Undo
+
+После VBA/Alt+F8 исследований были проверены дополнительные штатные механизмы Visio и Office.
+
+### Explicit IVBUndoUnit
+
+В отдельной qualification page был создан custom `IVBUndoUnit`, затем выполнен Duplicate:
+
+- до операции: 44 shapes;
+- после операции: 52 shapes;
+- описание Undo unit: `EnergoLogic: Duplicate Cell`.
+
+Однако:
+
+- один физический `Ctrl+Z`: 52 → 52;
+- прямой `Application.Undo()`: 52 → 52.
+
+То есть само наличие external `AddUndoUnit` не делает transaction обычной пользовательской записью Undo для текущего bridge invocation context.
+
+### Classic COM add-in + Ribbon
+
+Был собран минимальный managed classic COM add-in.
+
+Первая версия с самодельными COM interface declarations приводила к падению Visio. После ремонта add-in был переведён на реальные Microsoft interop assemblies:
+
+- `Extensibility.IDTExtensibility2`;
+- `Microsoft.Office.Core.IRibbonExtensibility`.
+
+Manual `Connect=true` после старта Visio стал стабильным. Но startup-load с Ribbon customization в qualification contour оставался небезопасным: Visio завершался/терял live binding, и add-in был полностью удалён из HKCU перед дальнейшей работой.
+
+Вывод: Ribbon startup probe не используется как production direction до отдельной полноценной packaging/runtime qualification.
+
+### CommandBar-only add-in
+
+Создан отдельный add-in:
+
+`EnergoLogic.VisioQolCommandBarAddin`
+
+Отличия:
+
+- отдельный ProgID/CLSID;
+- `LoadBehavior=0`;
+- без `IRibbonExtensibility`;
+- без Ribbon XML;
+- только `IDTExtensibility2`;
+- временная Office CommandBar `EnergoLogic QoL Probe`;
+- кнопка `EnergoLogic Duplicate 40`.
+
+Этот вариант стабильно зарегистрировался и подключился в работающий Visio:
+
+- listed in `COMAddIns`: true;
+- connected: true;
+- command bar present/visible: true;
+- button present/visible: true;
+- Visio не падал.
+
+Вызов штатного `CommandBarButton.Execute()` действительно зашёл в add-in callback и выполнил compound Duplicate:
+
+- 44 → 52 shapes.
+
+Но один физический `Ctrl+Z` после этого снова дал:
+
+- 52 → 52.
+
+Следовательно, программный `Execute()`, хотя callback выполняется внутри add-in, всё ещё инициирован внешним Automation call и не является достаточным user-context доказательством.
+
+### Physical click и reentrancy
+
+Следующая попытка физически кликнуть видимую CommandBar-кнопку мышью была сделана внутри того же synchronous bridge tool.
+
+Результат:
+
+- операция осталась в состоянии `claimed`;
+- Windows node продолжил heartbeat;
+- новый Visio command не может быть обработан;
+- серверный `visio_call` истёк по timeout.
+
+Это квалифицировано как reentrancy-deadlock pattern: нельзя держать активный Automation/COM вызов к Visio и одновременно пытаться породить физическое UI-событие, которое должно войти обратно в тот же Visio.
+
+Такой synchronous physical-click path больше не использовать.
+
+### Async physical UI probe
+
+Bridge managed extension `.73` добавляет bounded detached helpers:
+
+1. bridge выбирает фиксированный source selection и вычисляет координаты только нашей CommandBar-кнопки;
+2. запускает локальный helper с фиксированной задержкой 1 сек;
+3. bridge tool возвращается;
+4. helper физически кликает кнопку после завершения внешнего COM-вызова;
+5. отдельным read-only вызовом проверяется `44 → 52`;
+6. второй detached helper аналогично отправляет один физический `Ctrl+Z` уже после возврата своего COM-вызова;
+7. отдельным чтением проверяется ожидаемое `52 → 44`.
+
+Helpers не принимают произвольные клавиши, команды или координаты от caller; координаты берутся только из фиксированной `EnergoLogic.Duplicate40.UndoProbe` CommandBarButton.
+
+На момент фиксации evidence live async qualification ещё не выполнена: локальный `windows_visio_agent.py` остаётся заблокирован предыдущей synchronous physical-click операцией и требует один restart.
+
+Bridge branch:
+
+- managed extension `2026.10.03.73`;
+- focused unit/contract suite: **39/39 PASS**.

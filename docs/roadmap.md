@@ -20,7 +20,7 @@
 
 - R0: исследование API / bridge / реальной MCP-v2 — **done**;
 - R1: Duplicate Cell Right / Left — **in progress**: pure planner + exact duplicate + Glue + instance identity reset подтверждены; in-Visio one-Undo host и пользовательский command surface ещё нужны;
-- R2: остальные P0 QoL-команды;
+- R2: остальные P0 QoL-команды — **in progress**: exact Move Cell, Auto/Repair Glue и минимальный Scheme Doctor подтверждены; alignment/pitch apply-distribute ещё остаются;
 - R3: P1 cell/model diagnostics;
 - R4: P2 Ribbon/context menu/shortcuts/presets.
 

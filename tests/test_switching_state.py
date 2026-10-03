@@ -4,7 +4,7 @@ from dataclasses import replace
 from pathlib import Path
 import unittest
 
-from energologic.core import CanonicalModel, Element, Terminal, load_model
+from energologic.core import CanonicalModel, Element, Terminal, fingerprint, load_model
 from energologic.domain import (
     SwitchingStateError,
     read_switching_state,
@@ -143,6 +143,10 @@ class SwitchingStateTests(unittest.TestCase):
             ROOT / "examples" / "kru35-v1-cell.switching-state-v1.json"
         )
         self.assertEqual(validate_switching_state_model(model), ())
+        self.assertEqual(
+            fingerprint(model),
+            "a5f5ed2ce70be3063dc8465c6e6b5c23f001f8ab4f6c159a82ca70aa82339373",
+        )
 
     def test_switching_validation_is_input_order_independent(self):
         breaker = switch_element("breaker", switch_state="bad")

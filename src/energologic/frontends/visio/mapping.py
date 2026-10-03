@@ -9,8 +9,12 @@ from typing import Mapping
 from energologic.core.model import CanonicalModel, Connection, Element, Endpoint, Terminal
 from energologic.domain import (
     SWITCHING_KINDS,
+    TRANSFORMER_2W_KIND,
+    VOLTAGE_CLASS_BELOW_3000_V,
+    VoltageSpec,
     read_switching_state,
     validate_switching_state_model,
+    voltage_spec_for_terminal,
 )
 
 from .contracts import VisioShapeBinding
@@ -38,7 +42,12 @@ _VTD_VOLTAGE_V_BY_INDEX: dict[int, int] = {
 _VTD_INDEX_BY_VOLTAGE_V = {
     value: key for key, value in _VTD_VOLTAGE_V_BY_INDEX.items()
 }
-_INDEX_FORMULA = re.compile(r"^INDEX\((\d+),\s*Prop\.u\.Format\)$", re.IGNORECASE)
+_VTD_VOLTAGE_CLASS_BY_INDEX = {
+    16: VOLTAGE_CLASS_BELOW_3000_V,
+}
+_VTD_INDEX_BY_VOLTAGE_CLASS = {
+    value: key for key, value in _VTD_VOLTAGE_CLASS_BY_INDEX.items()
+}
 _CONNECTION_ROW = re.compile(r"^Connections\.(\d+)\.X$", re.IGNORECASE)
 
 
@@ -71,6 +80,11 @@ _MASTER_RULES: dict[str, _MasterRule] = {
         "withdrawable",
     ),
     "ТТ": _MasterRule("current_transformer", "Трансформаторы.vss", ("a", "b")),
+    "ТСН2": _MasterRule(
+        TRANSFORMER_2W_KIND,
+        "Трансформаторы.vss",
+        ("hv", "lv"),
+    ),
     "Связь с объектом2": _MasterRule("external_link", "Линии, заземление.vss", ("node",)),
 }
 
@@ -133,27 +147,118 @@ def _connection_id(first: Endpoint, second: Endpoint) -> str:
     return "connection:" + hashlib.sha256(material.encode("utf-8")).hexdigest()[:16]
 
 
-def _voltage_v(shape: VisioShapeSnapshot) -> int:
-    formula = shape.shape_data.get("u")
+def _shape_data_index(
+    shape: VisioShapeSnapshot, property_name: str
+) -> int:
+    formula = shape.shape_data.get(property_name)
     if formula is None:
         raise VisioMappingError(
-            "missing_voltage",
-            f"shape {shape.shape_id} ({shape.master_name}) has no Prop.u snapshot",
+            "missing_shape_data",
+            (
+                f"shape {shape.shape_id} ({shape.master_name}) has no "
+                f"Prop.{property_name} snapshot"
+            ),
         )
-    match = _INDEX_FORMULA.fullmatch(formula.strip())
+    pattern = re.compile(
+        rf"^INDEX\((\d+),\s*Prop\.{re.escape(property_name)}\.Format\)$",
+        re.IGNORECASE,
+    )
+    match = pattern.fullmatch(formula.strip())
     if match is None:
         raise VisioMappingError(
-            "unsupported_voltage_formula",
-            f"shape {shape.shape_id} has unsupported Prop.u formula {formula!r}",
+            "unsupported_shape_data_formula",
+            (
+                f"shape {shape.shape_id} has unsupported Prop.{property_name} "
+                f"formula {formula!r}"
+            ),
         )
-    index = int(match.group(1))
-    try:
-        return _VTD_VOLTAGE_V_BY_INDEX[index]
-    except KeyError as exc:
+    return int(match.group(1))
+
+
+def _voltage_spec(
+    shape: VisioShapeSnapshot, property_name: str
+) -> VoltageSpec:
+    index = _shape_data_index(shape, property_name)
+    exact = _VTD_VOLTAGE_V_BY_INDEX.get(index)
+    if exact is not None:
+        return VoltageSpec(nominal_voltage_v=exact)
+    voltage_class = _VTD_VOLTAGE_CLASS_BY_INDEX.get(index)
+    if voltage_class is not None:
+        return VoltageSpec(voltage_class=voltage_class)
+    raise VisioMappingError(
+        "unsupported_voltage_class",
+        (
+            f"shape {shape.shape_id} Prop.{property_name} uses unsupported "
+            f"VTD voltage index {index}"
+        ),
+    )
+
+
+def _voltage_v(shape: VisioShapeSnapshot) -> int:
+    spec = _voltage_spec(shape, "u")
+    if spec.nominal_voltage_v is None:
         raise VisioMappingError(
             "unsupported_voltage_class",
-            f"shape {shape.shape_id} uses VTD voltage index {index}",
+            (
+                f"shape {shape.shape_id} requires exact Prop.u voltage for "
+                "this element kind"
+            ),
+        )
+    return spec.nominal_voltage_v
+
+
+def _voltage_spec_attributes(spec: VoltageSpec) -> dict[str, object]:
+    if spec.nominal_voltage_v is not None:
+        return {"nominal_voltage_v": spec.nominal_voltage_v}
+    if spec.voltage_class is not None:
+        return {"voltage_class": spec.voltage_class}
+    raise AssertionError("empty VoltageSpec")
+
+
+_VTD_WINDING_BY_INDEX = {
+    1: "delta",
+    2: "open_delta",
+    3: "three_single_phase",
+    4: "star",
+    5: "star_with_neutral",
+    6: "star_grounded_neutral",
+    7: "zigzag",
+    8: "zigzag_with_neutral",
+}
+_CANONICAL_WINDING_TO_VTD = {
+    value: key for key, value in _VTD_WINDING_BY_INDEX.items()
+}
+
+
+def _winding_connection(
+    shape: VisioShapeSnapshot, property_name: str
+) -> str:
+    index = _shape_data_index(shape, property_name)
+    try:
+        return _VTD_WINDING_BY_INDEX[index]
+    except KeyError as exc:
+        raise VisioMappingError(
+            "unsupported_winding_connection",
+            (
+                f"shape {shape.shape_id} Prop.{property_name} uses unsupported "
+                f"winding index {index}"
+            ),
         ) from exc
+
+
+def _transformer_terminals(shape: VisioShapeSnapshot) -> tuple[Terminal, Terminal]:
+    hv_attributes = {
+        **_voltage_spec_attributes(_voltage_spec(shape, "u")),
+        "winding_connection": _winding_connection(shape, "s1"),
+    }
+    lv_attributes = {
+        **_voltage_spec_attributes(_voltage_spec(shape, "u2")),
+        "winding_connection": _winding_connection(shape, "s2"),
+    }
+    return (
+        Terminal(id="hv", attributes=hv_attributes),
+        Terminal(id="lv", attributes=lv_attributes),
+    )
 
 
 _VTD_CART_TO_CANONICAL = {
@@ -224,6 +329,16 @@ def _element_for_shape(shape: VisioShapeSnapshot) -> Element:
     rule = _shape_rule(shape)
     name = _normalized_text(shape.text)
     element_id = _element_id(rule.kind, name)
+
+    if rule.kind == TRANSFORMER_2W_KIND:
+        return Element(
+            id=element_id,
+            kind=rule.kind,
+            name=name,
+            terminals=_transformer_terminals(shape),
+            attributes={},
+        )
+
     attributes = {"nominal_voltage_v": _voltage_v(shape)}
     attributes.update(_switching_attributes(shape, rule))
     return Element(
@@ -269,17 +384,30 @@ def _endpoint_for_cell(
         return Endpoint(element.id, element.terminals[0].id)
 
     normalized = cell_name.strip()
-    if normalized.casefold() == "beginx":
-        return Endpoint(element.id, "a")
-    if normalized.casefold() == "endx":
-        return Endpoint(element.id, "b")
-    match = _CONNECTION_ROW.fullmatch(normalized)
-    if match:
-        row = int(match.group(1))
-        if row == 1:
+    if element.kind == TRANSFORMER_2W_KIND:
+        if normalized.casefold() == "beginx":
+            return Endpoint(element.id, "hv")
+        if normalized.casefold() == "endx":
+            return Endpoint(element.id, "lv")
+        match = _CONNECTION_ROW.fullmatch(normalized)
+        if match:
+            row = int(match.group(1))
+            if row == 1:
+                return Endpoint(element.id, "hv")
+            if row == 2:
+                return Endpoint(element.id, "lv")
+    else:
+        if normalized.casefold() == "beginx":
             return Endpoint(element.id, "a")
-        if row == 2:
+        if normalized.casefold() == "endx":
             return Endpoint(element.id, "b")
+        match = _CONNECTION_ROW.fullmatch(normalized)
+        if match:
+            row = int(match.group(1))
+            if row == 1:
+                return Endpoint(element.id, "a")
+            if row == 2:
+                return Endpoint(element.id, "b")
     raise VisioMappingError(
         "unsupported_terminal_cell",
         f"cannot map {cell_name!r} on shape {shape.shape_id} to a supported terminal",
@@ -394,6 +522,80 @@ def _voltage_formula(element: Element) -> str:
     return f"INDEX({index},Prop.u.Format)"
 
 
+def _voltage_spec_formula(
+    element: Element,
+    terminal_id: str,
+    property_name: str,
+) -> str:
+    spec = voltage_spec_for_terminal(element, terminal_id)
+    if spec.nominal_voltage_v is not None:
+        try:
+            index = _VTD_INDEX_BY_VOLTAGE_V[spec.nominal_voltage_v]
+        except KeyError as exc:
+            raise VisioMappingError(
+                "unsupported_exact_voltage_projection",
+                (
+                    f"element {element.id} terminal {terminal_id} exact voltage "
+                    f"{spec.nominal_voltage_v} V cannot be represented losslessly "
+                    "by the qualified VTD voltage list"
+                ),
+            ) from exc
+    elif spec.voltage_class is not None:
+        try:
+            index = _VTD_INDEX_BY_VOLTAGE_CLASS[spec.voltage_class]
+        except KeyError as exc:
+            raise VisioMappingError(
+                "unsupported_voltage_class_projection",
+                (
+                    f"element {element.id} terminal {terminal_id} voltage class "
+                    f"{spec.voltage_class!r} has no qualified VTD mapping"
+                ),
+            ) from exc
+    else:
+        raise AssertionError("empty VoltageSpec")
+    return f"INDEX({index},Prop.{property_name}.Format)"
+
+
+def _winding_formula(
+    element: Element,
+    terminal_id: str,
+    property_name: str,
+) -> str:
+    terminal = next(
+        (item for item in element.terminals if item.id == terminal_id),
+        None,
+    )
+    if terminal is None:
+        raise VisioMappingError(
+            "missing_transformer_terminal",
+            f"element {element.id} has no terminal {terminal_id!r}",
+        )
+    value = terminal.attributes.get("winding_connection")
+    try:
+        index = _CANONICAL_WINDING_TO_VTD[value]
+    except (KeyError, TypeError) as exc:
+        raise VisioMappingError(
+            "unsupported_winding_projection",
+            (
+                f"element {element.id} terminal {terminal_id} winding "
+                f"{value!r} has no qualified VTD mapping"
+            ),
+        ) from exc
+    return f"INDEX({index},Prop.{property_name}.Format)"
+
+
+def _transformer_shape_data(element: Element) -> dict[str, str]:
+    return {
+        "u": _voltage_spec_formula(element, "hv", "u"),
+        "u2": _voltage_spec_formula(element, "lv", "u2"),
+        "s1": _winding_formula(element, "hv", "s1"),
+        "s2": _winding_formula(element, "lv", "s2"),
+        # Native projection defaults observed on qualified ТСН2.
+        "p2": "INDEX(1,Prop.p2.Format)",
+        "c": "INDEX(1,Prop.c.Format)",
+    }
+
+
 def _render_rule(element: Element) -> tuple[str, _MasterRule]:
     matches = [
         (master, rule)
@@ -442,6 +644,8 @@ def _render_vtd_state(element: Element) -> VisioVtdStateSnapshot | None:
 
 def _path_order(model: CanonicalModel) -> tuple[str, ...]:
     elements = {element.id: element for element in model.elements}
+    if len(elements) == 1 and not model.connections:
+        return (next(iter(elements)),)
     buses = sorted(element.id for element in model.elements if element.kind == "bus")
     externals = sorted(
         element.id for element in model.elements if element.kind == "external_link"
@@ -577,7 +781,10 @@ def build_render_plan(model: CanonicalModel, *, page_name: str) -> VisioRenderPl
                     f"do not match {rule.terminals!r}"
                 ),
             )
-        shape_data = {"u": _voltage_formula(element)}
+        if element.kind == TRANSFORMER_2W_KIND:
+            shape_data = _transformer_shape_data(element)
+        else:
+            shape_data = {"u": _voltage_formula(element)}
         if element.kind == "bus":
             # Projection defaults only. They define a compact one-point native
             # Шина10 for the vertical-slice rebuild and never enter canonical data.

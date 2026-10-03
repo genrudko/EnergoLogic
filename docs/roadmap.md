@@ -19,7 +19,7 @@
 Порядок:
 
 - R0: исследование API / bridge / реальной MCP-v2 — **done**;
-- R1: Duplicate Cell Right / Left — **in progress**: planner + exact duplicate + Glue + identity reset подтверждены; VBA-host install квалифицирован, но настоящий one-Undo user-context launch ещё остаётся acceptance blocker;
+- R1: Duplicate Cell Right / Left — **in progress**: planner + exact duplicate + Glue + identity reset подтверждены; VBA/ShapeSheet/custom UndoUnit/Ribbon/CommandBar invocation paths исследованы, а последний one-Undo blocker сейчас проверяется через detached physical UI probe после возврата COM-вызова;
 - R2: остальные P0 QoL-команды — **implementation complete / live qualification partial**: Base Point copy/move, Exact Offset, topology-safe Align, native-slot Cell Pitch distribute и Scheme Doctor реализованы; Move Cell/Repair Glue подтверждены live, остальные P0 ещё требуют live acceptance;
 - R3: P1 cell/model diagnostics;
 - R4: P2 Ribbon/context menu/shortcuts/presets.

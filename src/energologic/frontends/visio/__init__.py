@@ -1,4 +1,10 @@
 from .contracts import VisioFrontend, VisioShapeBinding
+from .identity import (
+    CELL_ID_USER_CELL,
+    VisioIdentityError,
+    projection_cell_id,
+    validate_cell_id,
+)
 from .mapping import (
     VisioCaptureResult,
     VisioMappingError,
@@ -29,6 +35,7 @@ from .snapshot import (
 )
 
 __all__ = [
+    "CELL_ID_USER_CELL",
     "DuplicateCellPlan",
     "VisioCaptureResult",
     "VisioCell",
@@ -36,6 +43,7 @@ __all__ = [
     "VisioDuplicateExecutionRequest",
     "VisioFrontend",
     "VisioGeometry",
+    "VisioIdentityError",
     "VisioGlueSnapshot",
     "VisioMappingError",
     "VisioQolError",
@@ -53,4 +61,6 @@ __all__ = [
     "discover_cell_anchor",
     "measure_cell_pitch",
     "plan_duplicate_cell",
+    "projection_cell_id",
+    "validate_cell_id",
 ]

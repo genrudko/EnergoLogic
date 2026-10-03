@@ -19,7 +19,7 @@
 Порядок:
 
 - R0: исследование API / bridge / реальной MCP-v2 — **done**;
-- R1: Duplicate Cell Right / Left — **in progress**: pure planner + exact duplicate + Glue подтверждены; identity reset и in-Visio one-Undo host ещё нужны;
+- R1: Duplicate Cell Right / Left — **in progress**: pure planner + exact duplicate + Glue + instance identity reset подтверждены; in-Visio one-Undo host и пользовательский command surface ещё нужны;
 - R2: остальные P0 QoL-команды;
 - R3: P1 cell/model diagnostics;
 - R4: P2 Ribbon/context menu/shortcuts/presets.

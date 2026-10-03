@@ -6,6 +6,7 @@ import math
 import re
 from typing import Literal
 
+from .identity import VisioIdentityError, validate_cell_id
 from .snapshot import VisioGlueSnapshot, VisioPageSnapshot, VisioShapeSnapshot
 
 
@@ -53,6 +54,7 @@ class VisioDuplicateExecutionRequest:
     dy_mm: float
     select_result: bool
     glue_items_json: str
+    new_cell_id: str
     identity_reset_required: bool
 
     def arguments(self) -> dict[str, object]:
@@ -62,6 +64,7 @@ class VisioDuplicateExecutionRequest:
             "dy_mm": self.dy_mm,
             "select_result": self.select_result,
             "glue_items_json": self.glue_items_json,
+            "new_cell_id": self.new_cell_id,
         }
 
 
@@ -79,6 +82,7 @@ class DuplicateCellPlan:
     target_bus_slot_index: int
     target_connection_row: int
     source_endpoint: Literal["begin", "end"]
+    new_cell_id: str
     reset_identity: bool = True
 
     @property
@@ -438,6 +442,7 @@ def plan_duplicate_cell(
     direction: Literal["left", "right"],
     pitch_mm: float,
     target_bus_terminal_nt: int | None = None,
+    new_cell_id: str,
     vertical_margin_mm: float = 10.0,
 ) -> DuplicateCellPlan:
     """Build a fail-closed, transport-neutral duplicate operation plan."""
@@ -447,6 +452,10 @@ def plan_duplicate_cell(
             "invalid_direction",
             f"direction must be 'left' or 'right', got {direction!r}",
         )
+    try:
+        validated_cell_id = validate_cell_id(new_cell_id)
+    except VisioIdentityError as exc:
+        raise VisioQolError(exc.code, str(exc).split(": ", 1)[-1]) from exc
     cell = discover_cell(
         snapshot,
         seed_shape_id=source_seed_shape_id,
@@ -509,6 +518,7 @@ def plan_duplicate_cell(
         target_bus_slot_index=target_slot_index,
         target_connection_row=cell.anchor.target_connection_row,
         source_endpoint=cell.anchor.source_endpoint,
+        new_cell_id=validated_cell_id,
         reset_identity=True,
     )
 
@@ -550,5 +560,6 @@ def build_duplicate_execution_request(
             sort_keys=True,
             separators=(",", ":"),
         ),
+        new_cell_id=plan.new_cell_id,
         identity_reset_required=plan.reset_identity,
     )

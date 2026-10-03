@@ -181,6 +181,7 @@ class VisioQolTests(unittest.TestCase):
             source_seed_shape_id=66,
             direction="right",
             pitch_mm=40.0,
+            new_cell_id="cell:v2",
         )
         self.assertEqual(plan.shape_ids, (66, 69, 71, 73, 113, 117, 119, 247))
         self.assertEqual(plan.dx_mm, 40.0)
@@ -191,6 +192,7 @@ class VisioQolTests(unittest.TestCase):
         self.assertEqual(plan.target_bus_terminal_nt, 2)
         self.assertEqual(plan.source_endpoint, "begin")
         self.assertEqual(plan.target_connection_row, 2)
+        self.assertEqual(plan.new_cell_id, "cell:v2")
         self.assertTrue(plan.reset_identity)
 
     def test_execution_request_contains_no_hardcoded_runtime_ids(self):
@@ -199,6 +201,7 @@ class VisioQolTests(unittest.TestCase):
             source_seed_shape_id=66,
             direction="right",
             pitch_mm=40.0,
+            new_cell_id="cell:v2",
         )
         request = build_duplicate_execution_request(plan)
         self.assertEqual(request.tool_name, "duplicate_shapes_exact")
@@ -209,6 +212,7 @@ class VisioQolTests(unittest.TestCase):
             request.glue_items_json,
             '[{"endpoint":"begin","source_shape_id":66,"target_connection_row":2,"target_shape_id":105}]',
         )
+        self.assertEqual(request.new_cell_id, "cell:v2")
         self.assertTrue(request.identity_reset_required)
         self.assertEqual(
             request.arguments(),
@@ -218,6 +222,7 @@ class VisioQolTests(unittest.TestCase):
                 "dy_mm": 0.0,
                 "select_result": True,
                 "glue_items_json": request.glue_items_json,
+                "new_cell_id": "cell:v2",
             },
         )
 
@@ -227,6 +232,7 @@ class VisioQolTests(unittest.TestCase):
             source_seed_shape_id=66,
             direction="left",
             pitch_mm=40.0,
+            new_cell_id="cell:v2",
         )
         self.assertEqual(plan.dx_mm, -40.0)
         self.assertEqual(plan.source_bus_slot_index, 2)
@@ -241,6 +247,7 @@ class VisioQolTests(unittest.TestCase):
                 source_seed_shape_id=66,
                 direction="right",
                 pitch_mm=40.0,
+                new_cell_id="cell:v2",
             )
 
     def test_explicit_terminal_must_match_requested_direction(self):
@@ -250,6 +257,7 @@ class VisioQolTests(unittest.TestCase):
                 source_seed_shape_id=66,
                 direction="right",
                 pitch_mm=40.0,
+                new_cell_id="cell:v2",
                 target_bus_terminal_nt=9,
             )
 
@@ -269,6 +277,17 @@ class VisioQolTests(unittest.TestCase):
                 source_seed_shape_id=66,
                 direction="right",
                 pitch_mm=40.0,
+                new_cell_id="cell:v2",
+            )
+
+    def test_duplicate_requires_safe_explicit_new_cell_id(self):
+        with self.assertRaisesRegex(VisioQolError, "invalid_energologic_cell_id"):
+            plan_duplicate_cell(
+                live_qol_snapshot(),
+                source_seed_shape_id=66,
+                direction="right",
+                pitch_mm=40.0,
+                new_cell_id='bad "formula"',
             )
 
     def test_cell_boundary_is_not_silently_assigned(self):

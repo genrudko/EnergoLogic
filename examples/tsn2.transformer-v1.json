@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.1",
+  "model_id": "tsn2:35kv-lv-class",
+  "elements": [
+    {
+      "id": "bus:35kv",
+      "kind": "bus",
+      "name": "35 kV bus",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "transformer:tsn",
+      "kind": "transformer_2w",
+      "name": "ТСН",
+      "terminals": [
+        {
+          "id": "hv",
+          "attributes": {
+            "nominal_voltage_v": 35000,
+            "winding_connection": "delta"
+          }
+        },
+        {
+          "id": "lv",
+          "attributes": {
+            "voltage_class": "below_3000_v",
+            "winding_connection": "star"
+          }
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "id": "external:400v",
+      "kind": "external_link",
+      "name": "0.4 kV load",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 400}
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection:hv",
+      "endpoints": [
+        {"element_id": "bus:35kv", "terminal_id": "node"},
+        {"element_id": "transformer:tsn", "terminal_id": "hv"}
+      ]
+    },
+    {
+      "id": "connection:lv",
+      "endpoints": [
+        {"element_id": "transformer:tsn", "terminal_id": "lv"},
+        {"element_id": "external:400v", "terminal_id": "node"}
+      ]
+    }
+  ]
+}

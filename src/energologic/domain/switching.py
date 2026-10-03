@@ -123,25 +123,63 @@ def validate_switching_state_model(
     for element in model.elements:
         path = _element_path(element.id)
         if element.kind in SWITCHING_KINDS:
-            try:
-                read_switching_state(element)
-            except SwitchingStateError as exc:
-                attribute_name = {
-                    "invalid_switch_state": "switch_state",
-                    "invalid_mounting_type": "mounting_type",
-                    "invalid_withdrawable_position": "withdrawable_position",
-                    "unexpected_withdrawable_position": "withdrawable_position",
-                }.get(exc.code)
-                issue_path = (
-                    f"{path}/attributes/{attribute_name}"
-                    if attribute_name is not None
-                    else f"{path}/attributes"
-                )
+            raw_state = element.attributes.get("switch_state")
+            if not isinstance(raw_state, str) or raw_state not in SWITCH_STATES:
                 issues.append(
                     ValidationIssue(
-                        exc.code,
-                        issue_path,
-                        str(exc).split(": ", 1)[1],
+                        "invalid_switch_state",
+                        f"{path}/attributes/switch_state",
+                        (
+                            f"kind '{element.kind}' requires switch_state in "
+                            f"{sorted(SWITCH_STATES)!r}; got {raw_state!r}"
+                        ),
+                    )
+                )
+
+            raw_mounting = element.attributes.get("mounting_type")
+            mounting_valid = (
+                isinstance(raw_mounting, str)
+                and raw_mounting in MOUNTING_TYPES
+            )
+            if not mounting_valid:
+                issues.append(
+                    ValidationIssue(
+                        "invalid_mounting_type",
+                        f"{path}/attributes/mounting_type",
+                        (
+                            f"kind '{element.kind}' requires mounting_type in "
+                            f"{sorted(MOUNTING_TYPES)!r}; got {raw_mounting!r}"
+                        ),
+                    )
+                )
+
+            raw_position = element.attributes.get("withdrawable_position")
+            if raw_mounting == "withdrawable":
+                if (
+                    not isinstance(raw_position, str)
+                    or raw_position not in WITHDRAWABLE_POSITIONS
+                ):
+                    issues.append(
+                        ValidationIssue(
+                            "invalid_withdrawable_position",
+                            f"{path}/attributes/withdrawable_position",
+                            (
+                                "withdrawable switchgear requires "
+                                "withdrawable_position in "
+                                f"{sorted(WITHDRAWABLE_POSITIONS)!r}; "
+                                f"got {raw_position!r}"
+                            ),
+                        )
+                    )
+            elif raw_mounting == "fixed" and raw_position is not None:
+                issues.append(
+                    ValidationIssue(
+                        "unexpected_withdrawable_position",
+                        f"{path}/attributes/withdrawable_position",
+                        (
+                            "fixed switchgear must not define "
+                            f"withdrawable_position={raw_position!r}"
+                        ),
                     )
                 )
             continue

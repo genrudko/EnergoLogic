@@ -45,7 +45,7 @@ def read_switching_state(element: Element) -> SwitchingState:
         )
 
     raw_state = element.attributes.get("switch_state")
-    if raw_state not in SWITCH_STATES:
+    if not isinstance(raw_state, str) or raw_state not in SWITCH_STATES:
         raise SwitchingStateError(
             "invalid_switch_state",
             (
@@ -55,7 +55,7 @@ def read_switching_state(element: Element) -> SwitchingState:
         )
 
     raw_mounting = element.attributes.get("mounting_type")
-    if raw_mounting not in MOUNTING_TYPES:
+    if not isinstance(raw_mounting, str) or raw_mounting not in MOUNTING_TYPES:
         raise SwitchingStateError(
             "invalid_mounting_type",
             (
@@ -66,7 +66,10 @@ def read_switching_state(element: Element) -> SwitchingState:
 
     raw_position = element.attributes.get("withdrawable_position")
     if raw_mounting == "withdrawable":
-        if raw_position not in WITHDRAWABLE_POSITIONS:
+        if (
+            not isinstance(raw_position, str)
+            or raw_position not in WITHDRAWABLE_POSITIONS
+        ):
             raise SwitchingStateError(
                 "invalid_withdrawable_position",
                 (

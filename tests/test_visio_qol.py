@@ -10,10 +10,12 @@ from energologic.frontends.visio import (
     VisioQolError,
     VisioShapeSnapshot,
     build_duplicate_execution_request,
+    build_move_execution_request,
     discover_cell,
     discover_cell_anchor,
     measure_cell_pitch,
     plan_duplicate_cell,
+    plan_move_cell_to_adjacent_slot,
 )
 
 
@@ -40,6 +42,7 @@ def live_qol_snapshot(*, occupy_right_slot: bool = False) -> VisioPageSnapshot:
             "1",
             user_cells={"nt": "9"},
             parent_shape_id=101,
+            geometry=VisioGeometry(inch(70.0), inch(255.0), 0.0, 0.0),
         ),
         VisioShapeSnapshot(
             103,
@@ -47,6 +50,7 @@ def live_qol_snapshot(*, occupy_right_slot: bool = False) -> VisioPageSnapshot:
             "2",
             user_cells={"nt": "1"},
             parent_shape_id=101,
+            geometry=VisioGeometry(inch(110.0), inch(255.0), 0.0, 0.0),
         ),
         VisioShapeSnapshot(
             105,
@@ -54,6 +58,7 @@ def live_qol_snapshot(*, occupy_right_slot: bool = False) -> VisioPageSnapshot:
             "3",
             user_cells={"nt": "2"},
             parent_shape_id=101,
+            geometry=VisioGeometry(inch(150.0), inch(255.0), 0.0, 0.0),
         ),
         VisioShapeSnapshot(
             66,
@@ -301,6 +306,117 @@ class VisioQolTests(unittest.TestCase):
         snapshot = replace(original, shapes=original.shapes + (boundary,))
         with self.assertRaisesRegex(VisioQolError, "ambiguous_cell_boundary"):
             discover_cell(snapshot, seed_shape_id=66, pitch_mm=40.0)
+
+
+    def test_move_right_uses_native_bus_terminal_geometry(self):
+        plan = plan_move_cell_to_adjacent_slot(
+            live_qol_snapshot(),
+            source_seed_shape_id=66,
+            direction="right",
+            pitch_mm=40.0,
+        )
+        self.assertEqual(
+            plan.shape_ids,
+            (66, 69, 71, 73, 113, 117, 119, 247),
+        )
+        self.assertAlmostEqual(plan.dx_mm, 40.0, places=6)
+        self.assertAlmostEqual(plan.dy_mm, 0.0, places=6)
+        self.assertEqual(plan.source_bus_terminal_shape_id, 103)
+        self.assertEqual(plan.source_bus_terminal_nt, 1)
+        self.assertEqual(plan.target_bus_terminal_shape_id, 105)
+        self.assertEqual(plan.target_bus_terminal_nt, 2)
+        self.assertEqual(plan.source_bus_slot_index, 2)
+        self.assertEqual(plan.target_bus_slot_index, 3)
+        self.assertEqual(plan.source_endpoint, "begin")
+        self.assertEqual(plan.target_connection_row, 2)
+
+    def test_move_execution_request_detaches_and_reglues_same_anchor(self):
+        plan = plan_move_cell_to_adjacent_slot(
+            live_qol_snapshot(),
+            source_seed_shape_id=66,
+            direction="right",
+            pitch_mm=40.0,
+        )
+        request = build_move_execution_request(plan)
+        self.assertEqual(request.tool_name, "move_shapes_exact")
+        self.assertEqual(
+            request.shape_ids_json,
+            "[66,69,71,73,113,117,119,247]",
+        )
+        self.assertAlmostEqual(request.dx_mm, 40.0, places=6)
+        self.assertAlmostEqual(request.dy_mm, 0.0, places=6)
+        self.assertEqual(
+            request.detach_items_json,
+            '[{"endpoint":"begin","expected_target_connection_row":2,'
+            '"expected_target_shape_id":103,"shape_id":66}]',
+        )
+        self.assertEqual(
+            request.glue_items_json,
+            '[{"endpoint":"begin","shape_id":66,'
+            '"target_connection_row":2,"target_shape_id":105}]',
+        )
+        self.assertEqual(
+            request.arguments(),
+            {
+                "shape_ids_json": "[66,69,71,73,113,117,119,247]",
+                "dx_mm": request.dx_mm,
+                "dy_mm": request.dy_mm,
+                "select_result": True,
+                "detach_items_json": request.detach_items_json,
+                "glue_items_json": request.glue_items_json,
+            },
+        )
+
+    def test_move_left_uses_real_slot_order_not_nt_arithmetic(self):
+        plan = plan_move_cell_to_adjacent_slot(
+            live_qol_snapshot(),
+            source_seed_shape_id=66,
+            direction="left",
+            pitch_mm=40.0,
+        )
+        self.assertAlmostEqual(plan.dx_mm, -40.0, places=6)
+        self.assertEqual(plan.target_bus_slot_index, 1)
+        self.assertEqual(plan.target_bus_terminal_shape_id, 112)
+        self.assertEqual(plan.target_bus_terminal_nt, 9)
+
+    def test_move_to_occupied_bus_terminal_fails_closed(self):
+        with self.assertRaisesRegex(
+            VisioQolError,
+            "target_bus_terminal_occupied",
+        ):
+            plan_move_cell_to_adjacent_slot(
+                live_qol_snapshot(occupy_right_slot=True),
+                source_seed_shape_id=66,
+                direction="right",
+                pitch_mm=40.0,
+            )
+
+    def test_move_rejects_bus_geometry_that_breaks_declared_pitch(self):
+        original = live_qol_snapshot()
+        shapes = list(original.shapes)
+        target_index = next(
+            index
+            for index, shape in enumerate(shapes)
+            if shape.shape_id == 105
+        )
+        shapes[target_index] = replace(
+            shapes[target_index],
+            geometry=VisioGeometry(
+                inch(151.0),
+                inch(255.0),
+                0.0,
+                0.0,
+            ),
+        )
+        snapshot = replace(original, shapes=tuple(shapes))
+        with self.assertRaisesRegex(VisioQolError, "bus_pitch_mismatch"):
+            plan_move_cell_to_adjacent_slot(
+                snapshot,
+                source_seed_shape_id=66,
+                direction="right",
+                pitch_mm=40.0,
+            )
+
 
 
 if __name__ == "__main__":

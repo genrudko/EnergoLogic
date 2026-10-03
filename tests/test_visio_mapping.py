@@ -166,6 +166,8 @@ class VisioMappingTests(unittest.TestCase):
             element for element in b.elements if element.kind == "circuit_breaker"
         )
         self.assertEqual(breaker.attributes["nominal_voltage_v"], 60000)
+        with self.assertRaisesRegex(VisioMappingError, "invalid_electrical_model"):
+            build_render_plan(b, page_name="invalid-voltage")
 
     def test_render_plan_round_trip_preserves_fingerprint(self):
         captured = capture_page_snapshot(

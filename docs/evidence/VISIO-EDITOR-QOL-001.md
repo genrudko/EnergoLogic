@@ -241,3 +241,116 @@ Fail-closed условия включают:
 То есть ограничение внешнего Automation path подтверждено уже не только COM/API-командой Undo, но и настоящим клавиатурным Ctrl+Z.
 
 Требование одного пользовательского Undo поэтому остаётся задачей для **in-Visio command host/custom UndoUnit** и не маскируется bridge-эмуляцией.
+
+
+## Остальные P0 planners
+
+После live-квалификации Duplicate/Move/Repair Glue добавлены детерминированные transport-neutral planners.
+
+### Copy with Base Point
+
+Поддерживается инженерный workflow:
+
+`selection + base point + target point → exact dx/dy`.
+
+Защитные правила:
+
+- пустой/дублированный selection запрещён;
+- child shapes нельзя случайно использовать вместо top-level engineering object;
+- selection с внешним native Glue generic Copy не копирует молча — требуется предметный Duplicate Cell / Auto Glue;
+- managed selection с `User.EnergoLogicCellId` требует явный новый `cell_id`;
+- selection с несколькими managed cell identities блокируется.
+
+Исполнение транслируется в уже квалифицированный `duplicate_shapes_exact`.
+
+### Move with Base Point / Exact Offset
+
+Для свободного selection поддержаны:
+
+- base point → target point;
+- прямой `dx_mm/dy_mm` Exact Offset.
+
+Если selection имеет внешний electrical Glue, generic move блокируется и требует cell-aware detach/move/re-glue.
+
+Для подключённых ячеек отдельный `MoveCellPlan` уже квалифицирован live.
+
+### Electrical Align
+
+Добавлен exact alignment по Visio reference point:
+
+- axis X → `PinX`;
+- axis Y → `PinY`;
+- reference shape либо явная engineering coordinate.
+
+Generic Align намеренно отказывается двигать shape, участвующий в native Glue. Для electrical equipment выравнивание должно выполняться через cell/bus-aware операцию, а не косметическим сдвигом.
+
+### Cell Pitch distribute
+
+Добавлен planner распределения выбранных ячеек по native bus slots.
+
+Он:
+
+- использует реальный slot order, а не `User.nt ± 1`;
+- требует существующие native connection points;
+- проверяет, что геометрия bus slots действительно поддерживает заданный pitch;
+- блокирует занятые target slots;
+- строит explicit MoveCell detach/move/re-glue requests;
+- не создаёт фиктивные электрические точки ради красивой геометрии.
+
+Live measure 40 мм уже подтверждён. Live apply/distribute ещё не квалифицирован.
+
+## In-Visio host qualification
+
+На рабочем Microsoft Visio подтверждено:
+
+- `VBAEnabled = true`;
+- macros target document enabled;
+- VBE project доступен;
+- COM Add-ins collection доступна.
+
+Создана отдельная qualification copy:
+
+`KRU-35_normal_scheme_v2_energologic_qol_host_v1.vsdm`.
+
+В неё без изменения VTD stencil projects успешно установлен фиксированный модуль:
+
+`EnergoLogicQolHost`.
+
+Probe `UndoProbeDuplicate40` выполняет native Duplicate + exact Move внутри одного `BeginUndoScope/EndUndoScope`.
+
+### Внешний ExecuteLine всё ещё не является user-context
+
+При запуске VBA через внешний:
+
+`Document.ExecuteLine("EnergoLogicQolHost.UndoProbeDuplicate40")`
+
+операция реально выполнилась:
+
+- shapes before: 44;
+- after VBA duplicate: 52.
+
+Но один физический `Ctrl+Z`, отправленный в корневое окно Visio, оставил:
+
+- before Undo: 52;
+- after Undo: 52.
+
+Следовательно, перенос кода в VBA сам по себе проблему не решает. Критичен именно контекст запуска команды.
+
+### Реальный Visio Macros UI
+
+Добавлен bounded qualification path:
+
+`Alt+F8 → fixed UndoProbeDuplicate40 → Run`.
+
+Инструмент не принимает произвольное имя макроса или произвольные клавиши.
+
+Версии `.36/.37` не дошли до запуска VBA из-за ошибок автоматизированного ввода фиксированного имени макроса. `.38` исправляет ввод прямыми ASCII virtual-key events с учётом Caps Lock и проходит bridge unit/contract tests.
+
+Live qualification `.38` сейчас не завершена: после managed update running Visio add-in перестал публиковать `OpenAI Visio Live Application v4` в ROT. Windows node/agent остаётся online и tool catalog доступен, но любой Visio document call fail-closed с сообщением о missing live publication. Для продолжения требуется восстановить local Visio agent/add-in binding; Visio document restart не является частью planned recovery.
+
+## Текущий CI
+
+EnergoLogic head `742848bd355f39bef57986f92a73a527ebb1ed23`:
+
+- CI run `37124461821`;
+- conclusion: **success**.

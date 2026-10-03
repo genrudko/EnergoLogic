@@ -71,6 +71,22 @@ Do not expand this work item into:
 - CIM;
 - pandapower/power-flow/short-circuit solvers.
 
+## Visio editor QoL rules
+
+For VISIO-EDITOR-QOL-001:
+
+- Treat CELL / EQUIPMENT / TERMINAL / BUS / ANCHOR / CONNECTION as the working vocabulary.
+- Do not use bounding boxes as the sole cell anchor.
+- Geometry may suggest a connection but must never establish electrical truth.
+- Real electrical attachment requires native Glue and/or canonical terminal↔node mapping.
+- Preserve VTD master internals unless a separate normalization work item proves a change necessary.
+- Prefer exact millimetre-based operations over manual nudging.
+- User-facing compound actions should use one Visio Undo scope when the API permits it.
+- A failed compound action must rollback or leave a clearly safe, diagnosable state.
+- Duplicate operations must reset logical/canonical identity instead of cloning physical-object identity.
+- R0 research findings must be verified on the real MCP-v2 page, not inferred only from docs.
+- The first P0 benchmark is Duplicate Cell Right / Left.
+
 ## Evidence discipline
 
 Every work item must record:

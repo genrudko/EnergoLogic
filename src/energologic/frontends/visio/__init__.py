@@ -22,6 +22,7 @@ from .mapping import (
     capture_page_snapshot,
 )
 from .qol import (
+    CellDistributionPlan,
     DuplicateCellPlan,
     MoveCellPlan,
     VisioBasePointPlan,
@@ -35,6 +36,7 @@ from .qol import (
     VisioMoveExecutionRequest,
     VisioQolError,
     build_base_point_copy_execution_request,
+    build_distribution_execution_requests,
     build_base_point_move_execution_request,
     build_duplicate_execution_request,
     build_glue_repair_execution_request,
@@ -44,6 +46,7 @@ from .qol import (
     find_glue_candidates,
     measure_cell_pitch,
     plan_copy_with_base_point,
+    plan_distribute_cells_on_bus,
     plan_duplicate_cell,
     plan_exact_offset,
     plan_move_cell_to_adjacent_slot,
@@ -60,6 +63,7 @@ from .snapshot import (
 
 __all__ = [
     "CELL_ID_USER_CELL",
+    "CellDistributionPlan",
     "DuplicateCellPlan",
     "VisioDoctorIssue",
     "VisioEndpointProbe",
@@ -89,6 +93,7 @@ __all__ = [
     "VisioVtdStateSnapshot",
     "build_base_point_copy_execution_request",
     "build_base_point_move_execution_request",
+    "build_distribution_execution_requests",
     "build_duplicate_execution_request",
     "build_glue_repair_execution_request",
     "build_move_execution_request",
@@ -102,6 +107,7 @@ __all__ = [
     "find_glue_candidates",
     "measure_cell_pitch",
     "plan_copy_with_base_point",
+    "plan_distribute_cells_on_bus",
     "plan_duplicate_cell",
     "plan_exact_offset",
     "plan_move_cell_to_adjacent_slot",

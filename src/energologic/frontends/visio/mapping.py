@@ -7,10 +7,14 @@ import unicodedata
 from typing import Mapping
 
 from energologic.core.model import CanonicalModel, Connection, Element, Endpoint, Terminal
-from energologic.domain import validate_electrical_model
+from energologic.domain import (
+    SWITCHING_KINDS,
+    read_switching_state,
+    validate_switching_state_model,
+)
 
 from .contracts import VisioShapeBinding
-from .snapshot import VisioPageSnapshot, VisioShapeSnapshot
+from .snapshot import VisioPageSnapshot, VisioShapeSnapshot, VisioVtdStateSnapshot
 
 
 _VTD_VOLTAGE_V_BY_INDEX: dict[int, int] = {
@@ -49,12 +53,22 @@ class _MasterRule:
     kind: str
     stencil_name: str
     terminals: tuple[str, ...]
+    mounting_type: str | None = None
 
 
 _MASTER_RULES: dict[str, _MasterRule] = {
     "Шина10": _MasterRule("bus", "Шины.vss", ("node",)),
     "Выкатная тележка выключателя": _MasterRule(
-        "circuit_breaker", "Коммутационные аппараты.vss", ("a", "b")
+        "circuit_breaker",
+        "Коммутационные аппараты.vss",
+        ("a", "b"),
+        "withdrawable",
+    ),
+    "Разъединитель выдвижной": _MasterRule(
+        "disconnector",
+        "Коммутационные аппараты.vss",
+        ("a", "b"),
+        "withdrawable",
     ),
     "ТТ": _MasterRule("current_transformer", "Трансформаторы.vss", ("a", "b")),
     "Связь с объектом2": _MasterRule("external_link", "Линии, заземление.vss", ("node",)),
@@ -77,6 +91,7 @@ class VisioRenderShape:
     shape_data: Mapping[str, str]
     x_mm: float
     y_mm: float
+    vtd_state: VisioVtdStateSnapshot | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,6 +156,60 @@ def _voltage_v(shape: VisioShapeSnapshot) -> int:
         ) from exc
 
 
+_VTD_CART_TO_CANONICAL = {
+    0: "working",
+    1: "repair",
+    2: "control",
+}
+_CANONICAL_CART_TO_VTD = {
+    value: key for key, value in _VTD_CART_TO_CANONICAL.items()
+}
+
+
+def _switching_attributes(
+    shape: VisioShapeSnapshot, rule: _MasterRule
+) -> dict[str, str]:
+    if rule.kind not in SWITCHING_KINDS:
+        return {}
+    if rule.mounting_type != "withdrawable":
+        raise VisioMappingError(
+            "unsupported_switching_master",
+            (
+                f"shape {shape.shape_id} master {shape.master_name!r} has "
+                f"unsupported mounting type {rule.mounting_type!r}"
+            ),
+        )
+    state = shape.vtd_state
+    if state is None:
+        raise VisioMappingError(
+            "missing_vtd_state",
+            f"shape {shape.shape_id} ({shape.master_name}) has no VTD state snapshot",
+        )
+    if not isinstance(state.main_action_active, bool):
+        raise VisioMappingError(
+            "invalid_vtd_switch_state",
+            (
+                f"shape {shape.shape_id} requires boolean native main action state; "
+                f"got {state.main_action_active!r}"
+            ),
+        )
+    try:
+        position = _VTD_CART_TO_CANONICAL[state.cart_position_value]
+    except KeyError as exc:
+        raise VisioMappingError(
+            "invalid_vtd_cart_position",
+            (
+                f"shape {shape.shape_id} requires native cart position 0/1/2; "
+                f"got {state.cart_position_value!r}"
+            ),
+        ) from exc
+    return {
+        "switch_state": "closed" if state.main_action_active else "open",
+        "mounting_type": "withdrawable",
+        "withdrawable_position": position,
+    }
+
+
 def _shape_rule(shape: VisioShapeSnapshot) -> _MasterRule:
     try:
         return _MASTER_RULES[shape.master_name]
@@ -155,12 +224,14 @@ def _element_for_shape(shape: VisioShapeSnapshot) -> Element:
     rule = _shape_rule(shape)
     name = _normalized_text(shape.text)
     element_id = _element_id(rule.kind, name)
+    attributes = {"nominal_voltage_v": _voltage_v(shape)}
+    attributes.update(_switching_attributes(shape, rule))
     return Element(
         id=element_id,
         kind=rule.kind,
         name=name,
         terminals=tuple(Terminal(id=terminal_id) for terminal_id in rule.terminals),
-        attributes={"nominal_voltage_v": _voltage_v(shape)},
+        attributes=attributes,
     )
 
 
@@ -328,6 +399,10 @@ def _render_rule(element: Element) -> tuple[str, _MasterRule]:
         (master, rule)
         for master, rule in _MASTER_RULES.items()
         if rule.kind == element.kind
+        and (
+            rule.mounting_type is None
+            or element.attributes.get("mounting_type") == rule.mounting_type
+        )
     ]
     if len(matches) != 1:
         raise VisioMappingError(
@@ -335,6 +410,34 @@ def _render_rule(element: Element) -> tuple[str, _MasterRule]:
             f"element {element.id} kind {element.kind!r} has no unique Visio master",
         )
     return matches[0]
+
+
+def _render_vtd_state(element: Element) -> VisioVtdStateSnapshot | None:
+    if element.kind not in SWITCHING_KINDS:
+        return None
+    state = read_switching_state(element)
+    if state.mounting_type != "withdrawable":
+        raise VisioMappingError(
+            "unsupported_switching_projection",
+            (
+                f"element {element.id} uses mounting_type={state.mounting_type!r}; "
+                "qualified Visio masters are withdrawable"
+            ),
+        )
+    try:
+        cart_position = _CANONICAL_CART_TO_VTD[state.withdrawable_position]
+    except KeyError as exc:
+        raise VisioMappingError(
+            "unsupported_withdrawable_position",
+            (
+                f"element {element.id} has unsupported withdrawable position "
+                f"{state.withdrawable_position!r}"
+            ),
+        ) from exc
+    return VisioVtdStateSnapshot(
+        main_action_active=state.switch_state == "closed",
+        cart_position_value=cart_position,
+    )
 
 
 def _path_order(model: CanonicalModel) -> tuple[str, ...]:
@@ -447,11 +550,11 @@ def _render_connections(
 
 
 def build_render_plan(model: CanonicalModel, *, page_name: str) -> VisioRenderPlan:
-    electrical_issues = validate_electrical_model(model)
-    if electrical_issues:
-        issue = electrical_issues[0]
+    switching_issues = validate_switching_state_model(model)
+    if switching_issues:
+        issue = switching_issues[0]
         raise VisioMappingError(
-            "invalid_electrical_model",
+            "invalid_switching_state_model",
             f"{issue.code} at {issue.path}: {issue.message}",
         )
 
@@ -493,6 +596,7 @@ def build_render_plan(model: CanonicalModel, *, page_name: str) -> VisioRenderPl
                 shape_data=shape_data,
                 x_mm=x_mm,
                 y_mm=top_y_mm - position * step_mm,
+                vtd_state=_render_vtd_state(element),
             )
         )
 

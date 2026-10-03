@@ -16,15 +16,19 @@ from .mapping import (
 )
 from .qol import (
     DuplicateCellPlan,
+    MoveCellPlan,
     VisioCell,
     VisioCellAnchor,
     VisioDuplicateExecutionRequest,
+    VisioMoveExecutionRequest,
     VisioQolError,
     build_duplicate_execution_request,
+    build_move_execution_request,
     discover_cell,
     discover_cell_anchor,
     measure_cell_pitch,
     plan_duplicate_cell,
+    plan_move_cell_to_adjacent_slot,
 )
 from .snapshot import (
     VisioGeometry,
@@ -37,10 +41,12 @@ from .snapshot import (
 __all__ = [
     "CELL_ID_USER_CELL",
     "DuplicateCellPlan",
+    "MoveCellPlan",
     "VisioCaptureResult",
     "VisioCell",
     "VisioCellAnchor",
     "VisioDuplicateExecutionRequest",
+    "VisioMoveExecutionRequest",
     "VisioFrontend",
     "VisioGeometry",
     "VisioIdentityError",
@@ -55,12 +61,14 @@ __all__ = [
     "VisioShapeSnapshot",
     "VisioVtdStateSnapshot",
     "build_duplicate_execution_request",
+    "build_move_execution_request",
     "build_render_plan",
     "capture_page_snapshot",
     "discover_cell",
     "discover_cell_anchor",
     "measure_cell_pitch",
     "plan_duplicate_cell",
+    "plan_move_cell_to_adjacent_slot",
     "projection_cell_id",
     "validate_cell_id",
 ]

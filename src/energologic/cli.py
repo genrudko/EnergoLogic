@@ -13,6 +13,10 @@ from .core import (
     load_model,
     validate_model,
 )
+from .domain import ELECTRICAL_V1_NAME, validate_electrical_model
+
+
+STRUCTURAL_PROFILE = "structural"
 
 
 def _write_bytes(data: bytes, *, error: bool = False) -> None:
@@ -28,7 +32,7 @@ def _write_json(data: object, *, error: bool = False) -> None:
     _write_bytes(payload, error=error)
 
 
-def _load_valid(path: Path):
+def _load_valid(path: Path, *, profile: str = STRUCTURAL_PROFILE):
     try:
         model = load_model(path)
     except (OSError, ModelDecodeError) as exc:
@@ -39,7 +43,13 @@ def _load_valid(path: Path):
         _write_json({"valid": False, "issues": [issue]}, error=True)
         return None, 2
 
-    issues = validate_model(model)
+    if profile == STRUCTURAL_PROFILE:
+        issues = validate_model(model)
+    elif profile == ELECTRICAL_V1_NAME:
+        issues = validate_electrical_model(model)
+    else:
+        raise AssertionError(f"unhandled validation profile: {profile}")
+
     if issues:
         _write_json(
             {
@@ -59,7 +69,15 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="energologic")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    for name in ("validate", "canonicalize", "fingerprint"):
+    validate = subparsers.add_parser("validate")
+    validate.add_argument("path", type=Path)
+    validate.add_argument(
+        "--profile",
+        choices=(STRUCTURAL_PROFILE, ELECTRICAL_V1_NAME),
+        default=STRUCTURAL_PROFILE,
+    )
+
+    for name in ("canonicalize", "fingerprint"):
         command = subparsers.add_parser(name)
         command.add_argument("path", type=Path)
 
@@ -68,18 +86,20 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    model, status = _load_valid(args.path)
+    profile = getattr(args, "profile", STRUCTURAL_PROFILE)
+    model, status = _load_valid(args.path, profile=profile)
     if model is None:
         return status
 
     if args.command == "validate":
-        _write_json(
-            {
-                "valid": True,
-                "schema_version": model.schema_version,
-                "model_id": model.model_id,
-            }
-        )
+        payload = {
+            "valid": True,
+            "schema_version": model.schema_version,
+            "model_id": model.model_id,
+        }
+        if profile != STRUCTURAL_PROFILE:
+            payload["profile"] = profile
+        _write_json(payload)
         return 0
 
     if args.command == "canonicalize":

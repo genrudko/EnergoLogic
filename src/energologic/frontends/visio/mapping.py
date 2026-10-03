@@ -7,30 +7,33 @@ import unicodedata
 from typing import Mapping
 
 from energologic.core.model import CanonicalModel, Connection, Element, Endpoint, Terminal
+from energologic.domain import validate_electrical_model
 
 from .contracts import VisioShapeBinding
 from .snapshot import VisioPageSnapshot, VisioShapeSnapshot
 
 
-_VTD_VOLTAGE_BY_INDEX: dict[int, int] = {
-    0: 1150,
-    1: 800,
-    2: 750,
-    3: 500,
-    4: 400,
-    5: 330,
-    6: 220,
-    7: 150,
-    8: 110,
-    9: 60,
-    10: 35,
-    11: 20,
-    12: 15,
-    13: 10,
-    14: 6,
-    15: 3,
+_VTD_VOLTAGE_V_BY_INDEX: dict[int, int] = {
+    0: 1_150_000,
+    1: 800_000,
+    2: 750_000,
+    3: 500_000,
+    4: 400_000,
+    5: 330_000,
+    6: 220_000,
+    7: 150_000,
+    8: 110_000,
+    9: 60_000,
+    10: 35_000,
+    11: 20_000,
+    12: 15_000,
+    13: 10_000,
+    14: 6_000,
+    15: 3_000,
 }
-_VTD_INDEX_BY_VOLTAGE = {value: key for key, value in _VTD_VOLTAGE_BY_INDEX.items()}
+_VTD_INDEX_BY_VOLTAGE_V = {
+    value: key for key, value in _VTD_VOLTAGE_V_BY_INDEX.items()
+}
 _INDEX_FORMULA = re.compile(r"^INDEX\((\d+),\s*Prop\.u\.Format\)$", re.IGNORECASE)
 _CONNECTION_ROW = re.compile(r"^Connections\.(\d+)\.X$", re.IGNORECASE)
 
@@ -115,7 +118,7 @@ def _connection_id(first: Endpoint, second: Endpoint) -> str:
     return "connection:" + hashlib.sha256(material.encode("utf-8")).hexdigest()[:16]
 
 
-def _voltage_kv(shape: VisioShapeSnapshot) -> int:
+def _voltage_v(shape: VisioShapeSnapshot) -> int:
     formula = shape.shape_data.get("u")
     if formula is None:
         raise VisioMappingError(
@@ -130,7 +133,7 @@ def _voltage_kv(shape: VisioShapeSnapshot) -> int:
         )
     index = int(match.group(1))
     try:
-        return _VTD_VOLTAGE_BY_INDEX[index]
+        return _VTD_VOLTAGE_V_BY_INDEX[index]
     except KeyError as exc:
         raise VisioMappingError(
             "unsupported_voltage_class",
@@ -157,7 +160,7 @@ def _element_for_shape(shape: VisioShapeSnapshot) -> Element:
         kind=rule.kind,
         name=name,
         terminals=tuple(Terminal(id=terminal_id) for terminal_id in rule.terminals),
-        attributes={"nominal_voltage_kv": _voltage_kv(shape)},
+        attributes={"nominal_voltage_v": _voltage_v(shape)},
     )
 
 
@@ -301,17 +304,17 @@ def capture_page_snapshot(
 
 
 def _voltage_formula(element: Element) -> str:
-    value = element.attributes.get("nominal_voltage_kv")
+    value = element.attributes.get("nominal_voltage_v")
     if not isinstance(value, int) or isinstance(value, bool):
         raise VisioMappingError(
             "missing_nominal_voltage",
             (
-                f"element {element.id} needs integer nominal_voltage_kv "
+                f"element {element.id} needs integer nominal_voltage_v "
                 "for Visio projection"
             ),
         )
     try:
-        index = _VTD_INDEX_BY_VOLTAGE[value]
+        index = _VTD_INDEX_BY_VOLTAGE_V[value]
     except KeyError as exc:
         raise VisioMappingError(
             "unsupported_nominal_voltage",
@@ -444,6 +447,14 @@ def _render_connections(
 
 
 def build_render_plan(model: CanonicalModel, *, page_name: str) -> VisioRenderPlan:
+    electrical_issues = validate_electrical_model(model)
+    if electrical_issues:
+        issue = electrical_issues[0]
+        raise VisioMappingError(
+            "invalid_electrical_model",
+            f"{issue.code} at {issue.path}: {issue.message}",
+        )
+
     elements = {element.id: element for element in model.elements}
     order = _path_order(model)
     x_mm = 110.0

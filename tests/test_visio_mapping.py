@@ -4,6 +4,7 @@ from dataclasses import replace
 import unittest
 
 from energologic.core import fingerprint
+from energologic.domain import validate_electrical_model
 from energologic.frontends.visio import (
     VisioGeometry,
     VisioGlueSnapshot,
@@ -121,9 +122,13 @@ class VisioMappingTests(unittest.TestCase):
         )
         self.assertTrue(
             all(
-                element.attributes["nominal_voltage_kv"] == 35
+                element.attributes["nominal_voltage_v"] == 35000
                 for element in result.model.elements
             )
+        )
+        self.assertEqual(
+            fingerprint(result.model),
+            "364a379c2756d7801090d7602dc2f1ddadca3203069b779a248e3ed7652e053b",
         )
 
     def test_geometry_changes_do_not_change_canonical_fingerprint(self):
@@ -164,12 +169,15 @@ class VisioMappingTests(unittest.TestCase):
         breaker = next(
             element for element in b.elements if element.kind == "circuit_breaker"
         )
-        self.assertEqual(breaker.attributes["nominal_voltage_kv"], 60)
+        self.assertEqual(breaker.attributes["nominal_voltage_v"], 60000)
+        with self.assertRaisesRegex(VisioMappingError, "invalid_electrical_model"):
+            build_render_plan(b, page_name="invalid-voltage")
 
     def test_render_plan_round_trip_preserves_fingerprint(self):
         captured = capture_page_snapshot(
             live_slice(), model_id="kru35:v1-cell"
         ).model
+        self.assertEqual(validate_electrical_model(captured), ())
         plan = build_render_plan(captured, page_name="EnergoLogic-V1")
         ordered = sorted(plan.shapes, key=lambda shape: -shape.y_mm)
         self.assertEqual(

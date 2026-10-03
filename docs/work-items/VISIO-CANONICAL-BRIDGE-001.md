@@ -1,6 +1,6 @@
 # VISIO-CANONICAL-BRIDGE-001
 
-Status: Awaiting owner acceptance  
+Status: Owner accepted — awaiting explicit merge command  
 Issue: #3  
 Draft PR: #4
 
@@ -158,5 +158,11 @@ The subsequent evidence-only documentation commit does not change runtime behavi
 - [x] Reference page proven unchanged by PNG hash.
 - [x] Live source/rebuild canonical fingerprints identical.
 - [x] Code candidate CI green on Linux/Windows × Python 3.11/3.12.
-- [ ] Owner acceptance.
+- [x] Owner acceptance.
 - [x] No merge without explicit owner command.
+
+
+## Owner acceptance
+
+Owner accepted the qualified work item on 2026-10-03 by instructing to continue work.
+PR #4 intentionally remains Draft and unmerged until an explicit merge command.

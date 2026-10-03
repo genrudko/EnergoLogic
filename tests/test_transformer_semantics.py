@@ -212,6 +212,41 @@ class TransformerSemanticsTests(unittest.TestCase):
             {issue.code for issue in validate_electrical_model(model)},
         )
 
+    def test_transformer_rejects_definitely_reversed_hv_lv(self):
+        tx = transformer(
+            hv_attributes={
+                "nominal_voltage_v": 400,
+                "winding_connection": "delta",
+            },
+            lv_attributes={
+                "nominal_voltage_v": 35000,
+                "winding_connection": "star",
+            },
+        )
+        model = CanonicalModel("0.1", "test:reversed-transformer", (tx,), ())
+        issues = validate_electrical_model(model)
+        self.assertIn(
+            "invalid_transformer_voltage_order",
+            {issue.code for issue in issues},
+        )
+
+    def test_below_3kv_hv_is_rejected_against_35kv_lv(self):
+        tx = transformer(
+            hv_attributes={
+                "voltage_class": VOLTAGE_CLASS_BELOW_3000_V,
+                "winding_connection": "delta",
+            },
+            lv_attributes={
+                "nominal_voltage_v": 35000,
+                "winding_connection": "star",
+            },
+        )
+        model = CanonicalModel("0.1", "test:reversed-class", (tx,), ())
+        self.assertIn(
+            "invalid_transformer_voltage_order",
+            {issue.code for issue in validate_electrical_model(model)},
+        )
+
     def test_transformer_rejects_element_level_voltage_to_avoid_ambiguity(self):
         tx = replace(
             transformer(),

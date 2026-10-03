@@ -234,15 +234,15 @@ def voltage_spec_for_terminal(
         raise ValueError(f"unsupported element kind: {element.kind}")
 
     if spec.voltage_scope == "element":
-        voltage, issues = _read_voltage_spec(
-            element.attributes,
-            path=f"{_element_path(element.id)}/attributes",
-            missing_code="missing_nominal_voltage",
-            invalid_voltage_code="invalid_nominal_voltage",
-            invalid_class_code="invalid_voltage_class",
-            ambiguous_code="ambiguous_voltage_spec",
-            missing_message="electrical-v1 requires canonical nominal_voltage_v or voltage_class",
-        )
+        raw_voltage = element.attributes.get("nominal_voltage_v")
+        voltage_v = _nominal_voltage_v(raw_voltage)
+        if voltage_v is None:
+            raise ValueError(
+                "element-scoped electrical equipment requires a positive integer "
+                "nominal_voltage_v"
+            )
+        voltage = VoltageSpec(nominal_voltage_v=voltage_v)
+        issues: tuple[ValidationIssue, ...] = ()
     elif spec.voltage_scope == "terminal":
         terminal = next(
             (item for item in element.terminals if item.id == terminal_id),
@@ -353,22 +353,47 @@ def validate_electrical_model(
             )
 
         if spec.voltage_scope == "element":
-            voltage, voltage_issues = _read_voltage_spec(
-                element.attributes,
-                path=f"{path}/attributes",
-                missing_code="missing_nominal_voltage",
-                invalid_voltage_code="invalid_nominal_voltage",
-                invalid_class_code="invalid_voltage_class",
-                ambiguous_code="ambiguous_voltage_spec",
-                missing_message=(
-                    "electrical-v1 requires canonical nominal_voltage_v "
-                    "or voltage_class"
-                ),
-            )
-            issues.extend(voltage_issues)
-            if voltage is not None:
-                for terminal in element.terminals:
-                    voltage_by_endpoint[Endpoint(element.id, terminal.id)] = voltage
+            if "voltage_class" in element.attributes:
+                issues.append(
+                    ValidationIssue(
+                        "unexpected_element_voltage_class",
+                        f"{path}/attributes/voltage_class",
+                        (
+                            f"kind '{element.kind}' requires exact "
+                            "nominal_voltage_v; voltage_class is reserved for "
+                            "qualified terminal-scoped semantics"
+                        ),
+                    )
+                )
+
+            if "nominal_voltage_v" not in element.attributes:
+                issues.append(
+                    ValidationIssue(
+                        "missing_nominal_voltage",
+                        f"{path}/attributes/nominal_voltage_v",
+                        "electrical-v1 requires canonical nominal_voltage_v",
+                    )
+                )
+                continue
+
+            raw_voltage = element.attributes["nominal_voltage_v"]
+            voltage_v = _nominal_voltage_v(raw_voltage)
+            if voltage_v is None:
+                issues.append(
+                    ValidationIssue(
+                        "invalid_nominal_voltage",
+                        f"{path}/attributes/nominal_voltage_v",
+                        (
+                            "nominal_voltage_v must be a positive integer "
+                            "number of volts"
+                        ),
+                    )
+                )
+                continue
+
+            voltage = VoltageSpec(nominal_voltage_v=voltage_v)
+            for terminal in element.terminals:
+                voltage_by_endpoint[Endpoint(element.id, terminal.id)] = voltage
             continue
 
         if spec.voltage_scope != "terminal":

@@ -8,6 +8,16 @@ from .mapping import (
     build_render_plan,
     capture_page_snapshot,
 )
+from .qol import (
+    DuplicateCellPlan,
+    VisioCell,
+    VisioCellAnchor,
+    VisioQolError,
+    discover_cell,
+    discover_cell_anchor,
+    measure_cell_pitch,
+    plan_duplicate_cell,
+)
 from .snapshot import (
     VisioGeometry,
     VisioGlueSnapshot,
@@ -17,11 +27,15 @@ from .snapshot import (
 )
 
 __all__ = [
+    "DuplicateCellPlan",
     "VisioCaptureResult",
+    "VisioCell",
+    "VisioCellAnchor",
     "VisioFrontend",
     "VisioGeometry",
     "VisioGlueSnapshot",
     "VisioMappingError",
+    "VisioQolError",
     "VisioPageSnapshot",
     "VisioRenderConnection",
     "VisioRenderPlan",
@@ -31,4 +45,8 @@ __all__ = [
     "VisioVtdStateSnapshot",
     "build_render_plan",
     "capture_page_snapshot",
+    "discover_cell",
+    "discover_cell_anchor",
+    "measure_cell_pitch",
+    "plan_duplicate_cell",
 ]

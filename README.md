@@ -2,7 +2,7 @@
 
 EnergoLogic — инженерная платформа, в которой **каноническая электрическая модель является источником истины**, а пользовательские интерфейсы являются проекциями и адаптерами этой модели.
 
-Текущий этап: `TRANSFORMER-SEMANTICS-001`.
+Текущий этап: `VISIO-EDITOR-QOL-001`.
 
 ## Базовые архитектурные инварианты
 
@@ -124,6 +124,18 @@ docs/architecture/             ADRs
 docs/work-items/               work-item evidence
 tests/                         acceptance/regression tests
 ```
+
+## EnergoLogic Visio UX
+
+Текущий work item `VISIO-EDITOR-QOL-001` не меняет источник истины: Visio остаётся frontend'ом.
+
+Цель — убрать ручную CAD-подобную рутину поверх Visio. Первый benchmark:
+
+`Duplicate Cell Right / Left`
+
+с точным pitch, сохранением внутренних Glue, автоматическим подключением к шине, новой identity и одним Undo.
+
+План и приоритеты: `docs/roadmap.md`.
 
 ## Текущая граница
 

@@ -46,6 +46,38 @@ class CliProfileTests(unittest.TestCase):
         self.assertIn("unsupported_element_kind", codes)
         self.assertIn("missing_nominal_voltage", codes)
 
+    def test_switching_profile_accepts_stateful_kru35_slice(self):
+        result = self._run(
+            "validate",
+            "examples/kru35-v1-cell.switching-state-v1.json",
+            "--profile",
+            "switching-state-v1",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            json.loads(result.stdout),
+            {
+                "valid": True,
+                "schema_version": "0.1",
+                "model_id": "kru35:v1-cell-switching",
+                "profile": "switching-state-v1",
+            },
+        )
+
+    def test_switching_profile_rejects_state_less_breaker(self):
+        result = self._run(
+            "validate",
+            "examples/kru35-v1-cell.electrical-v1.json",
+            "--profile",
+            "switching-state-v1",
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stderr)
+        self.assertFalse(payload["valid"])
+        codes = {issue["code"] for issue in payload["issues"]}
+        self.assertIn("invalid_switch_state", codes)
+        self.assertIn("invalid_mounting_type", codes)
+
     def test_electrical_profile_accepts_kru35_slice(self):
         result = self._run(
             "validate",

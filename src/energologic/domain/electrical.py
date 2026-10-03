@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import math
+from types import MappingProxyType
 from typing import Mapping
 
 from energologic.core.model import CanonicalModel, Endpoint
@@ -26,28 +26,30 @@ class ElectricalProfile:
 
 ELECTRICAL_V1 = ElectricalProfile(
     name=ELECTRICAL_V1_NAME,
-    specs={
-        "bus": ElectricalElementSpec(
-            kind="bus",
-            terminals=("node",),
-            max_terminal_degree={"node": None},
-        ),
-        "circuit_breaker": ElectricalElementSpec(
-            kind="circuit_breaker",
-            terminals=("a", "b"),
-            max_terminal_degree={"a": 1, "b": 1},
-        ),
-        "current_transformer": ElectricalElementSpec(
-            kind="current_transformer",
-            terminals=("a", "b"),
-            max_terminal_degree={"a": 1, "b": 1},
-        ),
-        "external_link": ElectricalElementSpec(
-            kind="external_link",
-            terminals=("node",),
-            max_terminal_degree={"node": 1},
-        ),
-    },
+    specs=MappingProxyType(
+        {
+            "bus": ElectricalElementSpec(
+                kind="bus",
+                terminals=("node",),
+                max_terminal_degree=MappingProxyType({"node": None}),
+            ),
+            "circuit_breaker": ElectricalElementSpec(
+                kind="circuit_breaker",
+                terminals=("a", "b"),
+                max_terminal_degree=MappingProxyType({"a": 1, "b": 1}),
+            ),
+            "current_transformer": ElectricalElementSpec(
+                kind="current_transformer",
+                terminals=("a", "b"),
+                max_terminal_degree=MappingProxyType({"a": 1, "b": 1}),
+            ),
+            "external_link": ElectricalElementSpec(
+                kind="external_link",
+                terminals=("node",),
+                max_terminal_degree=MappingProxyType({"node": 1}),
+            ),
+        }
+    ),
 )
 
 

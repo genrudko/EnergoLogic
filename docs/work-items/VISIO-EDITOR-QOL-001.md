@@ -74,15 +74,16 @@ VTD masters массово не переписываются. Сначала ada
 10. выделить новую ячейку;
 11. откатываться одним Undo.
 
-### R2 — остальные P0
+### R2 — остальные P0 — In progress
 
 - Copy with Base Point;
-- Move with Base Point;
-- Exact Offset в мм;
-- Auto Glue to Bus;
-- Repair Glue: Find → Preview → Fix;
+- [x] Move with Base Point / Move Cell to adjacent native slot;
+- [x] Exact Offset в мм — bridge primitive + deterministic verification;
+- [x] Auto Glue to Bus для квалифицированного cell anchor;
+- [x] Repair Glue: Find → Preview → Fix — pure planner + live repair;
 - Electrical Align;
-- Cell Pitch: measure / set / distribute.
+- Cell Pitch: measure / set / distribute — measure already implemented;
+- [x] минимальный Scheme Doctor для Glue/pitch/identity structural checks.
 
 ### R3 — P1
 
@@ -169,4 +170,7 @@ Merge и Ready for Review — только по явной команде вла
 - pure CELL/ANCHOR/Duplicate plan — реализован и покрыт тестами;
 - instance-only identity reset через `User.EnergoLogicCellId` — реализован и подтверждён live;
 - пользовательский Renumber Cell — ещё не реализован;
-- один пользовательский Ctrl+Z — требует in-Visio host/custom UndoUnit; внешний bridge этого не обеспечивает.
+- Move Cell Right + exact detach/re-glue — подтверждён live;
+- Repair Glue на визуально совпадающем, но electrically disconnected endpoint — подтверждён live;
+- минимальный Scheme Doctor — реализован;
+- один пользовательский Ctrl+Z — требует in-Visio host/custom UndoUnit; внешний bridge этого не обеспечивает даже при реальной отправке Ctrl+Z.

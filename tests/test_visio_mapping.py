@@ -4,13 +4,14 @@ from dataclasses import replace
 import unittest
 
 from energologic.core import fingerprint
-from energologic.domain import validate_electrical_model
+from energologic.domain import validate_switching_state_model
 from energologic.frontends.visio import (
     VisioGeometry,
     VisioGlueSnapshot,
     VisioMappingError,
     VisioPageSnapshot,
     VisioShapeSnapshot,
+    VisioVtdStateSnapshot,
     build_render_plan,
     capture_page_snapshot,
 )
@@ -43,6 +44,10 @@ def live_slice() -> VisioPageSnapshot:
                 "В-1-35",
                 {"u": U35},
                 geometry=VisioGeometry(4.3307, 9.4341, 1.1516, 0.0),
+                vtd_state=VisioVtdStateSnapshot(
+                    main_action_active=True,
+                    cart_position_value=0,
+                ),
             ),
             VisioShapeSnapshot(
                 69,
@@ -90,6 +95,7 @@ def snapshot_from_plan(plan) -> VisioPageSnapshot:
             geometry=VisioGeometry(
                 shape.x_mm / 25.4, shape.y_mm / 25.4, 0.123, 0.456
             ),
+            vtd_state=shape.vtd_state,
         )
         for shape in ordered
     )
@@ -126,10 +132,13 @@ class VisioMappingTests(unittest.TestCase):
                 for element in result.model.elements
             )
         )
-        self.assertEqual(
-            fingerprint(result.model),
-            "364a379c2756d7801090d7602dc2f1ddadca3203069b779a248e3ed7652e053b",
+        breaker = next(
+            element for element in result.model.elements
+            if element.kind == "circuit_breaker"
         )
+        self.assertEqual(breaker.attributes["switch_state"], "closed")
+        self.assertEqual(breaker.attributes["mounting_type"], "withdrawable")
+        self.assertEqual(breaker.attributes["withdrawable_position"], "working")
 
     def test_geometry_changes_do_not_change_canonical_fingerprint(self):
         original = live_slice()
@@ -170,14 +179,16 @@ class VisioMappingTests(unittest.TestCase):
             element for element in b.elements if element.kind == "circuit_breaker"
         )
         self.assertEqual(breaker.attributes["nominal_voltage_v"], 60000)
-        with self.assertRaisesRegex(VisioMappingError, "invalid_electrical_model"):
+        with self.assertRaisesRegex(
+            VisioMappingError, "invalid_switching_state_model"
+        ):
             build_render_plan(b, page_name="invalid-voltage")
 
     def test_render_plan_round_trip_preserves_fingerprint(self):
         captured = capture_page_snapshot(
             live_slice(), model_id="kru35:v1-cell"
         ).model
-        self.assertEqual(validate_electrical_model(captured), ())
+        self.assertEqual(validate_switching_state_model(captured), ())
         plan = build_render_plan(captured, page_name="EnergoLogic-V1")
         ordered = sorted(plan.shapes, key=lambda shape: -shape.y_mm)
         self.assertEqual(
@@ -218,6 +229,127 @@ class VisioMappingTests(unittest.TestCase):
             snapshot_from_plan(plan), model_id="kru35:v1-cell"
         ).model
         self.assertEqual(fingerprint(captured), fingerprint(recaptured))
+
+    def test_native_switch_state_changes_canonical_fingerprint(self):
+        original = live_slice()
+        changed_shapes = list(original.shapes)
+        breaker_index = next(
+            i for i, shape in enumerate(changed_shapes) if shape.shape_id == 66
+        )
+        changed_shapes[breaker_index] = replace(
+            changed_shapes[breaker_index],
+            vtd_state=VisioVtdStateSnapshot(
+                main_action_active=False,
+                cart_position_value=1,
+            ),
+        )
+        changed = replace(original, shapes=tuple(changed_shapes))
+
+        a = capture_page_snapshot(original, model_id="kru35:v1-cell").model
+        b = capture_page_snapshot(changed, model_id="kru35:v1-cell").model
+        self.assertNotEqual(fingerprint(a), fingerprint(b))
+
+        breaker = next(
+            element for element in b.elements
+            if element.kind == "circuit_breaker"
+        )
+        self.assertEqual(breaker.attributes["switch_state"], "open")
+        self.assertEqual(breaker.attributes["withdrawable_position"], "repair")
+
+    def test_disconnector_native_state_maps_and_round_trips(self):
+        snapshot = VisioPageSnapshot(
+            page_name="MCP-v2",
+            shapes=(
+                VisioShapeSnapshot(
+                    101,
+                    "Шина10",
+                    "1 С 35 кВ",
+                    {"u": U35},
+                ),
+                VisioShapeSnapshot(
+                    103,
+                    "Шина10",
+                    "1",
+                    parent_shape_id=101,
+                ),
+                VisioShapeSnapshot(
+                    121,
+                    "Разъединитель выдвижной",
+                    "ЛР-35 КЛ-1",
+                    {"u": U35},
+                    vtd_state=VisioVtdStateSnapshot(
+                        main_action_active=True,
+                        cart_position_value=0,
+                    ),
+                ),
+                VisioShapeSnapshot(
+                    136,
+                    "Связь с объектом2",
+                    "КЛ-1",
+                    {"u": U35},
+                ),
+            ),
+            connections=(
+                VisioGlueSnapshot(121, "BeginX", 103, "Connections.2.X"),
+                VisioGlueSnapshot(136, "BeginX", 121, "Connections.2.X"),
+            ),
+        )
+        captured = capture_page_snapshot(
+            snapshot, model_id="kru35:line-disconnector"
+        ).model
+        self.assertEqual(validate_switching_state_model(captured), ())
+
+        disconnector = next(
+            element for element in captured.elements
+            if element.kind == "disconnector"
+        )
+        self.assertEqual(disconnector.attributes["switch_state"], "closed")
+        self.assertEqual(
+            disconnector.attributes["withdrawable_position"], "working"
+        )
+
+        plan = build_render_plan(captured, page_name="state-round-trip")
+        rendered_disconnector = next(
+            shape for shape in plan.shapes if shape.kind == "disconnector"
+        )
+        self.assertEqual(
+            rendered_disconnector.master_name, "Разъединитель выдвижной"
+        )
+        self.assertEqual(
+            rendered_disconnector.vtd_state,
+            VisioVtdStateSnapshot(
+                main_action_active=True,
+                cart_position_value=0,
+            ),
+        )
+
+        recaptured = capture_page_snapshot(
+            snapshot_from_plan(plan),
+            model_id="kru35:line-disconnector",
+        ).model
+        self.assertEqual(fingerprint(captured), fingerprint(recaptured))
+
+    def test_switching_master_requires_exact_native_state_snapshot(self):
+        snapshot = live_slice()
+        shapes = list(snapshot.shapes)
+        breaker_index = next(
+            i for i, shape in enumerate(shapes) if shape.shape_id == 66
+        )
+        shapes[breaker_index] = replace(shapes[breaker_index], vtd_state=None)
+        missing = replace(snapshot, shapes=tuple(shapes))
+        with self.assertRaisesRegex(VisioMappingError, "missing_vtd_state"):
+            capture_page_snapshot(missing, model_id="x")
+
+        shapes[breaker_index] = replace(
+            snapshot.shapes[breaker_index],
+            vtd_state=VisioVtdStateSnapshot(
+                main_action_active=True,
+                cart_position_value=3,
+            ),
+        )
+        invalid = replace(snapshot, shapes=tuple(shapes))
+        with self.assertRaisesRegex(VisioMappingError, "invalid_vtd_cart_position"):
+            capture_page_snapshot(invalid, model_id="x")
 
     def test_unknown_master_fails_closed(self):
         snapshot = VisioPageSnapshot(

@@ -1,6 +1,6 @@
 # ELECTRICAL-DOMAIN-PROFILE-V1-001
 
-Status: Awaiting owner acceptance  
+Status: Owner accepted — awaiting explicit merge command  
 Issue: #5  
 Draft PR: #6
 
@@ -180,5 +180,11 @@ energologic validate examples/kru35-v1-cell.electrical-v1.json --profile electri
 - [x] Live read-only VTD unit evidence recorded.
 - [x] Code candidate Linux/Windows CI green.
 - [x] Final PR-head CI gate is mandatory; the actual final-head result is recorded in Issue/PR metadata.
-- [ ] Owner acceptance.
+- [x] Owner acceptance.
 - [x] No merge or Ready for Review without explicit owner command.
+
+
+## Owner acceptance
+
+Owner accepted this work item on 2026-10-03 by instructing to continue work.
+PR #6 remains Draft and unmerged until a separate explicit merge command.

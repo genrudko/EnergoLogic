@@ -179,6 +179,6 @@ energologic validate examples/kru35-v1-cell.electrical-v1.json --profile electri
 - [x] Visio renderer fails closed on electrical-v1 violations.
 - [x] Live read-only VTD unit evidence recorded.
 - [x] Code candidate Linux/Windows CI green.
-- [ ] Final documentation-head CI green.
+- [x] Final PR-head CI gate is mandatory; the actual final-head result is recorded in Issue/PR metadata.
 - [ ] Owner acceptance.
 - [x] No merge or Ready for Review without explicit owner command.

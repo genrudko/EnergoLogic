@@ -1,0 +1,55 @@
+{
+  "schema_version": "0.1",
+  "model_id": "example:minimal",
+  "elements": [
+    {
+      "id": "bus-35",
+      "kind": "bus",
+      "name": "35 kV bus",
+      "terminals": [
+        {
+          "id": "t1",
+          "name": "feeder"
+        }
+      ],
+      "attributes": {
+        "nominal_voltage": {
+          "value": 35,
+          "unit": "kV"
+        }
+      }
+    },
+    {
+      "id": "q1",
+      "kind": "switching-device",
+      "name": "Q1",
+      "terminals": [
+        {
+          "id": "a"
+        },
+        {
+          "id": "b"
+        }
+      ],
+      "attributes": {}
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "endpoints": [
+        {
+          "element_id": "bus-35",
+          "terminal_id": "t1"
+        },
+        {
+          "element_id": "q1",
+          "terminal_id": "a"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "description": "Foundation smoke model"
+  }
+}

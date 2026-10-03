@@ -1,0 +1,138 @@
+{
+  "$defs": {
+    "connection": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "default": {},
+          "type": "object"
+        },
+        "endpoints": {
+          "items": {
+            "$ref": "#/$defs/endpoint"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "endpoints"
+      ],
+      "type": "object"
+    },
+    "element": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "default": {},
+          "type": "object"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "default": "",
+          "type": "string"
+        },
+        "terminals": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/terminal"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "endpoint": {
+      "additionalProperties": false,
+      "properties": {
+        "element_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "terminal_id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "element_id",
+        "terminal_id"
+      ],
+      "type": "object"
+    },
+    "terminal": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "default": {},
+          "type": "object"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "default": "",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://energologic.local/schema/energologic-model-0.1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "connections": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/connection"
+      },
+      "type": "array"
+    },
+    "elements": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/element"
+      },
+      "type": "array"
+    },
+    "metadata": {
+      "default": {},
+      "type": "object"
+    },
+    "model_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "0.1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "model_id"
+  ],
+  "title": "EnergoLogic canonical electrical model 0.1",
+  "type": "object"
+}

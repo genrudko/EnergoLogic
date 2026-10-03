@@ -1340,3 +1340,200 @@ def build_base_point_move_execution_request(
         detach_items_json="[]",
         glue_items_json="[]",
     )
+
+
+@dataclass(frozen=True, slots=True)
+class CellDistributionPlan:
+    """Distribute selected cells over real native bus slots at a declared pitch."""
+
+    page_name: str
+    bus_shape_id: int
+    pitch_mm: float
+    start_slot_index: int
+    ordered_seed_shape_ids: tuple[int, ...]
+    moves: tuple[MoveCellPlan, ...]
+
+
+def plan_distribute_cells_on_bus(
+    snapshot: VisioPageSnapshot,
+    *,
+    seed_shape_ids: tuple[int, ...],
+    pitch_mm: float,
+    start_slot_index: int | None = None,
+    vertical_margin_mm: float = 10.0,
+    tolerance_mm: float = 0.25,
+) -> CellDistributionPlan:
+    """Plan equal-pitch distribution using existing native bus terminals only.
+
+    The planner never invents electrical connection points. If the bus does not
+    expose the requested geometry, a separate bus-extension/edit operation is needed.
+    """
+
+    if len(seed_shape_ids) < 2:
+        raise VisioQolError(
+            "insufficient_cells",
+            "cell distribution requires at least two seed shapes",
+        )
+    if len(set(seed_shape_ids)) != len(seed_shape_ids):
+        raise VisioQolError(
+            "duplicate_cell_seed",
+            "seed_shape_ids must not contain duplicates",
+        )
+    pitch = float(pitch_mm)
+    tolerance = float(tolerance_mm)
+    if not math.isfinite(pitch) or pitch <= 0.0:
+        raise VisioQolError(
+            "invalid_pitch",
+            "pitch_mm must be a finite positive number",
+        )
+    if not math.isfinite(tolerance) or tolerance < 0.0:
+        raise VisioQolError(
+            "invalid_tolerance",
+            "tolerance_mm must be a finite non-negative number",
+        )
+
+    cells = [
+        discover_cell(
+            snapshot,
+            seed_shape_id=int(seed),
+            pitch_mm=pitch,
+            vertical_margin_mm=vertical_margin_mm,
+        )
+        for seed in seed_shape_ids
+    ]
+    bus_ids = {cell.anchor.bus_shape_id for cell in cells}
+    if len(bus_ids) != 1:
+        raise VisioQolError(
+            "different_buses",
+            "selected cells must be attached to the same bus",
+        )
+    bus_id = next(iter(bus_ids))
+    cells.sort(key=lambda cell: (cell.anchor.x_mm, cell.seed_shape_id))
+
+    if start_slot_index is None:
+        start_slot = min(cell.anchor.bus_slot_index for cell in cells)
+    else:
+        start_slot = int(start_slot_index)
+        if start_slot <= 0:
+            raise VisioQolError(
+                "invalid_start_slot",
+                "start_slot_index must be a positive integer",
+            )
+
+    shapes = _shape_index(snapshot)
+    selected_seeds = {cell.seed_shape_id for cell in cells}
+    targets: list[tuple[VisioCell, VisioShapeSnapshot, int, int]] = []
+
+    for offset, cell in enumerate(cells):
+        target_slot = start_slot + offset
+        target = _bus_terminal_by_slot(
+            snapshot,
+            bus_shape_id=bus_id,
+            slot_index=target_slot,
+        )
+        target_nt = _user_int(target, "nt")
+        occupants = _terminal_is_occupied(snapshot, terminal_shape_id=target.shape_id)
+        foreign = tuple(
+            occupant
+            for occupant in occupants
+            if occupant not in selected_seeds and occupant != cell.seed_shape_id
+        )
+        if foreign:
+            raise VisioQolError(
+                "target_bus_terminal_occupied",
+                (
+                    f"distribution target slot {target_slot} shape {target.shape_id} "
+                    f"is occupied by non-selected shape(s) {foreign}"
+                ),
+            )
+        other_selected = tuple(
+            occupant
+            for occupant in occupants
+            if occupant in selected_seeds and occupant != cell.seed_shape_id
+        )
+        if other_selected:
+            raise VisioQolError(
+                "distribution_target_requires_swap",
+                (
+                    f"distribution target slot {target_slot} is currently occupied "
+                    f"by selected cell(s) {other_selected}; atomic swap planning is "
+                    "not yet supported by the external bridge"
+                ),
+            )
+        targets.append((cell, target, target_slot, target_nt))
+
+    # The requested pitch must already exist in native bus connection-point geometry.
+    for left, right in zip(targets, targets[1:]):
+        left_x = _mm(left[1].geometry.pin_x)
+        right_x = _mm(right[1].geometry.pin_x)
+        delta = right_x - left_x
+        if abs(delta - pitch) > tolerance:
+            raise VisioQolError(
+                "bus_pitch_mismatch",
+                (
+                    f"native bus slots {left[2]}->{right[2]} are {delta:.6f} mm "
+                    f"apart; requested pitch is {pitch:.6f} mm"
+                ),
+            )
+
+    moves: list[MoveCellPlan] = []
+    for cell, target, target_slot, target_nt in targets:
+        source_terminal = shapes.get(cell.anchor.bus_terminal_shape_id)
+        if source_terminal is None:
+            raise VisioQolError(
+                "missing_source_bus_terminal",
+                f"source bus terminal {cell.anchor.bus_terminal_shape_id} is missing",
+            )
+        dx = _mm(target.geometry.pin_x) - _mm(source_terminal.geometry.pin_x)
+        dy = _mm(target.geometry.pin_y) - _mm(source_terminal.geometry.pin_y)
+        if abs(dy) > tolerance:
+            raise VisioQolError(
+                "bus_row_misaligned",
+                (
+                    f"slot {cell.anchor.bus_slot_index}->{target_slot} differs "
+                    f"vertically by {dy:.6f} mm"
+                ),
+            )
+        if abs(dx) <= tolerance and abs(dy) <= tolerance:
+            continue
+        direction: Literal["left", "right"] = "right" if dx > 0 else "left"
+        moves.append(
+            MoveCellPlan(
+                page_name=snapshot.page_name,
+                source_cell=cell,
+                direction=direction,
+                pitch_mm=pitch,
+                dx_mm=dx,
+                dy_mm=dy,
+                source_bus_terminal_shape_id=source_terminal.shape_id,
+                source_bus_terminal_nt=cell.anchor.bus_terminal_nt,
+                target_bus_terminal_shape_id=target.shape_id,
+                target_bus_terminal_nt=target_nt,
+                source_bus_slot_index=cell.anchor.bus_slot_index,
+                target_bus_slot_index=target_slot,
+                target_connection_row=cell.anchor.target_connection_row,
+                source_endpoint=cell.anchor.source_endpoint,
+            )
+        )
+
+    return CellDistributionPlan(
+        page_name=snapshot.page_name,
+        bus_shape_id=bus_id,
+        pitch_mm=pitch,
+        start_slot_index=start_slot,
+        ordered_seed_shape_ids=tuple(cell.seed_shape_id for cell in cells),
+        moves=tuple(moves),
+    )
+
+
+def build_distribution_execution_requests(
+    plan: CellDistributionPlan,
+    *,
+    select_result: bool = True,
+) -> tuple[VisioMoveExecutionRequest, ...]:
+    """Build sequential safe moves for targets that were empty at planning time."""
+
+    return tuple(
+        build_move_execution_request(move, select_result=select_result)
+        for move in plan.moves
+    )

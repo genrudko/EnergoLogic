@@ -10,6 +10,7 @@ from energologic.core import (
     Element,
     Endpoint,
     Terminal,
+    fingerprint,
     load_model,
 )
 from energologic.domain import (
@@ -72,6 +73,10 @@ class TransformerSemanticsTests(unittest.TestCase):
     def test_repository_transformer_example_is_valid(self):
         model = load_model(ROOT / "examples" / "tsn2.transformer-v1.json")
         self.assertEqual(validate_electrical_model(model), ())
+        self.assertEqual(
+            fingerprint(model),
+            "ae1156fe0898e6941109dd11af97a5fe3c6ec952657072b5b22cec5412c0f73b",
+        )
 
     def test_transformer_uses_terminal_voltage_specs(self):
         element = transformer()

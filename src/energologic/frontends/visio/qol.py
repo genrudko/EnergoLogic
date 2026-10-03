@@ -6,7 +6,7 @@ import math
 import re
 from typing import Literal
 
-from .identity import VisioIdentityError, validate_cell_id
+from .identity import VisioIdentityError, projection_cell_id, validate_cell_id
 from .snapshot import VisioGlueSnapshot, VisioPageSnapshot, VisioShapeSnapshot
 
 
@@ -1023,4 +1023,320 @@ def build_glue_repair_execution_request(
             sort_keys=True,
             separators=(",", ":"),
         ),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class VisioBasePointPlan:
+    """Geometry transform planned from an explicit engineering base point."""
+
+    operation: Literal["copy", "move"]
+    page_name: str
+    shape_ids: tuple[int, ...]
+    base_x_mm: float
+    base_y_mm: float
+    target_x_mm: float
+    target_y_mm: float
+    dx_mm: float
+    dy_mm: float
+    new_cell_id: str = ""
+    reset_identity: bool = False
+
+
+def _validate_base_point_selection(
+    snapshot: VisioPageSnapshot,
+    *,
+    shape_ids: tuple[int, ...],
+) -> tuple[VisioShapeSnapshot, ...]:
+    if not shape_ids:
+        raise VisioQolError(
+            "empty_selection",
+            "base-point operation requires at least one shape",
+        )
+    if len(set(shape_ids)) != len(shape_ids):
+        raise VisioQolError(
+            "duplicate_selection_shape",
+            "shape_ids must not contain duplicates",
+        )
+    shapes = _shape_index(snapshot)
+    selected: list[VisioShapeSnapshot] = []
+    for shape_id in shape_ids:
+        shape = shapes.get(int(shape_id))
+        if shape is None:
+            raise VisioQolError(
+                "unknown_selection_shape",
+                f"shape {shape_id} is not present on page {snapshot.page_name!r}",
+            )
+        if shape.parent_shape_id is not None:
+            raise VisioQolError(
+                "group_child_selection",
+                (
+                    f"shape {shape_id} is a child of group {shape.parent_shape_id}; "
+                    "select the top-level engineering object instead"
+                ),
+            )
+        selected.append(shape)
+    return tuple(selected)
+
+
+def _external_glues(
+    snapshot: VisioPageSnapshot,
+    *,
+    shape_ids: tuple[int, ...],
+) -> tuple[VisioGlueSnapshot, ...]:
+    selected = set(shape_ids)
+    result: list[VisioGlueSnapshot] = []
+    for glue in snapshot.connections:
+        left = glue.from_shape_id in selected
+        right = glue.to_shape_id in selected
+        if left ^ right:
+            result.append(glue)
+    return tuple(
+        sorted(
+            result,
+            key=lambda item: (
+                item.from_shape_id,
+                item.from_cell,
+                item.to_shape_id,
+                item.to_cell,
+            ),
+        )
+    )
+
+
+def _finite_point(name: str, x_mm: float, y_mm: float) -> tuple[float, float]:
+    x = float(x_mm)
+    y = float(y_mm)
+    if not math.isfinite(x) or not math.isfinite(y):
+        raise VisioQolError(
+            "invalid_base_point",
+            f"{name} coordinates must be finite",
+        )
+    return x, y
+
+
+def _managed_cell_ids(
+    shapes: tuple[VisioShapeSnapshot, ...],
+) -> tuple[str, ...]:
+    result: set[str] = set()
+    for shape in shapes:
+        try:
+            cell_id = projection_cell_id(shape.user_cells)
+        except VisioIdentityError as exc:
+            raise VisioQolError(exc.code, str(exc).split(": ", 1)[-1]) from exc
+        if cell_id is not None:
+            result.add(cell_id)
+    return tuple(sorted(result))
+
+
+def plan_copy_with_base_point(
+    snapshot: VisioPageSnapshot,
+    *,
+    shape_ids: tuple[int, ...],
+    base_x_mm: float,
+    base_y_mm: float,
+    target_x_mm: float,
+    target_y_mm: float,
+    new_cell_id: str = "",
+) -> VisioBasePointPlan:
+    """Plan exact copy from one explicit point to another.
+
+    External Glue is rejected deliberately. Cell-aware duplication must use
+    plan_duplicate_cell so its bus attachment is rebuilt explicitly.
+    """
+
+    selected = _validate_base_point_selection(snapshot, shape_ids=shape_ids)
+    external = _external_glues(snapshot, shape_ids=shape_ids)
+    if external:
+        first = external[0]
+        raise VisioQolError(
+            "external_glue_requires_cell_operation",
+            (
+                "selection has external electrical Glue "
+                f"{first.from_shape_id}:{first.from_cell} -> "
+                f"{first.to_shape_id}:{first.to_cell}; "
+                "use Duplicate Cell / Auto Glue instead"
+            ),
+        )
+
+    source_x, source_y = _finite_point("base point", base_x_mm, base_y_mm)
+    target_x, target_y = _finite_point("target point", target_x_mm, target_y_mm)
+    dx = target_x - source_x
+    dy = target_y - source_y
+    if abs(dx) < 1e-12 and abs(dy) < 1e-12:
+        raise VisioQolError(
+            "zero_offset",
+            "copy target point must differ from base point",
+        )
+
+    managed_ids = _managed_cell_ids(selected)
+    reset_identity = bool(managed_ids)
+    validated_new_id = ""
+    if reset_identity:
+        if len(managed_ids) > 1:
+            raise VisioQolError(
+                "multiple_cell_identities",
+                (
+                    "selection contains multiple managed cell identities: "
+                    + ", ".join(managed_ids)
+                ),
+            )
+        if not str(new_cell_id).strip():
+            raise VisioQolError(
+                "identity_reset_required",
+                (
+                    f"copying managed cell {managed_ids[0]!r} requires an explicit "
+                    "new_cell_id"
+                ),
+            )
+        try:
+            validated_new_id = validate_cell_id(new_cell_id)
+        except VisioIdentityError as exc:
+            raise VisioQolError(exc.code, str(exc).split(": ", 1)[-1]) from exc
+    elif str(new_cell_id).strip():
+        try:
+            validated_new_id = validate_cell_id(new_cell_id)
+        except VisioIdentityError as exc:
+            raise VisioQolError(exc.code, str(exc).split(": ", 1)[-1]) from exc
+
+    return VisioBasePointPlan(
+        operation="copy",
+        page_name=snapshot.page_name,
+        shape_ids=tuple(int(value) for value in shape_ids),
+        base_x_mm=source_x,
+        base_y_mm=source_y,
+        target_x_mm=target_x,
+        target_y_mm=target_y,
+        dx_mm=dx,
+        dy_mm=dy,
+        new_cell_id=validated_new_id,
+        reset_identity=reset_identity,
+    )
+
+
+def plan_move_with_base_point(
+    snapshot: VisioPageSnapshot,
+    *,
+    shape_ids: tuple[int, ...],
+    base_x_mm: float,
+    base_y_mm: float,
+    target_x_mm: float,
+    target_y_mm: float,
+) -> VisioBasePointPlan:
+    """Plan exact move from one explicit point to another.
+
+    Generic base-point move refuses external electrical Glue. Connected cells must
+    use the cell-aware move planner so detach/re-glue remains explicit.
+    """
+
+    _validate_base_point_selection(snapshot, shape_ids=shape_ids)
+    external = _external_glues(snapshot, shape_ids=shape_ids)
+    if external:
+        first = external[0]
+        raise VisioQolError(
+            "external_glue_requires_cell_operation",
+            (
+                "selection has external electrical Glue "
+                f"{first.from_shape_id}:{first.from_cell} -> "
+                f"{first.to_shape_id}:{first.to_cell}; "
+                "use Move Cell / explicit detach-re-glue instead"
+            ),
+        )
+
+    source_x, source_y = _finite_point("base point", base_x_mm, base_y_mm)
+    target_x, target_y = _finite_point("target point", target_x_mm, target_y_mm)
+    dx = target_x - source_x
+    dy = target_y - source_y
+    if abs(dx) < 1e-12 and abs(dy) < 1e-12:
+        raise VisioQolError(
+            "zero_offset",
+            "move target point must differ from base point",
+        )
+    return VisioBasePointPlan(
+        operation="move",
+        page_name=snapshot.page_name,
+        shape_ids=tuple(int(value) for value in shape_ids),
+        base_x_mm=source_x,
+        base_y_mm=source_y,
+        target_x_mm=target_x,
+        target_y_mm=target_y,
+        dx_mm=dx,
+        dy_mm=dy,
+    )
+
+
+def plan_exact_offset(
+    snapshot: VisioPageSnapshot,
+    *,
+    shape_ids: tuple[int, ...],
+    dx_mm: float,
+    dy_mm: float,
+) -> VisioBasePointPlan:
+    """Plan an exact millimetre move without forcing users to calculate points."""
+
+    dx = float(dx_mm)
+    dy = float(dy_mm)
+    if not math.isfinite(dx) or not math.isfinite(dy):
+        raise VisioQolError(
+            "invalid_offset",
+            "dx_mm and dy_mm must be finite",
+        )
+    return plan_move_with_base_point(
+        snapshot,
+        shape_ids=shape_ids,
+        base_x_mm=0.0,
+        base_y_mm=0.0,
+        target_x_mm=dx,
+        target_y_mm=dy,
+    )
+
+
+def build_base_point_copy_execution_request(
+    plan: VisioBasePointPlan,
+    *,
+    select_result: bool = True,
+) -> VisioDuplicateExecutionRequest:
+    if plan.operation != "copy":
+        raise VisioQolError(
+            "invalid_plan_operation",
+            f"expected copy plan, got {plan.operation!r}",
+        )
+    return VisioDuplicateExecutionRequest(
+        tool_name="duplicate_shapes_exact",
+        shape_ids_json=json.dumps(
+            list(plan.shape_ids),
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        dx_mm=plan.dx_mm,
+        dy_mm=plan.dy_mm,
+        select_result=bool(select_result),
+        glue_items_json="[]",
+        new_cell_id=plan.new_cell_id,
+        identity_reset_required=plan.reset_identity,
+    )
+
+
+def build_base_point_move_execution_request(
+    plan: VisioBasePointPlan,
+    *,
+    select_result: bool = True,
+) -> VisioMoveExecutionRequest:
+    if plan.operation != "move":
+        raise VisioQolError(
+            "invalid_plan_operation",
+            f"expected move plan, got {plan.operation!r}",
+        )
+    return VisioMoveExecutionRequest(
+        tool_name="move_shapes_exact",
+        shape_ids_json=json.dumps(
+            list(plan.shape_ids),
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        dx_mm=plan.dx_mm,
+        dy_mm=plan.dy_mm,
+        select_result=bool(select_result),
+        detach_items_json="[]",
+        glue_items_json="[]",
     )

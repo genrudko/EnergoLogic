@@ -192,6 +192,20 @@ class VisioMappingTests(unittest.TestCase):
                 "Линии, заземление.vss",
             ],
         )
+        self.assertEqual(len(plan.connections), 4)
+        self.assertTrue(
+            all(connection.source_endpoint == "begin" for connection in plan.connections)
+        )
+        self.assertTrue(
+            all(connection.target_connection_row == 2 for connection in plan.connections)
+        )
+        self.assertEqual(plan.connections[0].target_child_user_nt, 1)
+        self.assertTrue(
+            all(
+                connection.target_child_user_nt is None
+                for connection in plan.connections[1:]
+            )
+        )
         recaptured = capture_page_snapshot(
             snapshot_from_plan(plan), model_id="kru35:v1-cell"
         ).model

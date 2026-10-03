@@ -30,7 +30,7 @@ class SwitchingState:
 
 
 def _path_value(value: str) -> str:
-    return value.replace("\", "\\").replace("'", "\'")
+    return value.replace("\\", "\\\\").replace("'", "\\'")
 
 
 def _element_path(element_id: str) -> str:

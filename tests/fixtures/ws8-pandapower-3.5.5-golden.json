@@ -1,0 +1,52 @@
+{
+  "solver": "pandapower",
+  "solver_version": "3.5.5",
+  "fixture": "ws8:synthetic-two-section-network",
+  "tolerances": {
+    "voltage_v": 0.05,
+    "current_a": 0.05,
+    "loading_percent": 0.001,
+    "short_circuit_current_a": 0.2,
+    "short_circuit_power_va": 2000.0
+  },
+  "power_flow": {
+    "state_a": {
+      "section_a_voltage_v": 34967.986402547634,
+      "section_b_voltage_v": 34981.606784917996,
+      "line_a_current_a": 68.07587127959545,
+      "line_b_current_a": 17.5318272074234,
+      "transformer_loading_percent": 21.25621105303143
+    },
+    "state_b": {
+      "section_a_voltage_v": 34972.18011028091,
+      "section_b_voltage_v": 34972.18011028091,
+      "line_a_current_a": 58.3580755254915,
+      "line_b_current_a": 27.260594501204984,
+      "transformer_loading_percent": 21.261873780411307
+    }
+  },
+  "short_circuit": {
+    "section_a_3ph": {
+      "ikss_a": 7700.124858338515,
+      "ip_a": 17348.304922428473,
+      "ith_a": 7773.477164983039,
+      "skss_va": 466795261.7743244,
+      "line_a_ikss_a": 7700.124858338513
+    },
+    "section_a_2ph": {
+      "ikss_a": 6668.503739633204,
+      "skss_va": 134752185.02092397,
+      "line_a_ikss_a": 6668.503739633202
+    },
+    "section_a_1ph": {
+      "ikss_a": 7352.760179238831,
+      "line_a_ikss_a": 7352.760179238835
+    },
+    "grid_3ph_hand_reference": {
+      "short_circuit_power_va": 500000000.0,
+      "nominal_voltage_v": 35000.0,
+      "expected_ikss_a": 8247.860988423225,
+      "formula": "I = S_sc / (sqrt(3) * U)"
+    }
+  }
+}

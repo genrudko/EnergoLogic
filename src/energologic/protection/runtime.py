@@ -609,6 +609,17 @@ def compile_protection_program(
                     )
                 )
 
+            if delay_value.basis != "not_applicable":
+                issues.append(
+                    _issue(
+                        "delay_basis_mismatch",
+                        f"{stage_path}/parameters/{delay.id}",
+                        (
+                            "operate delay basis must be "
+                            "'not_applicable'"
+                        ),
+                    )
+                )
             if (
                 delay_value.quantity_kind != "time"
                 or delay_value.normalized_unit != "s"
@@ -780,6 +791,20 @@ def _validate_runtime_state(
         path="/state/last_time_s",
         allow_empty=True,
     )
+
+    if last_time is None and any(
+        item.status != "inactive" for item in state.stages
+    ):
+        raise ProtectionRuntimeInputError(
+            _issue(
+                "missing_last_time_for_active_state",
+                "/state/last_time_s",
+                (
+                    "picked-up/operated runtime state requires "
+                    "last_time_s"
+                ),
+            )
+        )
 
     for index, item in enumerate(state.stages):
         path = f"/state/stages/{index}"

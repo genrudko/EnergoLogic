@@ -48,6 +48,14 @@ class ProtectionSettingsArchitectureTests(unittest.TestCase):
                     module.startswith("energologic.solver"),
                     f"{path} depends on solver: {module}",
                 )
+                self.assertFalse(
+                    module.startswith("energologic.operational"),
+                    f"{path} depends on WS-6 operational runtime: {module}",
+                )
+                self.assertFalse(
+                    module.startswith("energologic.terminology"),
+                    f"{path} hard-depends on unmerged WS-2 runtime: {module}",
+                )
 
     def test_core_and_domain_do_not_depend_upward_on_protection(self):
         for directory in (CORE, DOMAIN):

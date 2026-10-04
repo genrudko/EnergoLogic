@@ -985,6 +985,7 @@ class PandapowerAdapter:
                 built.pp.runpp(
                     built.net,
                     calculate_voltage_angles=request.calculate_voltage_angles,
+                    numba=False,
                 )
             warning_messages = _captured_warnings(captured)
         except Exception as exc:

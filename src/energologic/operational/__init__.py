@@ -8,17 +8,39 @@ from .contracts import (
     TerminalOperationalDelta,
     TerminalOperationalState,
 )
+from .operations import (
+    OperationBlock,
+    OperationValidator,
+    OperationalEvent,
+    OperationalEventKind,
+    SwitchStateOperation,
+    SwitchingOperation,
+    SwitchingOperationResult,
+    SwitchingOperationStatus,
+    WithdrawablePositionOperation,
+    execute_switching_operation,
+)
 from .runtime import compare_operational_results, simulate_operational_state
 
 __all__ = [
     "ElementOperationalState",
+    "OperationBlock",
+    "OperationValidator",
     "OperationalDelta",
+    "OperationalEvent",
+    "OperationalEventKind",
     "OperationalMessage",
     "OperationalResult",
     "OperationalStatus",
     "SourceRef",
+    "SwitchStateOperation",
+    "SwitchingOperation",
+    "SwitchingOperationResult",
+    "SwitchingOperationStatus",
     "TerminalOperationalDelta",
     "TerminalOperationalState",
+    "WithdrawablePositionOperation",
     "compare_operational_results",
+    "execute_switching_operation",
     "simulate_operational_state",
 ]

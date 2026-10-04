@@ -21,10 +21,10 @@
 - R0: исследование API / bridge / реальной MCP-v2 — **done**;
 - R1: Duplicate Cell Right / Left — **live-qualified core / polish remains**: exact duplicate, Glue, identity reset и реальный Editor UI работают; one-user-Undo вынесен в deferred technical debt и не блокирует продукт;
 - R2: остальные P0 QoL-команды — **done / live-qualified**: Coordinates, Base Point copy/move, Exact Offset, Smart Nudge, Align X/Y, Select/Renumber Cell, Move Cell, Repair Glue, Scheme Doctor, Measure Pitch и topology-safe Cell Pitch distribute приняты live. v3.18 закрывает прежний `244.End → 166/Connections.1` half-Glue через ordered out-of-process topology restoration;
-- R3: P1 cell/model diagnostics / Replace & Insert Equipment / bus editing — после закрытия topology-safe pitch;
-- R4: P2 Ribbon/context menu/shortcuts/presets.
+- R3: P1 cell/model diagnostics / Replace & Insert Equipment / bus editing — **done / live-qualified**;
+- R4: P2 native RibbonX / Visio context menu / Ribbon KeyTips / presets — **done / live-qualified**.
 
-Текущая точка релиза — **Editor v3.18 / API 0.3.18 / managed extension 2026.10.04.116**. Topology blocker Cell Pitch закрыт live: fresh 44-shape acceptance завершён `state=success`, pitch 40 мм, bus Glue и полный TSN internal topology подтверждены. Следующий фокус — R3/R4: недостающий пользовательский функционал и polish.
+Текущая точка релиза — **Editor v3.45 / API 0.3.45 / managed extension 2026.10.04.145**. R3/R4 приняты live: bus editing, reconnect, diagnostics, native RibbonX и штатные Visio right-click menus работают на реальном VTD-документе; исходная MCP-v2 сохранена 52 shapes. One-user Undo и ~31-секундный полный Visual Diagnostics остаются отдельными неблокирующими technical-debt пунктами. Work item функционально завершён; PR #12 остаётся Draft до явного owner decision.
 
 
 ## Canonical product target

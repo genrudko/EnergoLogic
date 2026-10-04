@@ -191,4 +191,4 @@ Primary command:
 python -m unittest discover -s tests -v
 ```
 
-Final CI evidence for the corrected head is recorded in PR #18 before acceptance.
+Corrected code head `9323c5979f65077686934bc654efd52384494b03`: CI run **37205909855 — SUCCESS** on Ubuntu/Windows × Python 3.11/3.12; each matrix job ran **95 tests — OK**.\n\nDocumentation-reconciled head `e9f3599e7922f828c8cf911363b578199b9663a1`: CI run **37206082055 — SUCCESS**.

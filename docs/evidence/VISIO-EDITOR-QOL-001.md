@@ -573,3 +573,99 @@ Authoritative `get_connections` после вызова подтвердил:
 7. После этого вернуться к общему UI/product polish.
 
 PR #12 остаётся Draft; Ready/merge без явной команды владельца запрещены.
+
+
+## Editor v3.18 — topology-safe Cell Pitch accepted live (2026-10-04)
+
+### Почему v3.15–v3.17 были важны
+
+После v3.13 были последовательно закрыты ложные гипотезы:
+
+- v3.14: атомарная нормализация пары X/Y непосредственно перед in-process `GlueTo` — **не помогла**;
+- v3.15: временное `Application.EventsEnabled=0` вокруг in-process `GlueTo` — **не помогло**;
+- v3.16: topology restoration вынесен в отдельный COM process. Process boundary/ROT подтвердились рабочими, helper запускался и входил в Visio COM;
+- v3.16 одновременно показал, что нельзя без необходимости повторно выполнять Glue уже корректных VTD edges;
+- v3.17 отправлял helper'у только отсутствующие/изменённые edges. Helper завершался успешно, bus anchor восстанавливался, но последующий порядок операций снова оставлял `244.EndX` numeric;
+- контрольный low-level `batch_glue_endpoints` после уже восстановленного bus anchor немедленно и устойчиво восстановил `244.End → 166/Connections.1`.
+
+Из этого получено точное правило порядка:
+
+> внешний Glue ячейки к шине должен восстанавливаться **до** зависимых внутренних VTD Glue; внутренний `244.End → TSN2` должен быть последней авторитетной Glue-операцией.
+
+### Реализация v3.18
+
+Live runtime:
+
+- Editor: `EnergoLogic.VisioEditorAddinV318`;
+- API: `0.3.18`;
+- managed extension: `2026.10.04.116`;
+- development-bridge commit: `5c4e28b6e7c6ab702d383feab820189ffff9a379`;
+- focused Visio suite: **41/41 PASS**.
+
+Pending topology phase теперь:
+
+1. сравнивает captured topology с текущим состоянием;
+2. передаёт во внешний helper только реально отсутствующие/изменённые Glue;
+3. сначала восстанавливает bus anchor;
+4. затем восстанавливает missing internal Glue;
+5. возвращается в add-in и выполняет read/verify по native Connects/ShapeSheet.
+
+### Fresh live acceptance
+
+Disposable page:
+
+`UI-V318-Pitch-Acceptance`
+
+подготовлена заново из неизменённой `MCP-v2`.
+
+Удалены slot-3 shapes:
+
+`[138,141,143,145,147,151,153,248]`
+
+Baseline:
+
+- page shapes: **44**;
+- selected cells: `[66,155]`;
+- measured pitch: **80 мм**;
+- `66.PinX = 110 мм`;
+- `155.PinX = 190 мм`;
+- исходный `244.End → 166/Connections.1` присутствовал.
+
+После `DistributePitch(40)` и external topology completion:
+
+- operation state: **success**;
+- page shapes: **44**;
+- `66.PinX = 110 мм`;
+- `155.PinX = 150 мм`;
+- фактический шаг: **40 мм**;
+- verified internal Glue count: **7**.
+
+Final authoritative topology содержит:
+
+- `155.BeginX → Sheet.105 / Connections.2.X` — новый bus slot;
+- `158.BeginX → 155 / Connections.2.X`;
+- `160.BeginX → 162 / Connections.1.X`;
+- `182.BeginX → 169 / Connections.2.X`;
+- `240.BeginX → 162 / Connections.2.X`;
+- `242.BeginX → 158 / Connections.2.X`;
+- `244.BeginX → 242 / Connections.2.X`;
+- `244.EndX → 166 / Connections.1.X`.
+
+Формулы shape 244 после success:
+
+- `BeginX/BeginY = PAR(PNT(ТТ.242!Connections.2.X,ТТ.242!Connections.2.Y))`;
+- `EndX/EndY = PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))`.
+
+То есть прежний half-Glue устранён.
+
+Source safety:
+
+- исходная `MCP-v2` после acceptance: **52 shapes**, без destructive mutation.
+
+### Вывод
+
+Topology-safe Cell Pitch distribute больше не является blocker'ом VISIO-EDITOR-QOL-001.
+
+Следующий продуктовый фокус: R3/R4 — недостающие пользовательские команды, интеграция интерфейса и polish.
+
+One-user-Undo остаётся deferred technical debt и не возвращается в critical path без нового основания.

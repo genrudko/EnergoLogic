@@ -1,6 +1,6 @@
 # ELECTRICAL-SOLVER-SPIKE-001
 
-Status: **Implementation complete — awaiting final CI and owner acceptance**  
+Status: **Implementation and architecture decisions complete — awaiting final CI and owner acceptance**  
 Workstream: WS-8 — Electrical Solver  
 Issue: #14  
 Branch: `solver/electrical-solver-spike-001`  
@@ -94,7 +94,7 @@ the electrical-calculation contract.
 - [x] pandapower limitations
 - [x] production recommendation
 - [x] VPS headless qualification — 83 tests PASS on Python 3.14.4 / pandapower 3.5.5
-- [ ] GitHub CI green on final head
+- [ ] GitHub CI green on architecture-final head
 - [ ] owner acceptance
 - [ ] Ready for Review — owner command only
 - [ ] Merge — owner command only
@@ -131,20 +131,42 @@ behavior, harmonics and long QSTS.
 
 Protection/RZA remains a separate EnergoLogic engine.
 
-## Explicit unresolved architecture
+## Production architecture decisions
 
-This spike intentionally does **not** promote `external_grid`, `line` and
-`load` to accepted `electrical-v1` production semantics.
+The spike's architectural questions are no longer left as an open list.
 
-Before production integration, separate bounded decisions are required for:
+They are resolved/reclassified in:
 
-- source/load/line/generator/shunt canonical semantics;
-- positive/negative/zero-sequence parameter ownership and provenance;
-- breaker/disconnector current normalization;
-- phase-domain/neutral topology;
-- solver process/IPC boundary and Windows bundling;
-- solver-version/golden upgrade policy;
-- pandapower versus OpenDSS study-selection policy.
+`docs/architecture/ELECTRICAL-SOLVER-PRODUCTION-DECISIONS.md`
+
+Decided now:
+
+- electrical parameters are canonical solver-neutral engineering facts;
+- SolverStudyInput is a spike DTO assembled from canonical data/state;
+- production calculation semantics use a separate versioned
+  `electrical-calculation-v1` contract instead of silently mutating
+  `electrical-v1`;
+- zero/sequence data is explicit and provenance-bearing;
+- balanced AC + qualified IEC 60909 is production v1;
+- switchgear current is terminal-scoped and unavailable when attribution is
+  ambiguous;
+- production solver runtime is an out-of-process bundled x64 worker;
+- solver routing is explicit and does not silently fall back;
+- pandapower is first/default for the qualified scope;
+- OpenDSS follows phase/neutral qualification for
+  unbalance/neutral/harmonics/QSTS;
+- solver/golden upgrades are release-controlled;
+- Kochubeevskaya site acceptance has an explicit reference hierarchy.
+
+Dependent work is converted into named bounded work items rather than unresolved
+questions:
+
+- ELECTRICAL-CALCULATION-DOMAIN-001;
+- PHASE-NEUTRAL-TOPOLOGY-001;
+- SOLVER-RUNTIME-HOST-001;
+- SWITCH-FLOW-RESULTS-001 when required;
+- OPENDSS-ADAPTER-001 after phase/neutral qualification;
+- SITE-SOLVER-ACCEPTANCE-001.
 
 ## Out of scope
 

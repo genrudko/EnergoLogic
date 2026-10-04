@@ -896,7 +896,14 @@ def evaluate_breaker_failure_step(
                     )
 
         elif prior.status == "timing":
-            if not start_active:
+            if not start_active and breaker_open:
+                add_event("reset", "start_removed_and_breaker_open")
+                next_state = BreakerFailureStageState(
+                    function_id=definition.function_id,
+                    stage_id=definition.stage_id,
+                    status="idle",
+                )
+            elif not start_active:
                 add_event("reset", "start_removed")
                 next_state = BreakerFailureStageState(
                     function_id=definition.function_id,
@@ -918,7 +925,14 @@ def evaluate_breaker_failure_step(
                     next_state = prior
 
         elif prior.status == "operated":
-            if not start_active:
+            if not start_active and breaker_open:
+                add_event("reset", "start_removed_and_breaker_open")
+                next_state = BreakerFailureStageState(
+                    function_id=definition.function_id,
+                    stage_id=definition.stage_id,
+                    status="idle",
+                )
+            elif not start_active:
                 add_event("reset", "start_removed")
                 next_state = BreakerFailureStageState(
                     function_id=definition.function_id,

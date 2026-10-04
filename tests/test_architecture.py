@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / "src" / "energologic" / "core"
 DOMAIN = ROOT / "src" / "energologic" / "domain"
+OPERATIONAL = ROOT / "src" / "energologic" / "operational"
 
 
 FORBIDDEN_ROOTS = {
@@ -65,6 +66,24 @@ class ArchitectureTests(unittest.TestCase):
                 self.assertFalse(
                     module.startswith("energologic.frontends"),
                     f"{path} depends on frontend: {module}",
+                )
+
+    def test_operational_runtime_has_no_frontend_or_solver_dependency(self):
+        for path in sorted(OPERATIONAL.rglob("*.py")):
+            for module in _imports(path):
+                root = module.split(".", 1)[0]
+                self.assertNotIn(
+                    root,
+                    FORBIDDEN_ROOTS,
+                    f"{path} imports forbidden stack: {module}",
+                )
+                self.assertFalse(
+                    module.startswith("energologic.frontends"),
+                    f"{path} depends on frontend: {module}",
+                )
+                self.assertFalse(
+                    module.startswith("energologic.solvers"),
+                    f"{path} depends on solver layer: {module}",
                 )
 
 

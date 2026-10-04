@@ -1,9 +1,10 @@
 # OPERATIONAL-SIMULATION-FOUNDATION-001
 
-Status: **Implementation in progress**  
-Workstream: WS-6 — Operational Simulation  
-Issue: #19  
+Status: **Implementation candidate — awaiting CI and owner acceptance**
+Workstream: WS-6 — Operational Simulation
+Issue: #19
 Branch: `operational/operational-simulation-foundation-001`
+Draft PR: #20
 
 ## Objective
 
@@ -62,20 +63,20 @@ No source is inferred from element name, kind, voltage, text or geometry.
 ## Acceptance checklist
 
 - [x] issue and isolated branch from current main;
-- [ ] Draft PR;
-- [ ] public headless operational contract;
-- [ ] deterministic terminal graph traversal;
-- [ ] explicit source references;
-- [ ] source attribution including multiple sources;
-- [ ] closed/open switching topology delta;
-- [ ] withdrawable repair/control non-conduction;
-- [ ] transformer topological energization;
-- [ ] disconnected island handling;
-- [ ] normalized invalid-model / invalid-source failure;
-- [ ] deterministic before/after state delta;
-- [ ] full existing regression green;
+- [x] Draft PR;
+- [x] public headless operational contract;
+- [x] deterministic terminal graph traversal;
+- [x] explicit source references;
+- [x] source attribution including multiple sources;
+- [x] closed/open switching topology delta;
+- [x] withdrawable repair/control non-conduction;
+- [x] transformer topological energization;
+- [x] disconnected island handling;
+- [x] normalized invalid-model / invalid-source failure;
+- [x] deterministic before/after state delta;
+- [x] full existing regression green — 84/84 PASS locally;
 - [ ] Linux/Windows CI green;
-- [ ] evidence and known limitations;
+- [x] evidence and known limitations;
 - [ ] owner acceptance;
 - [ ] Ready for Review — owner command only;
 - [ ] Merge — owner command only.

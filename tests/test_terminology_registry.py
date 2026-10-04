@@ -120,6 +120,12 @@ class TerminologyRegistryTests(unittest.TestCase):
         issues = validate_registry_data(data)
         self.assertIn("invalid_canonical", {issue.code for issue in issues})
 
+    def test_invalid_source_authority_is_rejected(self):
+        data = _raw_registry()
+        data["sources"][0]["authority"] = "random_blog"
+        issues = validate_registry_data(data)
+        self.assertIn("invalid_source_authority", {issue.code for issue in issues})
+
     def test_accepted_concept_requires_current_provenance(self):
         data = _raw_registry()
         concept = next(item for item in data["concepts"] if item["status"] == "accepted")

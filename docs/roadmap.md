@@ -35,7 +35,26 @@ EnergoLogic target scope now explicitly includes: Visio engineering frontend/mne
 
 Cross-cutting requirements: Windows 10/11; desktop Visio 2010 through latest supported desktop/Microsoft 365 Visio; x86/x64 qualification as applicable; bundled runtimes/libraries; Russian UI with canonical Russian power-engineering terminology; English code/API identifiers using canonical international electrical terminology; controlled RU↔EN Terminology Registry.
 
-Planned bounded workstreams after the current editor baseline: canonical architecture hardening → legacy Visio migration (Kochubeevskaya WPP as real acceptance case) → scheme generator → energized-network traversal → switching simulation/forms → electrical solver v1 (pandapower preferred initial adapter) → protection engine v1 → arc/advanced protection → Russian normative rules → compatibility/product hardening.
+Delivery is now organized as **parallel workstreams with explicit dependency gates**, not as one linear chain. Authoritative dependency topology is in the canonical architecture document.
+
+Parallel streams include:
+
+- current Visio Editor baseline;
+- canonical domain/contracts;
+- terminology + normative foundations;
+- Visio compatibility + standalone packaging;
+- legacy Visio migration (Kochubeevskaya WPP acceptance case);
+- Scheme Generator;
+- operational simulation;
+- switching forms/training;
+- electrical solver;
+- protection/RZA, with separate setting-import / core / arc / advanced substreams;
+- executable RU/site rules;
+- shared site/golden acceptance fixtures.
+
+Safe work that may start before the current Editor work item is closed: terminology registry, Visio compatibility/packaging inventory, legacy-Visio inspection/fingerprinting, solver-adapter spike on synthetic networks, protection-setting schema/import spike, normative provenance catalog, and site fixture inventory.
+
+Production generator integration still waits for stable canonical + Visio/Glue contracts, but its layout/template research may proceed independently.
 
 ## Следующий основной архитектурный этап
 

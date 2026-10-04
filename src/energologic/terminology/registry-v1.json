@@ -2,6 +2,14 @@
   "registry_version": "1.0",
   "sources": [
     {
+      "id": "gost-12.2.007.4-75",
+      "authority": "gost",
+      "document": "ГОСТ 12.2.007.4-75",
+      "edition": "1975; Изм. №1–6; действует только в РФ",
+      "status": "current",
+      "title": "ССБТ. Шкафы комплектных распределительных устройств и комплектных трансформаторных подстанций, камеры сборные одностороннего обслуживания, ячейки герметизированных элегазовых распределительных устройств"
+    },
+    {
       "id": "gost-17717-79",
       "authority": "gost",
       "document": "ГОСТ 17717-79",
@@ -58,6 +66,15 @@
       "title": "Международный электротехнический словарь. Часть 651. Работа под напряжением"
     },
     {
+      "id": "gost-iec-60947-2-2021",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60947-2-2021",
+      "edition": "2021; введен в РФ с 2022-03-01",
+      "status": "current",
+      "title": "Аппаратура распределения и управления низковольтная. Часть 2. Автоматические выключатели",
+      "notes": "Russian adoption of IEC 60947-2:2016 + Amd.1:2019; scope primarily up to 1000 V AC / 1500 V DC."
+    },
+    {
       "id": "gost-iec-61869-3-2012",
       "authority": "gost_iec",
       "document": "ГОСТ IEC 61869-3-2012",
@@ -80,6 +97,14 @@
       "edition": "2007; Поправка ИУС 8-2018; Изм. №1, ИУС 2-2021",
       "status": "current",
       "title": "Трансформаторы силовые. Общие технические условия"
+    },
+    {
+      "id": "gost-r-52726-2007",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 52726-2007",
+      "edition": "2007; с Поправкой",
+      "status": "current",
+      "title": "Разъединители и заземлители переменного тока на напряжение свыше 1 кВ и приводы к ним. Общие технические условия"
     },
     {
       "id": "gost-r-55190-2022",
@@ -283,7 +308,7 @@
           "notes": "Current Russian power-system terminology uses «заземлитель» for earth electrode."
         }
       ],
-      "notes": "Distinct concept from an earthing switch. This concept is included specifically to prevent legacy «заземлитель» switchgear imports from being resolved silently.",
+      "notes": "Physical earth electrode. Russian canonical «заземлитель» is a real cross-domain normative homonym with the high-voltage earthing switching apparatus. Lookup must use concept/domain context and must never infer identity from the Russian string alone.",
       "status": "accepted"
     },
     {
@@ -1058,7 +1083,7 @@
     },
     {
       "id": "switchgear.circuit_breaker",
-      "domain": "power.switchgear",
+      "domain": "power.switchgear.high_voltage",
       "category": "equipment",
       "canonical": {
         "ru": "выключатель",
@@ -1070,9 +1095,7 @@
         "en": []
       },
       "aliases": {
-        "ru": [
-          "автоматический выключатель"
-        ],
+        "ru": [],
         "en": [
           "circuit breaker",
           "breaker"
@@ -1090,14 +1113,14 @@
         {
           "source_id": "gost-r-52565-2006",
           "role": "primary",
-          "locator": "title and scope: 3–750 kV AC circuit-breakers",
-          "notes": "Russian high-voltage product terminology uses «выключатель»."
+          "locator": "title and scope: AC circuit-breakers for 3–750 kV",
+          "notes": "Direct Russian high-voltage equipment standard uses «выключатель»."
         },
         {
           "source_id": "gost-iec-60050-441-2015",
           "role": "supporting",
           "locator": "IEV 441-14-20",
-          "notes": "Generic IEV-derived Russian term is «автоматический выключатель»."
+          "notes": "Generic IEV-derived Russian vocabulary uses «автоматический выключатель»; EnergoLogic does not treat that as an alias here because low-voltage automatic circuit-breaker is a separate concept."
         }
       ],
       "semantic_bindings": [
@@ -1106,8 +1129,8 @@
           "value": "circuit_breaker"
         }
       ],
-      "notes": "Power-system/HV UI candidate intentionally differs from generic IEV Russian wording; retained as provisional until project scope policy is owner-approved.",
-      "status": "provisional"
+      "notes": "High-voltage/power-system circuit-breaker. Existing energologic.element.kind=circuit_breaker is bound to this concept because the qualified canonical profile is based on 35 kV switchgear. Do not merge with the low-voltage automatic circuit-breaker concept.",
+      "status": "accepted"
     },
     {
       "id": "switchgear.disconnector",
@@ -1154,10 +1177,10 @@
     },
     {
       "id": "switchgear.earthing_switch",
-      "domain": "power.switchgear",
+      "domain": "power.switchgear.high_voltage",
       "category": "equipment",
       "canonical": {
-        "ru": "заземляющий выключатель",
+        "ru": "заземлитель",
         "en": "earthing switch"
       },
       "code_identifier": "EarthingSwitch",
@@ -1167,19 +1190,17 @@
       },
       "aliases": {
         "ru": [
-          "выключатель заземления"
+          "заземляющий выключатель",
+          "выключатель заземления",
+          "заземляющий разъединитель",
+          "заземляющий нож",
+          "нож заземления"
         ],
         "en": [
           "grounding switch"
         ]
       },
       "deprecated_aliases": [
-        {
-          "language": "ru",
-          "term": "заземлитель",
-          "disposition": "deprecated",
-          "reason": "Legacy ГОСТ Р МЭК 60050-441-2012 used this for earthing switch, but current terminology uses «заземляющий выключатель» and «заземлитель» also denotes an earth electrode."
-        },
         {
           "language": "en",
           "term": "Zazemlitel",
@@ -1189,25 +1210,32 @@
       ],
       "sources": [
         {
-          "source_id": "gost-iec-60050-441-2015",
+          "source_id": "gost-r-52726-2007",
           "role": "primary",
-          "locator": "IEV 441-14-11"
+          "locator": "title; 3.17; 3.18–3.20",
+          "notes": "Direct equipment standard for AC disconnectors and earthing switches above 1 kV defines the Russian apparatus term «заземлитель»."
         },
         {
-          "source_id": "gost-r-iec-60050-441-2012",
-          "role": "legacy",
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
           "locator": "IEV 441-14-11",
-          "notes": "Historical Russian alias evidence only."
+          "notes": "Generic vocabulary uses «заземляющий выключатель»; retained as a search/import alias."
         },
         {
           "source_id": "gost-r-57190-2016",
           "role": "supporting",
           "locator": "01-12-11",
-          "notes": "Current Russian standard independently uses «выключатель заземления» for earthing switch."
+          "notes": "Uses «выключатель заземления»; retained as a search/import alias."
+        },
+        {
+          "source_id": "gost-12.2.007.4-75",
+          "role": "supporting",
+          "locator": "2.3; 2.4; 2.8",
+          "notes": "Current Russian KRU/KSO safety standard uses «заземляющие ножи», «ножи заземления» and «заземляющий разъединитель»."
         }
       ],
-      "notes": "Two current Russian normative forms coexist by source: ГОСТ IEC 60050-441-2015 uses «заземляющий выключатель», while ГОСТ Р 57190-2016 uses «выключатель заземления». Legacy «заземлитель» is not canonical because it also denotes earth electrode.",
-      "status": "provisional"
+      "notes": "High-voltage earthing switching apparatus. Russian canonical follows the directly applicable equipment standard ГОСТ Р 52726-2007: «заземлитель». This is a deliberate cross-domain homonym with earth electrode; identity must come from concept/domain, not from the surface string.",
+      "status": "accepted"
     },
     {
       "id": "switchgear.fuse",
@@ -1275,6 +1303,41 @@
       ],
       "notes": "Russian term is stable for 3–10 kV practice; preferred international English form remains scope-sensitive between switch and load-break switch.",
       "status": "provisional"
+    },
+    {
+      "id": "switchgear.low_voltage_circuit_breaker",
+      "domain": "power.switchgear.low_voltage",
+      "category": "equipment",
+      "canonical": {
+        "ru": "автоматический выключатель",
+        "en": "circuit-breaker"
+      },
+      "code_identifier": "LowVoltageCircuitBreaker",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "автомат"
+        ],
+        "en": [
+          "circuit breaker",
+          "low-voltage circuit-breaker",
+          "low voltage circuit-breaker"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60947-2-2021",
+          "role": "primary",
+          "locator": "title and clause 1.1 scope",
+          "notes": "Low-voltage switchgear standard explicitly uses «автоматические выключатели»; English title uses «Circuit-breakers»."
+        }
+      ],
+      "notes": "Distinct low-voltage protective switching apparatus. It is intentionally not bound to the existing energologic.element.kind=circuit_breaker, which currently represents the qualified 35 kV/high-voltage device semantics.",
+      "status": "accepted"
     },
     {
       "id": "switchyard.bay",

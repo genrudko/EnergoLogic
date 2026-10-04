@@ -70,6 +70,7 @@ def lint_text(
     for concept in registry.concepts:
         if not _domain_matches(str(concept["domain"]), domain):
             continue
+        candidate_terms.add(str(concept["canonical"][language]))
         candidate_terms.update(str(item) for item in concept["aliases"][language])
         candidate_terms.update(
             str(item["term"])
@@ -88,18 +89,20 @@ def lint_text(
             continue
 
         dispositions = {item.match_kind for item in matches}
-        if "forbidden" in dispositions:
+        if len(affected) > 1:
+            code, severity = "ambiguous_term", "warning"
+            replacement: str | None = None
+        elif dispositions == {"canonical"}:
+            continue
+        elif "forbidden" in dispositions:
             code, severity = "forbidden_term", "error"
+            replacement = registry.canonical_term(affected[0], language)
         elif "deprecated" in dispositions:
             code, severity = "deprecated_term", "warning"
-        else:
-            code, severity = "noncanonical_alias", "info"
-
-        replacement: str | None = None
-        if len(affected) == 1:
             replacement = registry.canonical_term(affected[0], language)
         else:
-            code, severity = "ambiguous_noncanonical_term", "warning"
+            code, severity = "noncanonical_alias", "info"
+            replacement = registry.canonical_term(affected[0], language)
 
         for match in _literal_pattern(candidate).finditer(text):
             if _is_inside_preferred_phrase(

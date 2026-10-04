@@ -25,7 +25,7 @@ class TerminologyRegistryTests(unittest.TestCase):
 
     def test_default_registry_loads_and_has_expected_version(self):
         self.assertEqual(self.registry.version, "1.0")
-        self.assertGreaterEqual(len(self.registry.concepts), 40)
+        self.assertGreaterEqual(len(self.registry.concepts), 41)
 
     def test_lookup_by_id_and_code_identifier(self):
         concept = self.registry.by_id("switchgear.circuit_breaker")
@@ -33,6 +33,37 @@ class TerminologyRegistryTests(unittest.TestCase):
         self.assertEqual(
             self.registry.by_code_identifier("CircuitBreaker")["id"],
             "switchgear.circuit_breaker",
+        )
+
+    def test_high_and_low_voltage_circuit_breakers_are_distinct_concepts(self):
+        high_voltage = self.registry.by_id("switchgear.circuit_breaker")
+        low_voltage = self.registry.by_id("switchgear.low_voltage_circuit_breaker")
+        self.assertEqual(high_voltage["canonical"]["ru"], "выключатель")
+        self.assertEqual(low_voltage["canonical"]["ru"], "автоматический выключатель")
+        self.assertEqual(high_voltage["canonical"]["en"], "circuit-breaker")
+        self.assertEqual(low_voltage["canonical"]["en"], "circuit-breaker")
+        self.assertEqual(high_voltage["status"], "accepted")
+        self.assertEqual(low_voltage["status"], "accepted")
+        self.assertNotIn("semantic_bindings", low_voltage)
+
+        with self.assertRaises(AmbiguousTermError):
+            self.registry.resolve_unique("circuit-breaker", language="en")
+
+        resolved_high = self.registry.resolve_unique(
+            "circuit-breaker",
+            language="en",
+            domain="power.switchgear.high_voltage",
+        )
+        self.assertEqual(resolved_high["id"], "switchgear.circuit_breaker")
+
+        resolved_low = self.registry.resolve_unique(
+            "circuit-breaker",
+            language="en",
+            domain="power.switchgear.low_voltage",
+        )
+        self.assertEqual(
+            resolved_low["id"],
+            "switchgear.low_voltage_circuit_breaker",
         )
 
     def test_power_domain_operational_terms_are_scope_aware(self):
@@ -96,9 +127,11 @@ class TerminologyRegistryTests(unittest.TestCase):
         earthing_switch = self.registry.resolve_unique(
             "заземлитель",
             language="ru",
-            domain="power.switchgear",
+            domain="power.switchgear.high_voltage",
         )
         self.assertEqual(earthing_switch["id"], "switchgear.earthing_switch")
+        self.assertEqual(earthing_switch["canonical"]["ru"], "заземлитель")
+        self.assertEqual(earthing_switch["status"], "accepted")
 
     def test_open_is_ambiguous_between_state_and_operation_without_domain(self):
         with self.assertRaises(AmbiguousTermError):

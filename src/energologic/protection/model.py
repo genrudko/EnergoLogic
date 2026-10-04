@@ -457,6 +457,13 @@ def validate_setting_card(
             "/protected_object_ids",
             "at least one protected object stable ID is required",
         )
+    if len(set(card.protected_object_ids)) != len(card.protected_object_ids):
+        _issue(
+            issues,
+            "duplicate_protected_object_id",
+            "/protected_object_ids",
+            "protected object stable IDs must be unique",
+        )
 
     source_ids: set[str] = set()
     source_types: dict[str, str] = {}
@@ -1047,36 +1054,174 @@ def setting_card_fingerprint(card: ProtectionSettingCard) -> str:
     return hashlib.sha256(canonical_setting_card_bytes(card)).hexdigest()
 
 
+def _display_path(path: str) -> str:
+    return path or "/"
+
+
 def _expect_mapping(value: object, path: str) -> Mapping[str, object]:
     if not isinstance(value, dict):
-        raise ProtectionSettingDecodeError(f"{path}: expected object")
+        raise ProtectionSettingDecodeError(
+            f"{_display_path(path)}: expected object"
+        )
     return value
+
+
+def _expect_exact_mapping(
+    value: object,
+    path: str,
+    *,
+    allowed: frozenset[str],
+) -> Mapping[str, object]:
+    data = _expect_mapping(value, path)
+    extra = sorted(set(data) - allowed)
+    if extra:
+        raise ProtectionSettingDecodeError(
+            f"{_display_path(path)}: unexpected fields {extra!r}"
+        )
+    return data
 
 
 def _expect_list(value: object, path: str) -> list[object]:
     if not isinstance(value, list):
-        raise ProtectionSettingDecodeError(f"{path}: expected array")
+        raise ProtectionSettingDecodeError(
+            f"{_display_path(path)}: expected array"
+        )
     return value
 
 
-def _text(mapping: Mapping[str, object], key: str, path: str, default: str | None = None) -> str:
+def _text(
+    mapping: Mapping[str, object],
+    key: str,
+    path: str,
+) -> str:
     if key not in mapping:
-        if default is not None:
-            return default
         raise ProtectionSettingDecodeError(f"{path}/{key}: missing")
     value = mapping[key]
     if not isinstance(value, str):
-        raise ProtectionSettingDecodeError(f"{path}/{key}: expected string")
+        raise ProtectionSettingDecodeError(
+            f"{path}/{key}: expected string"
+        )
     return value
 
 
-def _optional_bool(mapping: Mapping[str, object], key: str, path: str) -> bool | None:
-    value = mapping.get(key)
+def _optional_bool(
+    mapping: Mapping[str, object],
+    key: str,
+    path: str,
+) -> bool | None:
+    if key not in mapping:
+        raise ProtectionSettingDecodeError(f"{path}/{key}: missing")
+    value = mapping[key]
     if value is None:
         return None
     if not isinstance(value, bool):
-        raise ProtectionSettingDecodeError(f"{path}/{key}: expected boolean or null")
+        raise ProtectionSettingDecodeError(
+            f"{path}/{key}: expected boolean or null"
+        )
     return value
+
+
+_ROOT_FIELDS = frozenset(
+    {
+        "schema_version",
+        "card_id",
+        "card_revision",
+        "site_id",
+        "settings_scope",
+        "lifecycle_status",
+        "primary_source_id",
+        "protected_object_ids",
+        "sources",
+        "devices",
+        "functions",
+        "notes",
+    }
+)
+_SOURCE_FIELDS = frozenset(
+    {
+        "id",
+        "document_type",
+        "title",
+        "revision",
+        "sha256",
+        "issue_date",
+        "source_uri",
+        "notes",
+    }
+)
+_DEVICE_FIELDS = frozenset(
+    {
+        "id",
+        "technology",
+        "dispatch_name",
+        "manufacturer",
+        "model",
+        "software_version",
+        "parameter_file_source_ids",
+        "provenance",
+    }
+)
+_REFERENCE_FIELDS = frozenset({"source_id", "locator_kind", "locator"})
+_PARAMETER_FIELDS = frozenset(
+    {"id", "semantic_key", "role", "value", "provenance", "notes"}
+)
+_ACTION_FIELDS = frozenset(
+    {
+        "id",
+        "action_type",
+        "target_kind",
+        "target_id",
+        "source_label",
+        "provenance",
+        "notes",
+    }
+)
+_STAGE_FIELDS = frozenset(
+    {"id", "source_name", "enabled", "parameters", "actions", "provenance"}
+)
+_FUNCTION_FIELDS = frozenset(
+    {
+        "id",
+        "concept_id",
+        "source_name",
+        "device_id",
+        "enabled",
+        "parameters",
+        "stages",
+        "actions",
+        "provenance",
+    }
+)
+_VALUE_FIELDS_BY_KIND = {
+    "quantity": frozenset(
+        {
+            "kind",
+            "raw_text",
+            "source_value",
+            "source_unit",
+            "quantity_kind",
+            "basis",
+            "normalized_value",
+            "normalized_unit",
+        }
+    ),
+    "boolean": frozenset({"kind", "raw_text", "boolean_value"}),
+    "enum": frozenset({"kind", "raw_text", "enum_value"}),
+    "text": frozenset({"kind", "raw_text", "text_value"}),
+}
+_ALL_VALUE_FIELDS = frozenset().union(*_VALUE_FIELDS_BY_KIND.values())
+
+
+def _string_array(value: object, path: str) -> tuple[str, ...]:
+    items = _expect_list(value, path)
+    result: list[str] = []
+    for index, item in enumerate(items):
+        if not isinstance(item, str):
+            raise ProtectionSettingDecodeError(
+                f"{path}/{index}: expected string"
+            )
+        result.append(item)
+    return tuple(result)
 
 
 def _refs(value: object, path: str) -> tuple[SourceReference, ...]:
@@ -1084,7 +1229,11 @@ def _refs(value: object, path: str) -> tuple[SourceReference, ...]:
     result: list[SourceReference] = []
     for index, raw in enumerate(items):
         item_path = f"{path}/{index}"
-        data = _expect_mapping(raw, item_path)
+        data = _expect_exact_mapping(
+            raw,
+            item_path,
+            allowed=_REFERENCE_FIELDS,
+        )
         result.append(
             SourceReference(
                 source_id=_text(data, "source_id", item_path),
@@ -1096,55 +1245,93 @@ def _refs(value: object, path: str) -> tuple[SourceReference, ...]:
 
 
 def _setting_value(value: object, path: str) -> SettingValue:
-    data = _expect_mapping(value, path)
-    kind = _text(data, "kind", path)
-    result = SettingValue(
+    base = _expect_mapping(value, path)
+    kind = _text(base, "kind", path)
+    allowed = _VALUE_FIELDS_BY_KIND.get(kind, _ALL_VALUE_FIELDS)
+    data = _expect_exact_mapping(value, path, allowed=allowed)
+
+    if kind == "quantity":
+        return SettingValue(
+            kind=kind,
+            raw_text=_text(data, "raw_text", path),
+            source_value=_text(data, "source_value", path),
+            source_unit=_text(data, "source_unit", path),
+            quantity_kind=_text(data, "quantity_kind", path),
+            basis=_text(data, "basis", path),
+            normalized_value=_text(data, "normalized_value", path),
+            normalized_unit=_text(data, "normalized_unit", path),
+        )
+    if kind == "boolean":
+        boolean_value = data.get("boolean_value")
+        if not isinstance(boolean_value, bool):
+            raise ProtectionSettingDecodeError(
+                f"{path}/boolean_value: expected boolean"
+            )
+        return SettingValue(
+            kind=kind,
+            raw_text=_text(data, "raw_text", path),
+            boolean_value=boolean_value,
+        )
+    if kind == "enum":
+        return SettingValue(
+            kind=kind,
+            raw_text=_text(data, "raw_text", path),
+            enum_value=_text(data, "enum_value", path),
+        )
+    if kind == "text":
+        return SettingValue(
+            kind=kind,
+            raw_text=_text(data, "raw_text", path),
+            text_value=_text(data, "text_value", path),
+        )
+
+    # Preserve deterministic validation of an unknown kind while still rejecting
+    # arbitrary fields not part of any versioned setting-value shape.
+    return SettingValue(
         kind=kind,
         raw_text=_text(data, "raw_text", path),
-        source_value=_text(data, "source_value", path, ""),
-        source_unit=_text(data, "source_unit", path, ""),
-        quantity_kind=_text(data, "quantity_kind", path, ""),
-        basis=_text(data, "basis", path, ""),
-        normalized_value=_text(data, "normalized_value", path, ""),
-        normalized_unit=_text(data, "normalized_unit", path, ""),
-        boolean_value=(
-            _optional_bool(data, "boolean_value", path)
-            if "boolean_value" in data
-            else None
-        ),
-        enum_value=_text(data, "enum_value", path, ""),
-        text_value=_text(data, "text_value", path, ""),
     )
-    return result
 
 
 def _parameter(value: object, path: str) -> SettingParameter:
-    data = _expect_mapping(value, path)
+    data = _expect_exact_mapping(
+        value,
+        path,
+        allowed=_PARAMETER_FIELDS,
+    )
     return SettingParameter(
         id=_text(data, "id", path),
         semantic_key=_text(data, "semantic_key", path),
         role=_text(data, "role", path),
         value=_setting_value(data.get("value"), f"{path}/value"),
         provenance=_refs(data.get("provenance"), f"{path}/provenance"),
-        notes=_text(data, "notes", path, ""),
+        notes=_text(data, "notes", path),
     )
 
 
 def _action(value: object, path: str) -> SettingAction:
-    data = _expect_mapping(value, path)
+    data = _expect_exact_mapping(
+        value,
+        path,
+        allowed=_ACTION_FIELDS,
+    )
     return SettingAction(
         id=_text(data, "id", path),
         action_type=_text(data, "action_type", path),
         target_kind=_text(data, "target_kind", path),
         target_id=_text(data, "target_id", path),
-        source_label=_text(data, "source_label", path, ""),
+        source_label=_text(data, "source_label", path),
         provenance=_refs(data.get("provenance"), f"{path}/provenance"),
-        notes=_text(data, "notes", path, ""),
+        notes=_text(data, "notes", path),
     )
 
 
 def _stage(value: object, path: str) -> ProtectionStage:
-    data = _expect_mapping(value, path)
+    data = _expect_exact_mapping(
+        value,
+        path,
+        allowed=_STAGE_FIELDS,
+    )
     return ProtectionStage(
         id=_text(data, "id", path),
         source_name=_text(data, "source_name", path),
@@ -1166,7 +1353,11 @@ def _stage(value: object, path: str) -> ProtectionStage:
 
 
 def _function(value: object, path: str) -> ProtectionFunctionSettings:
-    data = _expect_mapping(value, path)
+    data = _expect_exact_mapping(
+        value,
+        path,
+        allowed=_FUNCTION_FIELDS,
+    )
     return ProtectionFunctionSettings(
         id=_text(data, "id", path),
         concept_id=_text(data, "concept_id", path),
@@ -1195,12 +1386,55 @@ def _function(value: object, path: str) -> ProtectionFunctionSettings:
     )
 
 
+def _source_document(value: object, path: str) -> SourceDocument:
+    data = _expect_exact_mapping(
+        value,
+        path,
+        allowed=_SOURCE_FIELDS,
+    )
+    return SourceDocument(
+        id=_text(data, "id", path),
+        document_type=_text(data, "document_type", path),
+        title=_text(data, "title", path),
+        revision=_text(data, "revision", path),
+        sha256=_text(data, "sha256", path),
+        issue_date=_text(data, "issue_date", path),
+        source_uri=_text(data, "source_uri", path),
+        notes=_text(data, "notes", path),
+    )
+
+
+def _device(value: object, path: str) -> ProtectionDevice:
+    data = _expect_exact_mapping(
+        value,
+        path,
+        allowed=_DEVICE_FIELDS,
+    )
+    return ProtectionDevice(
+        id=_text(data, "id", path),
+        technology=_text(data, "technology", path),
+        dispatch_name=_text(data, "dispatch_name", path),
+        manufacturer=_text(data, "manufacturer", path),
+        model=_text(data, "model", path),
+        software_version=_text(data, "software_version", path),
+        parameter_file_source_ids=_string_array(
+            data.get("parameter_file_source_ids"),
+            f"{path}/parameter_file_source_ids",
+        ),
+        provenance=_refs(data.get("provenance"), f"{path}/provenance"),
+    )
+
+
 def setting_card_from_dict(
     value: object,
     *,
     require_valid: bool = True,
 ) -> ProtectionSettingCard:
-    data = _expect_mapping(value, "")
+    data = _expect_exact_mapping(
+        value,
+        "",
+        allowed=_ROOT_FIELDS,
+    )
     card = ProtectionSettingCard(
         schema_version=_text(data, "schema_version", ""),
         card_id=_text(data, "card_id", ""),
@@ -1209,68 +1443,21 @@ def setting_card_from_dict(
         settings_scope=_text(data, "settings_scope", ""),
         lifecycle_status=_text(data, "lifecycle_status", ""),
         primary_source_id=_text(data, "primary_source_id", ""),
-        protected_object_ids=tuple(
-            _text({"value": item}, "value", f"/protected_object_ids/{index}")
-            for index, item in enumerate(
-                _expect_list(
-                    data.get("protected_object_ids"),
-                    "/protected_object_ids",
-                )
-            )
+        protected_object_ids=_string_array(
+            data.get("protected_object_ids"),
+            "/protected_object_ids",
         ),
         sources=tuple(
-            SourceDocument(
-                id=_text(item_data, "id", item_path),
-                document_type=_text(item_data, "document_type", item_path),
-                title=_text(item_data, "title", item_path),
-                revision=_text(item_data, "revision", item_path),
-                sha256=_text(item_data, "sha256", item_path),
-                issue_date=_text(item_data, "issue_date", item_path, ""),
-                source_uri=_text(item_data, "source_uri", item_path, ""),
-                notes=_text(item_data, "notes", item_path, ""),
-            )
+            _source_document(item, f"/sources/{index}")
             for index, item in enumerate(
                 _expect_list(data.get("sources"), "/sources")
             )
-            for item_path in (f"/sources/{index}",)
-            for item_data in (_expect_mapping(item, item_path),)
         ),
         devices=tuple(
-            ProtectionDevice(
-                id=_text(item_data, "id", item_path),
-                technology=_text(item_data, "technology", item_path),
-                dispatch_name=_text(item_data, "dispatch_name", item_path, ""),
-                manufacturer=_text(item_data, "manufacturer", item_path, ""),
-                model=_text(item_data, "model", item_path, ""),
-                software_version=_text(
-                    item_data,
-                    "software_version",
-                    item_path,
-                    "",
-                ),
-                parameter_file_source_ids=tuple(
-                    _text(
-                        {"value": source_id},
-                        "value",
-                        f"{item_path}/parameter_file_source_ids/{source_index}",
-                    )
-                    for source_index, source_id in enumerate(
-                        _expect_list(
-                            item_data.get("parameter_file_source_ids"),
-                            f"{item_path}/parameter_file_source_ids",
-                        )
-                    )
-                ),
-                provenance=_refs(
-                    item_data.get("provenance"),
-                    f"{item_path}/provenance",
-                ),
-            )
+            _device(item, f"/devices/{index}")
             for index, item in enumerate(
                 _expect_list(data.get("devices"), "/devices")
             )
-            for item_path in (f"/devices/{index}",)
-            for item_data in (_expect_mapping(item, item_path),)
         ),
         functions=tuple(
             _function(item, f"/functions/{index}")
@@ -1278,7 +1465,7 @@ def setting_card_from_dict(
                 _expect_list(data.get("functions"), "/functions")
             )
         ),
-        notes=_text(data, "notes", "", ""),
+        notes=_text(data, "notes", ""),
     )
 
     if require_valid:

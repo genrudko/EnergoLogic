@@ -90,6 +90,30 @@ class ProtectionSettingModelTests(unittest.TestCase):
                 basis="primary",
             )
 
+    def test_unknown_json_field_is_rejected_fail_closed(self):
+        data = raw_fixture()
+        data["unexpected_typo"] = "must not be ignored"
+        with self.assertRaises(Exception) as caught:
+            setting_card_from_dict(data)
+        self.assertIn("unexpected fields", str(caught.exception))
+
+    def test_unknown_nested_value_field_is_rejected_fail_closed(self):
+        data = raw_fixture()
+        value = data["functions"][0]["stages"][0]["parameters"][0]["value"]
+        value["basiss"] = "primary"
+        with self.assertRaises(Exception) as caught:
+            setting_card_from_dict(data)
+        self.assertIn("basiss", str(caught.exception))
+
+    def test_duplicate_protected_object_ids_are_rejected(self):
+        data = raw_fixture()
+        data["protected_object_ids"].append(data["protected_object_ids"][0])
+        card = setting_card_from_dict(data, require_valid=False)
+        self.assertIn(
+            "duplicate_protected_object_id",
+            {issue.code for issue in validate_setting_card(card)},
+        )
+
     def test_negative_numeric_delay_is_rejected(self):
         data = raw_fixture()
         delay = data["functions"][0]["stages"][0]["parameters"][1]["value"]

@@ -1,0 +1,402 @@
+{
+  "schema_version": "protection-settings-v1",
+  "card_id": "setting-card:kves:kl-1",
+  "card_revision": "rev-2026-10-04",
+  "site_id": "site:kves",
+  "settings_scope": "operational_summary",
+  "lifecycle_status": "implemented",
+  "primary_source_id": "source:setting-card:kl-1",
+  "protected_object_ids": [
+    "line:kl-1"
+  ],
+  "sources": [
+    {
+      "id": "source:setting-card:kl-1",
+      "document_type": "setting_card",
+      "title": "Synthetic KЛ-1 RZA setting card",
+      "revision": "2026-10-04",
+      "sha256": "b61988a24fe7414745f5e8abc94c6ef29b550120e7226766651b23dc04252142",
+      "issue_date": "2026-10-04",
+      "source_uri": "synthetic://ws9a/kl-1",
+      "notes": "Synthetic acceptance fixture only."
+    }
+  ],
+  "devices": [
+    {
+      "id": "ied:kl-1:rza",
+      "technology": "microprocessor",
+      "dispatch_name": "РЗА КЛ-1",
+      "manufacturer": "Synthetic",
+      "model": "RZA-TEST",
+      "software_version": "4.2.1",
+      "parameter_file_source_ids": [],
+      "provenance": [
+        {
+          "source_id": "source:setting-card:kl-1",
+          "locator_kind": "document",
+          "locator": "device header"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "function:kl-1:mtz",
+      "concept_id": "protection.overcurrent",
+      "source_name": "МТЗ",
+      "device_id": "ied:kl-1:rza",
+      "enabled": true,
+      "parameters": [],
+      "stages": [
+        {
+          "id": "stage:kl-1:mtz-1",
+          "source_name": "МТЗ I ступень",
+          "enabled": true,
+          "parameters": [
+            {
+              "id": "parameter:kl-1:mtz-1:pickup",
+              "semantic_key": "pickup_current",
+              "role": "pickup",
+              "value": {
+                "kind": "quantity",
+                "raw_text": "0.600 kA",
+                "source_value": "0.6",
+                "source_unit": "kA",
+                "quantity_kind": "current",
+                "basis": "primary",
+                "normalized_value": "600",
+                "normalized_unit": "A"
+              },
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 1; MTZ stage 1; pickup"
+                }
+              ],
+              "notes": ""
+            },
+            {
+              "id": "parameter:kl-1:mtz-1:delay",
+              "semantic_key": "operate_delay",
+              "role": "delay",
+              "value": {
+                "kind": "quantity",
+                "raw_text": "0.80 s",
+                "source_value": "0.8",
+                "source_unit": "s",
+                "quantity_kind": "time",
+                "basis": "not_applicable",
+                "normalized_value": "0.8",
+                "normalized_unit": "s"
+              },
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 1; MTZ stage 1; delay"
+                }
+              ],
+              "notes": ""
+            }
+          ],
+          "actions": [
+            {
+              "id": "action:kl-1:mtz-1:trip",
+              "action_type": "trip",
+              "target_kind": "equipment",
+              "target_id": "breaker:v-1-35",
+              "source_label": "Отключение В-1-35",
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 1; MTZ stage 1; action"
+                }
+              ],
+              "notes": "Association only; WS-9A does not execute it."
+            }
+          ],
+          "provenance": [
+            {
+              "source_id": "source:setting-card:kl-1",
+              "locator_kind": "page",
+              "locator": "page 1; MTZ stage 1"
+            }
+          ]
+        }
+      ],
+      "actions": [],
+      "provenance": [
+        {
+          "source_id": "source:setting-card:kl-1",
+          "locator_kind": "page",
+          "locator": "page 1; MTZ"
+        }
+      ]
+    },
+    {
+      "id": "function:kl-1:to",
+      "concept_id": "protection.instantaneous_overcurrent",
+      "source_name": "ТО",
+      "device_id": "ied:kl-1:rza",
+      "enabled": true,
+      "parameters": [],
+      "stages": [
+        {
+          "id": "stage:kl-1:to-1",
+          "source_name": "Токовая отсечка",
+          "enabled": true,
+          "parameters": [
+            {
+              "id": "parameter:kl-1:to-1:pickup",
+              "semantic_key": "pickup_current",
+              "role": "pickup",
+              "value": {
+                "kind": "quantity",
+                "raw_text": "1.20 kA",
+                "source_value": "1.2",
+                "source_unit": "kA",
+                "quantity_kind": "current",
+                "basis": "primary",
+                "normalized_value": "1200",
+                "normalized_unit": "A"
+              },
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 1; TO; pickup"
+                }
+              ],
+              "notes": ""
+            },
+            {
+              "id": "parameter:kl-1:to-1:delay",
+              "semantic_key": "operate_delay",
+              "role": "delay",
+              "value": {
+                "kind": "quantity",
+                "raw_text": "0 s",
+                "source_value": "0",
+                "source_unit": "s",
+                "quantity_kind": "time",
+                "basis": "not_applicable",
+                "normalized_value": "0",
+                "normalized_unit": "s"
+              },
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 1; TO; delay"
+                }
+              ],
+              "notes": ""
+            }
+          ],
+          "actions": [
+            {
+              "id": "action:kl-1:to-1:trip",
+              "action_type": "trip",
+              "target_kind": "equipment",
+              "target_id": "breaker:v-1-35",
+              "source_label": "Отключение В-1-35",
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 1; TO; action"
+                }
+              ],
+              "notes": ""
+            }
+          ],
+          "provenance": [
+            {
+              "source_id": "source:setting-card:kl-1",
+              "locator_kind": "page",
+              "locator": "page 1; TO"
+            }
+          ]
+        }
+      ],
+      "actions": [],
+      "provenance": [
+        {
+          "source_id": "source:setting-card:kl-1",
+          "locator_kind": "page",
+          "locator": "page 1; TO"
+        }
+      ]
+    },
+    {
+      "id": "function:kl-1:earth-fault",
+      "concept_id": "protection.earth_fault",
+      "source_name": "ЗЗ",
+      "device_id": "ied:kl-1:rza",
+      "enabled": true,
+      "parameters": [],
+      "stages": [
+        {
+          "id": "stage:kl-1:earth-fault-1",
+          "source_name": "Защита от замыканий на землю",
+          "enabled": true,
+          "parameters": [
+            {
+              "id": "parameter:kl-1:earth-fault-1:pickup",
+              "semantic_key": "pickup_residual_current",
+              "role": "pickup",
+              "value": {
+                "kind": "quantity",
+                "raw_text": "0.080 kA",
+                "source_value": "0.08",
+                "source_unit": "kA",
+                "quantity_kind": "current",
+                "basis": "primary",
+                "normalized_value": "80",
+                "normalized_unit": "A"
+              },
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 2; earth fault; pickup"
+                }
+              ],
+              "notes": ""
+            },
+            {
+              "id": "parameter:kl-1:earth-fault-1:delay",
+              "semantic_key": "operate_delay",
+              "role": "delay",
+              "value": {
+                "kind": "quantity",
+                "raw_text": "0.50 s",
+                "source_value": "0.5",
+                "source_unit": "s",
+                "quantity_kind": "time",
+                "basis": "not_applicable",
+                "normalized_value": "0.5",
+                "normalized_unit": "s"
+              },
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 2; earth fault; delay"
+                }
+              ],
+              "notes": ""
+            }
+          ],
+          "actions": [
+            {
+              "id": "action:kl-1:earth-fault-1:trip",
+              "action_type": "trip",
+              "target_kind": "equipment",
+              "target_id": "breaker:v-1-35",
+              "source_label": "Отключение В-1-35",
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 2; earth fault; action"
+                }
+              ],
+              "notes": ""
+            }
+          ],
+          "provenance": [
+            {
+              "source_id": "source:setting-card:kl-1",
+              "locator_kind": "page",
+              "locator": "page 2; earth fault"
+            }
+          ]
+        }
+      ],
+      "actions": [],
+      "provenance": [
+        {
+          "source_id": "source:setting-card:kl-1",
+          "locator_kind": "page",
+          "locator": "page 2; earth fault"
+        }
+      ]
+    },
+    {
+      "id": "function:kl-1:breaker-failure",
+      "concept_id": "protection.breaker_failure",
+      "source_name": "УРОВ",
+      "device_id": "ied:kl-1:rza",
+      "enabled": true,
+      "parameters": [],
+      "stages": [
+        {
+          "id": "stage:kl-1:breaker-failure-1",
+          "source_name": "УРОВ",
+          "enabled": true,
+          "parameters": [
+            {
+              "id": "parameter:kl-1:breaker-failure-1:delay",
+              "semantic_key": "breaker_failure_delay",
+              "role": "delay",
+              "value": {
+                "kind": "quantity",
+                "raw_text": "0.20 s",
+                "source_value": "0.2",
+                "source_unit": "s",
+                "quantity_kind": "time",
+                "basis": "not_applicable",
+                "normalized_value": "0.2",
+                "normalized_unit": "s"
+              },
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 2; breaker failure; delay"
+                }
+              ],
+              "notes": ""
+            }
+          ],
+          "actions": [
+            {
+              "id": "action:kl-1:breaker-failure-1:trip-adjacent",
+              "action_type": "trip",
+              "target_kind": "equipment",
+              "target_id": "breaker:section-coupler",
+              "source_label": "Отключение смежного выключателя",
+              "provenance": [
+                {
+                  "source_id": "source:setting-card:kl-1",
+                  "locator_kind": "page",
+                  "locator": "page 2; breaker failure; action"
+                }
+              ],
+              "notes": "Association only."
+            }
+          ],
+          "provenance": [
+            {
+              "source_id": "source:setting-card:kl-1",
+              "locator_kind": "page",
+              "locator": "page 2; breaker failure"
+            }
+          ]
+        }
+      ],
+      "actions": [],
+      "provenance": [
+        {
+          "source_id": "source:setting-card:kl-1",
+          "locator_kind": "page",
+          "locator": "page 2; breaker failure"
+        }
+      ]
+    }
+  ],
+  "notes": "Synthetic WS-9A fixture. Values are not Kochubeevskaya site settings."
+}

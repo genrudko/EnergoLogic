@@ -477,65 +477,311 @@ A project/site profile should encapsulate:
 
 The same canonical site model should drive Visio, simulation, calculations and protection behavior.
 
-## 16. Delivery sequence
+## 16. Delivery topology — parallel workstreams
 
-The product is implemented through bounded work items. Do not fold all of this into VISIO-EDITOR-QOL-001.
+The delivery plan is **not a single sequential phase chain**. EnergoLogic is developed through bounded workstreams that may run independently whenever their explicit contracts are satisfied.
 
-### Phase 0 — finish current Visio editor baseline
+There is no global rule such as “migration must finish before solver work can begin”. Dependencies are expressed through small shared gates.
 
-Close the remaining topology-safe Cell Pitch issue and complete the practical EnergoLogic Editor UX baseline.
+### 16.1 Shared dependency gates
 
-One-user-Undo remains deferred technical debt unless it becomes necessary for another accepted requirement.
+#### Gate A — Domain Model Contract
 
-### Phase 1 — canonical architecture hardening
+Minimum stable canonical concepts and IDs for:
 
-Create/lock:
+- equipment;
+- terminals/nodes;
+- connectivity;
+- switching state;
+- electrical parameters;
+- protection associations;
+- site/profile metadata.
+
+This gate is required for full integration of migration, generation, simulation, solver and protection work, but those workstreams may prototype behind adapters before the gate is complete.
+
+#### Gate B — Terminology Contract
+
+Terminology Registry structure and canonical RU↔EN naming rules are stable enough for schemas, UI labels and import aliases.
+
+Terminology curation itself remains continuous and does not block unrelated implementation unless a new domain concept is being accepted.
+
+#### Gate C — Visio Integration Contract
+
+Stable interfaces between canonical objects and:
+
+- Visio shapes/masters;
+- Glue/connectivity representation;
+- renderer state updates;
+- selection/command identity;
+- version/capability detection.
+
+This gate is required for generator/rendering integration, but not for solver, protection-engine or normative-rule development.
+
+#### Gate D — Electrical Calculation Contract
+
+Canonical electrical parameters/results and solver-adapter interfaces are stable.
+
+This enables independent solver implementations without coupling the canonical model to pandapower/OpenDSS schemas.
+
+#### Gate E — Event / Protection Contract
+
+Stable event timeline, measured-value input, protection pickup/trip output, breaker action and reset semantics.
+
+Protection algorithms may be developed before full operational UI integration once this contract exists.
+
+#### Gate F — Rules / Provenance Contract
+
+Stable representation for normative/site rules, source provenance, revision/applicability and machine-readable decisions.
+
+Normative source cataloging can start before this gate; executable rule integration depends on it.
+
+### 16.2 Parallel workstreams
+
+#### WS-0 — Current Visio Editor Baseline
+
+Scope:
+
+- finish topology-safe Cell Pitch;
+- complete practical editor UX/polish;
+- preserve current Glue/topology invariants.
+
+This remains the active VISIO-EDITOR-QOL-001 work item.
+
+**Does not block:** terminology research, packaging architecture, legacy-Visio inspection, solver-adapter prototyping, normative-source cataloging.
+
+**Blocks/limits:** production-grade generator integration that relies on the final editor/Glue primitives.
+
+#### WS-1 — Canonical Domain & Contracts
+
+Scope:
+
+- harden canonical model;
+- define Gates A, D and E;
+- site-profile structure;
+- stable IDs and serialization contracts.
+
+This is the principal shared foundation workstream.
+
+It should remain small and contract-focused rather than absorbing implementations from other streams.
+
+#### WS-2 — Terminology & Normative Foundations
+
+Scope:
 
 - Terminology Registry;
-- version/capability abstraction for Visio 2010 → latest;
-- packaging/runtime architecture;
-- site-profile structure;
-- explicit model/solver/protection/rules interfaces.
+- authoritative RU/EN term sourcing;
+- Normative Source Registry;
+- rule provenance schema;
+- terminology linting/validation.
 
-### Phase 2 — Visio legacy migration foundation
+**Can start immediately and run continuously.**
 
-Implement legacy-Visio inspection, symbol-family classification, connectivity reconstruction and canonical import.
+Executable normative rules later depend on WS-1/WS-6 operational semantics, but source collection and terminology do not.
 
-Use the Kochubeevskaya WPP source Visio as the primary acceptance case.
+#### WS-3 — Visio Compatibility & Packaging
 
-### Phase 3 — Scheme Generator v1
+Scope:
 
-Generate canonical bus/cell/bay structures using EnergoLogic masters and deterministic layout primitives.
+- Visio 2010 → latest capability/version abstraction;
+- x86/x64 qualification harness;
+- bundled runtime/dependency inventory;
+- offline installer/bootstrapper architecture;
+- update/diagnostic strategy.
 
-### Phase 4 — operational network simulation
+**Can run in parallel with all functional streams.**
 
-Implement energized-network traversal, switching state, earthing, interlocks and live mnemonic rendering.
+Final packaging acceptance is downstream of feature completion, but packaging architecture and compatibility qualification must not be deferred until the end.
 
-### Phase 5 — switching forms / training
+#### WS-4 — Legacy Visio Migration
 
-Implement operation sequencing, validation, explanation and scenario execution.
+Scope:
 
-### Phase 6 — electrical calculations v1
+- shape/master/group/text/ShapeSheet inspection;
+- legacy symbol fingerprinting;
+- symbol-family mapping;
+- native Glue extraction;
+- spatial topology reconstruction fallback;
+- confidence/review workflow;
+- canonical import.
 
-Add solver adapter architecture and pandapower-based power-flow and short-circuit calculation.
+Primary acceptance source: Kochubeevskaya WPP existing Visio.
 
-### Phase 7 — protection simulation v1
+**Can start immediately** with inspection/classification tooling.
 
-Import real setting cards and implement the first set of protection functions, trip matrices and event timing.
+Full canonical import depends on Gate A; generated replacement documents additionally depend on WS-5.
 
-### Phase 8 — arc protection / advanced protection
+#### WS-5 — Scheme Generator & Auto-layout
 
-Add station-realistic arc-fault protection, breaker-failure logic and progressively more complex protection functions.
+Scope:
 
-### Phase 9 — normative rules integration
+- domain templates for cells/bays;
+- deterministic bus/cell placement;
+- pitch/layout primitives;
+- Glue generation;
+- numbering/labels;
+- regeneration from canonical model.
 
-Formalize machine-enforced Russian normative and site rules with provenance and version control; integrate them into switching and protection validation.
+Can prototype layout/templates in parallel.
 
-Normative provenance must be designed earlier, but broad rule coverage is a dedicated workstream.
+Production integration depends on:
 
-### Phase 10 — product hardening and compatibility release gates
+- Gate A;
+- Gate C;
+- sufficiently stable EnergoLogic masters/editor primitives from WS-0.
 
-Qualify representative Visio generations/bitness combinations, offline packaging, upgrade paths, migration compatibility and end-to-end station scenarios.
+WS-4 and WS-5 deliberately remain separate: migration reconstructs meaning; generation renders canonical meaning.
+
+#### WS-6 — Operational Simulation
+
+Scope:
+
+- energized-network traversal;
+- source tracing;
+- switching state;
+- earthing;
+- interlocks;
+- invalid-state detection;
+- event timeline.
+
+This workstream is independent of Visio rendering and should be testable headlessly.
+
+Depends primarily on Gate A and existing switching semantics, not on migration/generator completion.
+
+#### WS-7 — Switching Forms & Training
+
+Scope:
+
+- switching-form/program model;
+- initial/target states;
+- step execution;
+- sequence validation;
+- explanations;
+- scenario/training results.
+
+Document/scenario schema can begin early.
+
+Full execution depends on WS-6 plus executable rules from WS-9.
+
+#### WS-8 — Electrical Solver
+
+Scope:
+
+- solver-adapter API;
+- pandapower adapter first;
+- optional OpenDSS adapter;
+- power flow;
+- short-circuit calculation;
+- result normalization.
+
+**Can run headlessly and in parallel with Visio/migration/generator work.**
+
+Depends on Gate D, not on Visio.
+
+It should use synthetic/golden canonical test networks before site migration is complete.
+
+#### WS-9 — Protection & Automation
+
+Scope:
+
+- protection setting-card import;
+- generic protection-function model;
+- pickup/delay/reset semantics;
+- trip matrices;
+- breaker-failure logic;
+- advanced functions;
+- arc-fault protection.
+
+Substreams may run independently:
+
+- WS-9A setting-card importer/data model;
+- WS-9B generic protection engine;
+- WS-9C arc-fault protection;
+- WS-9D advanced protection functions.
+
+WS-9A/WS-9B can begin before the solver is complete using synthetic measured quantities.
+
+Integrated protection simulation depends on Gates D/E and WS-8 result feeds.
+
+Arc-fault optical/logic behavior does not need to wait for every advanced electrical-protection function.
+
+#### WS-10 — Russian Rules Engine
+
+Scope:
+
+- executable switching rules;
+- site-specific operating rules;
+- protection/normative validation;
+- source-attributed explanations.
+
+Normative research runs in WS-2 continuously.
+
+Executable integration depends on Gate F and the relevant operational/protection semantics.
+
+#### WS-11 — Acceptance Fixtures & Site Digital Twin
+
+Scope:
+
+- Kochubeevskaya source Visio as golden migration fixture;
+- actual equipment parameter datasets;
+- real protection-setting cards;
+- approved topology snapshots;
+- switching scenarios;
+- expected calculation/protection outcomes.
+
+This workstream supplies stable real-world fixtures to all others and should start early.
+
+Sensitive/site-specific data must remain separated from generic product code as appropriate.
+
+### 16.3 Recommended concurrency after the current checkpoint
+
+Once separate bounded work items/branches exist, work may proceed approximately as:
+
+```text
+WS-0  Visio Editor baseline ────────────────┐
+WS-1  Canonical contracts ────────┐         │
+WS-2  Terminology/Normative ───────────────────────────────► continuous
+WS-3  Compatibility/Packaging ─────────────────────────────► continuous
+WS-4  Legacy migration ───────────┼─────────► canonical import
+WS-5  Scheme generator ───────────┼─────────► generated Visio
+WS-6  Operational simulation ─────┼─────────► switching runtime
+WS-8  Solver adapter ─────────────┼─────────► power flow / SC
+WS-9A Protection settings import ─┤
+WS-9B Protection core ────────────┼─────────► integrated RZA
+WS-11 Site fixtures ────────────────────────────────────────► continuous
+                                  │
+                                  ├─ WS-7 switching forms/training
+                                  ├─ WS-9C/9D arc + advanced protection
+                                  └─ WS-10 executable RU/site rules
+```
+
+The drawing above expresses dependencies, not mandatory calendar order.
+
+### 16.4 Rules for parallel development
+
+1. Each workstream gets its own bounded work item, branch and acceptance criteria.
+2. Do not share mutable implementation branches between independent streams.
+3. Shared contracts change through explicit versioned schema/interface changes.
+4. A workstream may prototype against mocks/fixtures before an upstream gate is complete.
+5. Integration must be fail-closed when contract versions are incompatible.
+6. Generic product code and Kochubeevskaya/site-specific data remain separable.
+7. Headless logic must be tested without requiring Visio where Visio is not intrinsic to the function.
+8. No stream may silently redefine canonical terminology or canonical model semantics.
+9. Packaging/compatibility and normative provenance are continuous streams, not “finish at the end” chores.
+10. PR Ready/merge remains owner-controlled.
+
+### 16.5 Near-term parallelization decision
+
+While VISIO-EDITOR-QOL-001 is still being closed, the following work is safe to start independently:
+
+- Terminology Registry and authoritative RU↔EN vocabulary;
+- Visio version/capability matrix and packaging dependency inventory;
+- Kochubeevskaya legacy-Visio inspection/fingerprinting tooling;
+- solver-adapter spike with synthetic canonical networks;
+- protection-setting-card schema/import spike using sanitized/test fixtures;
+- normative source/provenance catalog;
+- site/golden-fixture inventory.
+
+Do **not** start production generator integration against unstable Glue behavior; generator layout/template research may proceed behind an adapter.
 
 ## 17. Current implementation state boundary
 

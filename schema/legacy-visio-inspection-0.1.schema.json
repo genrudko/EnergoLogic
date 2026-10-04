@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://energologic.local/schema/legacy-visio-inspection-0.1.schema.json",
+  "title": "EnergoLogic Legacy Visio Inspection Report 0.1",
+  "type": "object",
+  "required": [
+    "report_version",
+    "inspection_fingerprint",
+    "source_contract",
+    "document",
+    "pages",
+    "symbol_families",
+    "instances",
+    "text_designation_candidates",
+    "glue_graph",
+    "endpoint_formula_candidates",
+    "connection_point_inventory",
+    "ambiguous_unclassified",
+    "statistics"
+  ],
+  "properties": {
+    "report_version": {
+      "const": "legacy-visio-inspection-0.1"
+    },
+    "inspection_fingerprint": {
+      "type": "string",
+      "pattern": "^inspection:[0-9a-f]{64}$"
+    },
+    "source_contract": {
+      "type": "object",
+      "required": [
+        "read_only",
+        "mutates_source",
+        "canonical_import_performed",
+        "glue_repair_performed"
+      ],
+      "properties": {
+        "read_only": {
+          "const": true
+        },
+        "mutates_source": {
+          "const": false
+        },
+        "canonical_import_performed": {
+          "const": false
+        },
+        "glue_repair_performed": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "document": {
+      "type": "object",
+      "required": [
+        "name",
+        "full_name",
+        "visio_version",
+        "reported_read_only",
+        "metadata"
+      ],
+      "additionalProperties": true
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/page"
+      }
+    },
+    "symbol_families": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/symbolFamily"
+      }
+    },
+    "instances": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/instance"
+      }
+    },
+    "text_designation_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "shape_ref",
+          "text",
+          "pattern",
+          "separate_from_symbol_geometry"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "glue_graph": {
+      "type": "object",
+      "required": [
+        "edges",
+        "inferred_edges",
+        "policy"
+      ],
+      "properties": {
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/topologyEdge"
+          }
+        },
+        "inferred_edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/topologyEdge"
+          }
+        },
+        "policy": {
+          "type": "object",
+          "required": [
+            "native_glue",
+            "endpoint_formula",
+            "connection_point",
+            "spatial_proximity",
+            "topology_context",
+            "visual_contact_is_proof"
+          ],
+          "properties": {
+            "visual_contact_is_proof": {
+              "const": false
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "endpoint_formula_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "shape_ref",
+          "formulas",
+          "evidence_type",
+          "confidence"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "connection_point_inventory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "shape_ref",
+          "row"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "ambiguous_unclassified": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "shape_ref",
+          "reason",
+          "confidence"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "required": [
+        "page_count",
+        "shape_count",
+        "top_level_shape_count",
+        "nested_shape_count",
+        "symbol_family_count",
+        "repeated_symbol_family_count",
+        "native_glue_edge_count",
+        "connection_point_count",
+        "endpoint_formula_shape_count",
+        "ambiguous_or_unknown_shape_count"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "confidence": {
+      "enum": [
+        "exact_native",
+        "high_confidence",
+        "review_recommended",
+        "ambiguous",
+        "unknown"
+      ]
+    },
+    "shapeRef": {
+      "type": "string",
+      "pattern": "^page:[0-9]+/shape:[0-9]+$"
+    },
+    "page": {
+      "type": "object",
+      "required": [
+        "page_id",
+        "name",
+        "name_u",
+        "shape_refs",
+        "shape_count",
+        "native_glue_count"
+      ],
+      "additionalProperties": true
+    },
+    "symbolFamily": {
+      "type": "object",
+      "required": [
+        "family_id",
+        "candidate_fingerprint",
+        "master_signature",
+        "geometry_signature",
+        "group_signature",
+        "shapesheet_signature",
+        "connection_point_signature",
+        "classification_confidence",
+        "frequency",
+        "instance_refs",
+        "text_patterns"
+      ],
+      "additionalProperties": true
+    },
+    "instance": {
+      "type": "object",
+      "required": [
+        "ref",
+        "page_id",
+        "shape_id",
+        "shape_type",
+        "master",
+        "parent_ref",
+        "child_refs",
+        "geometry",
+        "layers",
+        "text",
+        "text_pattern",
+        "endpoint_formulas",
+        "family_id",
+        "candidate_fingerprint",
+        "signal_fingerprints",
+        "classification_confidence"
+      ],
+      "additionalProperties": true
+    },
+    "topologyEdge": {
+      "type": "object",
+      "required": [
+        "from_shape_ref",
+        "from_cell",
+        "to_shape_ref",
+        "to_cell",
+        "evidence",
+        "evidence_type",
+        "confidence",
+        "inferred"
+      ],
+      "properties": {
+        "evidence_type": {
+          "enum": [
+            "native_glue",
+            "endpoint_formula",
+            "connection_point",
+            "spatial_proximity",
+            "topology_context"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "inferred": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

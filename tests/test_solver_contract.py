@@ -21,6 +21,7 @@ from energologic.solvers.units import (
     metres_to_kilometres,
     ohm_per_metre_to_ohm_per_kilometre,
     vars_to_megavars,
+    volt_amperes_to_megavolt_amperes,
     volts_to_kilovolts,
     watts_to_megawatts,
 )
@@ -83,6 +84,10 @@ class SolverContractTests(unittest.TestCase):
         self.assertEqual(kiloamperes_to_amperes(0.75), 750.0)
         self.assertEqual(watts_to_megawatts(7_500_000.0), 7.5)
         self.assertEqual(megawatts_to_watts(7.5), 7_500_000.0)
+        self.assertEqual(
+            volt_amperes_to_megavolt_amperes(5_000_000.0),
+            5.0,
+        )
         self.assertEqual(vars_to_megavars(2_500_000.0), 2.5)
         self.assertEqual(megavars_to_vars(2.5), 2_500_000.0)
         self.assertEqual(metres_to_kilometres(1_500.0), 1.5)

@@ -1,6 +1,6 @@
 # TERMINOLOGY-REGISTRY-V1-001 — Terminology Registry v1
 
-Status: **Implementation complete in Draft; owner terminology decisions pending**  
+Status: **Implementation complete in Draft; owner acceptance pending**  
 Workstream: **WS-2 — Terminology & Normative Foundations**  
 Issue: **#17**  
 Draft PR: **#18**  
@@ -23,13 +23,15 @@ The registry is the controlled contract between:
 1. Russian is the user-facing language.
 2. Code, APIs, schemas and internal identifiers use English.
 3. Canonical terminology must be sourced, not invented, when an authoritative term exists.
-4. Transliteration is not an accepted naming strategy.
-5. An alias is never automatically promoted to canonical terminology.
-6. Existing accepted electrical semantics are not changed by terminology curation.
-7. Normative homonyms are not resolved by guessing: lookup must expose ambiguity or accept a domain filter.
-8. Every accepted/provisional concept has provenance.
-9. The registry is headless and has no Visio dependency.
-10. Ready for Review and merge remain owner-controlled.
+4. Engineering scope is established before choosing between competing normative wordings.
+5. A directly applicable current equipment/operating standard may be more authoritative for that scoped concept than a generic vocabulary entry.
+6. Transliteration is not an accepted naming strategy.
+7. An alias is never automatically promoted to canonical terminology.
+8. Existing accepted electrical semantics are not changed by terminology curation.
+9. Normative homonyms are not resolved by guessing: lookup must expose ambiguity or accept a domain filter.
+10. Every accepted/provisional concept has provenance.
+11. The registry is headless and has no Visio dependency.
+12. Ready for Review and merge remain owner-controlled.
 
 ## Deliverables
 
@@ -65,47 +67,59 @@ The registry is the controlled contract between:
 - [x] duplicate IDs/code identifiers fail closed;
 - [x] canonical names are singular fields, not synonym sets;
 - [x] ambiguous normative homonyms are surfaced, never silently selected;
+- [x] voltage/domain-separated concepts can share an English term without being merged;
 - [x] lookup API and alias lookup are tested;
 - [x] terminology lint is tested;
 - [x] documentation explains how to add a term;
 - [x] disputed terms and competing evidence are explicit;
-- [x] repository test suite passes;
-- [x] CI evidence is recorded.
+- [x] repository test suite passes on the pre-correction head;
+- [ ] corrected breaker/earthing terminology head has final green CI recorded.
 
-Owner acceptance, Ready for Review and merge are intentionally **not** implied by these
+Owner acceptance, Ready for Review and merge are intentionally **not** implied by
 implementation checks.
 
-## Resolved terminology findings
+## Corrected equipment taxonomy
 
-- A physical electrical `terminal` is canonical Russian **«вывод»**; literal
-  «электрический терминал» is forbidden as a UI/code translation.
-- `присоединение распределительного устройства` maps to `feeder bay`, while
-  `ячейка` maps to `bay`; they are separate concepts.
-- In the EnergoLogic power/KRU scope, **«сборная шина»** is used as the Russian
-  `busbar` canonical candidate; generic «шина» remains an alias/supporting IEV form.
-- For the operational Russian UI, current switching rules support
-  **«включение/отключение»** and **«включенное/отключенное положение»**.
-  IEV mechanical wording remains searchable as aliases.
-- `заземлитель` is modeled explicitly as `earth electrode`, while its historical
-  use for `earthing switch` is a deprecated alias. Lookup therefore fails closed on
-  the real normative homonym instead of guessing.
+### Breakers are not one Russian concept
 
-## Owner decisions still required
+EnergoLogic now separates:
 
-1. **Circuit-breaker Russian UI canonical**
-   - generic current ГОСТ IEC terminology: «автоматический выключатель»;
-   - current 3–750 kV Russian equipment standard: «выключатель»;
-   - WS-2 proposal: **«выключатель»** for EnergoLogic's power/HV domain, with
-     «автоматический выключатель» as an alias.
+- high-voltage/power-system `CircuitBreaker` → **выключатель**;
+- low-voltage `LowVoltageCircuitBreaker` → **автоматический выключатель**.
 
-2. **Earthing-switch Russian UI canonical**
-   - current ГОСТ IEC terminology: «заземляющий выключатель»;
-   - current ГОСТ Р 57190 terminology: «выключатель заземления»;
-   - WS-2 proposal: **«заземляющий выключатель»**, with
-     «выключатель заземления» as an alias and historical «заземлитель» deprecated.
+Both may legitimately have English `circuit-breaker`; domain/ID disambiguates them.
 
-Other `provisional` entries are retained because their final wording depends on
-additional primary evidence or on future WS-1 domain boundaries. They must not be
+The existing `energologic.element.kind=circuit_breaker` semantic binding remains on
+the high-voltage concept because current qualified EnergoLogic data is 35 kV.
+
+### High-voltage earthing switch
+
+For the >1 kV switchgear domain:
+
+- canonical RU: **заземлитель**;
+- canonical EN: **earthing switch**;
+- aliases include:
+  `заземляющий выключатель`,
+  `выключатель заземления`,
+  `заземляющий разъединитель`,
+  `заземляющий нож`,
+  `нож заземления`.
+
+A separate `earth electrode` concept also has Russian canonical **заземлитель**.
+This is retained as an intentional normative homonym and requires domain-qualified
+resolution.
+
+## Other established terminology findings
+
+- physical electrical `terminal` → **«вывод»**;
+- `присоединение распределительного устройства` → **`feeder bay`**;
+- `ячейка` → **`bay`**;
+- power/KRU `busbar` candidate → **«сборная шина»**;
+- operational Russian switching UI →
+  **«включение/отключение»** and
+  **«включенное/отключенное положение»**.
+
+Remaining `provisional` entries are evidence/domain-contract gaps. They must not be
 promoted by guesswork.
 
 ## Verification
@@ -123,8 +137,4 @@ Repository CI matrix:
 - Windows latest / Python 3.11;
 - Windows latest / Python 3.12.
 
-Implementation head `16b3ea6f73a8cd2a60c5e0ae950a8cb6329c88e8`:
-CI run **37204617645 — SUCCESS**.
-
-Final Draft head may contain documentation-only reconciliation commits after this
-implementation checkpoint; those commits must also retain green CI before acceptance.
+Final corrected-head result is recorded in PR #18 before owner acceptance.

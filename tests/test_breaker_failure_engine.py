@@ -72,6 +72,40 @@ def snapshot(
 
 
 class BreakerFailureEngineTests(unittest.TestCase):
+    def test_incomplete_setting_card_is_not_executable_by_default(self):
+        with self.assertRaises(BreakerFailureProgramValidationError) as caught:
+            compile_breaker_failure_program(
+                card(),
+                bindings=[binding()],
+            )
+        self.assertIn(
+            "incomplete_settings_scope",
+            {item.code for item in caught.exception.issues},
+        )
+
+    def test_full_configuration_compiles_without_incomplete_override(self):
+        data = raw_fixture()
+        data["settings_scope"] = "full_configuration"
+        compiled = compile_breaker_failure_program(
+            setting_card_from_dict(data),
+            bindings=[binding()],
+        )
+        self.assertEqual(len(compiled.definitions), 1)
+
+    def test_draft_setting_card_is_not_executable_by_default(self):
+        data = raw_fixture()
+        data["lifecycle_status"] = "draft"
+        with self.assertRaises(BreakerFailureProgramValidationError) as caught:
+            compile_breaker_failure_program(
+                setting_card_from_dict(data),
+                bindings=[binding()],
+                allow_incomplete_settings=True,
+            )
+        self.assertIn(
+            "non_authoritative_settings",
+            {item.code for item in caught.exception.issues},
+        )
+
     def test_program_compiles_explicit_binding_and_delay(self):
         compiled = program()
         self.assertEqual(len(compiled.definitions), 1)
@@ -196,6 +230,46 @@ class BreakerFailureEngineTests(unittest.TestCase):
             "0.3",
         )
 
+    def test_breaker_open_at_exact_delay_wins_over_operation(self):
+        compiled = program()
+        started = evaluate_breaker_failure_step(
+            compiled,
+            snapshot("0", start=True, breaker_open=False),
+        )
+        boundary = evaluate_breaker_failure_step(
+            compiled,
+            snapshot("0.2", start=True, breaker_open=True),
+            state=started.state,
+        )
+        self.assertEqual(
+            [item.event_type for item in boundary.events],
+            ["reset"],
+        )
+        self.assertEqual(boundary.events[0].cause, "breaker_open")
+        self.assertEqual(boundary.requests, ())
+        self.assertEqual(
+            boundary.state.stages[0].status,
+            "waiting_start_clear",
+        )
+
+    def test_simultaneous_start_clear_and_breaker_open_has_explicit_cause(self):
+        compiled = program()
+        started = evaluate_breaker_failure_step(
+            compiled,
+            snapshot("0", start=True, breaker_open=False),
+        )
+        reset = evaluate_breaker_failure_step(
+            compiled,
+            snapshot("0.1", start=False, breaker_open=True),
+            state=started.state,
+        )
+        self.assertEqual([item.event_type for item in reset.events], ["reset"])
+        self.assertEqual(
+            reset.events[0].cause,
+            "start_removed_and_breaker_open",
+        )
+        self.assertEqual(reset.state.stages[0].status, "idle")
+
     def test_start_removed_before_delay_resets_to_idle(self):
         compiled = program()
         started = evaluate_breaker_failure_step(
@@ -301,6 +375,28 @@ class BreakerFailureEngineTests(unittest.TestCase):
                 state=first.state,
             )
         self.assertEqual(caught.exception.issue.code, "logical_time_reversal")
+
+    def test_zero_delay_does_not_operate_if_breaker_is_already_open(self):
+        data = raw_fixture()
+        function = next(item for item in data["functions"] if item["id"] == BF)
+        delay = function["stages"][0]["parameters"][0]["value"]
+        delay["raw_text"] = "0 s"
+        delay["source_value"] = "0"
+        delay["normalized_value"] = "0"
+        compiled = compile_breaker_failure_program(
+            setting_card_from_dict(data),
+            bindings=[binding()],
+            allow_incomplete_settings=True,
+        )
+        result = evaluate_breaker_failure_step(
+            compiled,
+            snapshot("0", start=True, breaker_open=True),
+        )
+        self.assertEqual(result.requests, ())
+        self.assertEqual(
+            result.state.stages[0].status,
+            "waiting_start_clear",
+        )
 
     def test_signal_ids_must_be_distinct(self):
         bad_binding = BreakerFailureBinding(

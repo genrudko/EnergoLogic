@@ -72,5 +72,4 @@ Implementation candidate
 - CI **37218116201 — SUCCESS**;
 - representative Ubuntu job: **151 tests — OK**.
 
-A final documentation reconciliation commit is verified through the full matrix before
-owner acceptance.
+Documentation-reconciled head `dfa0604a7bbd7395632800988141ec69ba5b32b5`: CI **37218303079 — SUCCESS**, 4/4 matrix jobs; representative Ubuntu job ran **151 tests — OK**.

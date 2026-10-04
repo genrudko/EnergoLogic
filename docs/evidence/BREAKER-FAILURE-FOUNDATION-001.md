@@ -122,4 +122,4 @@ GitHub Actions run **37218116201 — SUCCESS**.
 
 Representative Ubuntu job ran **151 tests — OK**.
 
-Final documentation/head CI is recorded before owner acceptance.
+Documentation-reconciled head `dfa0604a7bbd7395632800988141ec69ba5b32b5`: CI **37218303079 — SUCCESS** on Ubuntu/Windows × Python 3.11/3.12; representative Ubuntu job ran **151 tests — OK**.

@@ -2,28 +2,20 @@
   "registry_version": "1.0",
   "sources": [
     {
-      "id": "gost-iec-60050-441-2015",
-      "authority": "gost_iec",
-      "document": "ГОСТ IEC 60050-441-2015",
-      "edition": "2015",
-      "status": "current",
-      "title": "Международный электротехнический словарь. Часть 441. Аппаратура коммутационная, аппаратура управления и плавкие предохранители"
-    },
-    {
-      "id": "gost-r-52565-2006",
-      "authority": "gost_r",
-      "document": "ГОСТ Р 52565-2006",
-      "edition": "2006; Изм. №1, ИУС 2-2022",
-      "status": "current",
-      "title": "Выключатели переменного тока на напряжения от 3 до 750 кВ. Общие технические условия"
-    },
-    {
       "id": "gost-17717-79",
       "authority": "gost",
       "document": "ГОСТ 17717-79",
       "edition": "1979, переиздание/изменения по фонду стандартов",
       "status": "current",
       "title": "Выключатели нагрузки переменного тока на напряжение от 3 до 10 кВ. Общие технические условия"
+    },
+    {
+      "id": "gost-24291-90",
+      "authority": "gost",
+      "document": "ГОСТ 24291-90",
+      "edition": "1990",
+      "status": "current",
+      "title": "Электрическая часть электростанции и электрической сети. Термины и определения"
     },
     {
       "id": "gost-iec-60050-151-2014",
@@ -42,12 +34,28 @@
       "title": "Международный электротехнический словарь. Часть 321. Измерительные трансформаторы"
     },
     {
-      "id": "gost-r-iec-61869-2-2015",
-      "authority": "gost_r_iec",
-      "document": "ГОСТ Р МЭК 61869-2-2015",
+      "id": "gost-iec-60050-411-2015",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60050-411-2015",
       "edition": "2015",
       "status": "current",
-      "title": "Трансформаторы измерительные. Часть 2. Дополнительные требования к трансформаторам тока"
+      "title": "Международный электротехнический словарь. Часть 411. Машины вращающиеся"
+    },
+    {
+      "id": "gost-iec-60050-441-2015",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60050-441-2015",
+      "edition": "2015",
+      "status": "current",
+      "title": "Международный электротехнический словарь. Часть 441. Аппаратура коммутационная, аппаратура управления и плавкие предохранители"
+    },
+    {
+      "id": "gost-iec-60050-651-2014",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60050-651-2014",
+      "edition": "2014",
+      "status": "current",
+      "title": "Международный электротехнический словарь. Часть 651. Работа под напряжением"
     },
     {
       "id": "gost-iec-61869-3-2012",
@@ -58,6 +66,14 @@
       "title": "Трансформаторы измерительные. Часть 3. Дополнительные требования к индуктивным трансформаторам напряжения"
     },
     {
+      "id": "gost-r-52565-2006",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 52565-2006",
+      "edition": "2006; Изм. №1, ИУС 2-2022",
+      "status": "current",
+      "title": "Выключатели переменного тока на напряжения от 3 до 750 кВ. Общие технические условия"
+    },
+    {
       "id": "gost-r-52719-2007",
       "authority": "gost_r",
       "document": "ГОСТ Р 52719-2007",
@@ -66,20 +82,12 @@
       "title": "Трансформаторы силовые. Общие технические условия"
     },
     {
-      "id": "gost-24291-90",
-      "authority": "gost",
-      "document": "ГОСТ 24291-90",
-      "edition": "1990",
+      "id": "gost-r-55190-2022",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 55190-2022",
+      "edition": "2022; Поправка ИУС 10-2023",
       "status": "current",
-      "title": "Электрическая часть электростанции и электрической сети. Термины и определения"
-    },
-    {
-      "id": "gost-iec-60050-411-2015",
-      "authority": "gost_iec",
-      "document": "ГОСТ IEC 60050-411-2015",
-      "edition": "2015",
-      "status": "current",
-      "title": "Международный электротехнический словарь. Часть 411. Машины вращающиеся"
+      "title": "Устройства комплектные распределительные в металлической оболочке (КРУ) на номинальное напряжение до 35 кВ. Общие технические условия"
     },
     {
       "id": "gost-r-57114-2022",
@@ -90,12 +98,29 @@
       "title": "Единая энергетическая система и изолированно работающие энергосистемы. Электроэнергетические системы. Оперативно-диспетчерское управление в электроэнергетике и оперативно-технологическое управление. Термины и определения"
     },
     {
-      "id": "gost-iec-60050-651-2014",
-      "authority": "gost_iec",
-      "document": "ГОСТ IEC 60050-651-2014",
-      "edition": "2014",
+      "id": "gost-r-57190-2016",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 57190-2016",
+      "edition": "2016; переиздание февраль 2020",
       "status": "current",
-      "title": "Международный электротехнический словарь. Часть 651. Работа под напряжением"
+      "title": "Заземлители и заземляющие устройства различного назначения. Термины и определения"
+    },
+    {
+      "id": "gost-r-iec-60050-441-2012",
+      "authority": "gost_r_iec",
+      "document": "ГОСТ Р МЭК 60050-441-2012",
+      "edition": "2012",
+      "status": "superseded",
+      "title": "Аппаратура коммутационная, аппаратура управления и предохранители. Глава 441. Термины и определения",
+      "notes": "Отменен с 2021-03-01; заменен ГОСТ IEC 60050-441-2015. Используется только как provenance legacy aliases."
+    },
+    {
+      "id": "gost-r-iec-61869-2-2015",
+      "authority": "gost_r_iec",
+      "document": "ГОСТ Р МЭК 61869-2-2015",
+      "edition": "2015",
+      "status": "current",
+      "title": "Трансформаторы измерительные. Часть 2. Дополнительные требования к трансформаторам тока"
     },
     {
       "id": "iec-60050-131",
@@ -114,13 +139,12 @@
       "title": "International Electrotechnical Vocabulary — Part 448: Power system protection"
     },
     {
-      "id": "gost-r-iec-60050-441-2012",
-      "authority": "gost_r_iec",
-      "document": "ГОСТ Р МЭК 60050-441-2012",
-      "edition": "2012",
-      "status": "superseded",
-      "title": "Аппаратура коммутационная, аппаратура управления и предохранители. Глава 441. Термины и определения",
-      "notes": "Отменен с 2021-03-01; заменен ГОСТ IEC 60050-441-2015. Используется только как provenance legacy aliases."
+      "id": "minenergo-757-2018",
+      "authority": "russian_normative",
+      "document": "Приказ Минэнерго России от 13.09.2018 № 757",
+      "edition": "ред. от 06.07.2026",
+      "status": "current",
+      "title": "Об утверждении Правил переключений в электроустановках"
     }
   ],
   "concepts": [
@@ -129,7 +153,7 @@
       "domain": "power.busbar",
       "category": "topology",
       "canonical": {
-        "ru": "шина",
+        "ru": "сборная шина",
         "en": "busbar"
       },
       "code_identifier": "Busbar",
@@ -139,16 +163,23 @@
       },
       "aliases": {
         "ru": [
-          "сборная шина"
+          "шина"
         ],
         "en": []
       },
       "deprecated_aliases": [],
       "sources": [
         {
-          "source_id": "gost-iec-60050-151-2014",
+          "source_id": "gost-r-55190-2022",
           "role": "primary",
-          "locator": "IEV 151-12-30"
+          "locator": "3.1.44",
+          "notes": "Current metal-clad switchgear standard uses «сборная шина» for busbar."
+        },
+        {
+          "source_id": "gost-iec-60050-151-2014",
+          "role": "supporting",
+          "locator": "IEV 151-12-30",
+          "notes": "Generic IEV concept uses «шина» / busbar."
         }
       ],
       "semantic_bindings": [
@@ -157,7 +188,7 @@
           "value": "bus"
         }
       ],
-      "notes": "IEV preferred Russian term is «шина». Project UI may prefer the power-system-qualified «сборная шина»; that policy remains explicit rather than silently changing the IEV term.",
+      "notes": "Power-domain canonical Russian term is scoped as «сборная шина»; generic IEV «шина» remains an accepted search/import alias. Broader non-switchgear bus semantics remain reviewable.",
       "status": "provisional"
     },
     {
@@ -538,7 +569,7 @@
       "domain": "power.switchgear.operation",
       "category": "operation",
       "canonical": {
-        "ru": "замыкание",
+        "ru": "включение",
         "en": "closing operation"
       },
       "code_identifier": "ClosingOperation",
@@ -548,8 +579,8 @@
       },
       "aliases": {
         "ru": [
-          "включить",
-          "включение"
+          "замыкание",
+          "включить"
         ],
         "en": [
           "close",
@@ -559,12 +590,19 @@
       "deprecated_aliases": [],
       "sources": [
         {
-          "source_id": "gost-iec-60050-441-2015",
+          "source_id": "minenergo-757-2018",
           "role": "primary",
-          "locator": "IEV 441-16-08"
+          "locator": "гл. IX, operations with circuit-breakers/disconnectors/load switches",
+          "notes": "Operational rules consistently use «включение»."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-16-08",
+          "notes": "Mechanical-device term «замыкание» / closing operation."
         }
       ],
-      "notes": "",
+      "notes": "Canonical Russian operational action noun is «включение»; UI imperative «Включить» is an alias/presentation form.",
       "status": "accepted"
     },
     {
@@ -572,7 +610,7 @@
       "domain": "power.switchgear.operation",
       "category": "operation",
       "canonical": {
-        "ru": "размыкание",
+        "ru": "отключение",
         "en": "opening operation"
       },
       "code_identifier": "OpeningOperation",
@@ -582,8 +620,8 @@
       },
       "aliases": {
         "ru": [
-          "отключить",
-          "отключение"
+          "размыкание",
+          "отключить"
         ],
         "en": [
           "open",
@@ -593,12 +631,19 @@
       "deprecated_aliases": [],
       "sources": [
         {
-          "source_id": "gost-iec-60050-441-2015",
+          "source_id": "minenergo-757-2018",
           "role": "primary",
-          "locator": "IEV 441-16-09"
+          "locator": "гл. IX, operations with circuit-breakers/disconnectors/load switches",
+          "notes": "Operational rules consistently use «отключение»."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-16-09",
+          "notes": "Mechanical-device term «размыкание» / opening operation."
         }
       ],
-      "notes": "",
+      "notes": "Canonical Russian operational action noun is «отключение»; UI imperative «Отключить» is an alias/presentation form.",
       "status": "accepted"
     },
     {
@@ -922,7 +967,7 @@
       "domain": "power.switchgear.state",
       "category": "state",
       "canonical": {
-        "ru": "замкнутое положение",
+        "ru": "включенное положение",
         "en": "closed position"
       },
       "code_identifier": "ClosedPosition",
@@ -932,6 +977,7 @@
       },
       "aliases": {
         "ru": [
+          "замкнутое положение",
           "включен",
           "включено"
         ],
@@ -942,9 +988,16 @@
       "deprecated_aliases": [],
       "sources": [
         {
-          "source_id": "gost-iec-60050-441-2015",
+          "source_id": "minenergo-757-2018",
           "role": "primary",
-          "locator": "IEV 441-16-22"
+          "locator": "гл. IX; пп. 197, 199 и связанные положения",
+          "notes": "Operational switching rules use включение/отключение and включенное/отключенное положение."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-16-22",
+          "notes": "Mechanical switching-device vocabulary: «замкнутое положение» / closed position."
         }
       ],
       "semantic_bindings": [
@@ -953,7 +1006,7 @@
           "value": "closed"
         }
       ],
-      "notes": "Canonical concept is the mechanical switching-device position. UI inflection («включен») is an alias/presentation concern, not a replacement for the canonical engineering concept.",
+      "notes": "EnergoLogic UI is an operational power-system interface, so Russian canonical wording follows current switching rules; IEV mechanical wording remains an alias. Internal semantic value stays closed.",
       "status": "accepted"
     },
     {
@@ -961,7 +1014,7 @@
       "domain": "power.switchgear.state",
       "category": "state",
       "canonical": {
-        "ru": "разомкнутое положение",
+        "ru": "отключенное положение",
         "en": "open position"
       },
       "code_identifier": "OpenPosition",
@@ -971,6 +1024,7 @@
       },
       "aliases": {
         "ru": [
+          "разомкнутое положение",
           "отключен",
           "отключено"
         ],
@@ -981,9 +1035,16 @@
       "deprecated_aliases": [],
       "sources": [
         {
-          "source_id": "gost-iec-60050-441-2015",
+          "source_id": "minenergo-757-2018",
           "role": "primary",
-          "locator": "IEV 441-16-23"
+          "locator": "гл. IX; пп. 197, 199 и связанные положения",
+          "notes": "Operational switching rules use включение/отключение and включенное/отключенное положение."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-16-23",
+          "notes": "Mechanical switching-device vocabulary: «разомкнутое положение» / open position."
         }
       ],
       "semantic_bindings": [
@@ -992,7 +1053,7 @@
           "value": "open"
         }
       ],
-      "notes": "",
+      "notes": "Operational Russian canonical wording; IEV mechanical wording remains an alias. Internal semantic value stays open.",
       "status": "accepted"
     },
     {
@@ -1137,9 +1198,15 @@
           "role": "legacy",
           "locator": "IEV 441-14-11",
           "notes": "Historical Russian alias evidence only."
+        },
+        {
+          "source_id": "gost-r-57190-2016",
+          "role": "supporting",
+          "locator": "01-12-11",
+          "notes": "Current Russian standard independently uses «выключатель заземления» for earthing switch."
         }
       ],
-      "notes": "Do not collapse with earth electrode. «Выключатель заземления» is retained as a current industry/normative alias; canonical wording follows current GOST IEC 60050-441.",
+      "notes": "Two current Russian normative forms coexist by source: ГОСТ IEC 60050-441-2015 uses «заземляющий выключатель», while ГОСТ Р 57190-2016 uses «выключатель заземления». Legacy «заземлитель» is not canonical because it also denotes earth electrode.",
       "status": "provisional"
     },
     {

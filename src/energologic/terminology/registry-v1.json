@@ -13,7 +13,7 @@
       "id": "gost-r-52565-2006",
       "authority": "gost_r",
       "document": "ГОСТ Р 52565-2006",
-      "edition": "2006, с действующими изменениями",
+      "edition": "2006; Изм. №1, ИУС 2-2022",
       "status": "current",
       "title": "Выключатели переменного тока на напряжения от 3 до 750 кВ. Общие технические условия"
     },
@@ -53,7 +53,7 @@
       "id": "gost-iec-61869-3-2012",
       "authority": "gost_iec",
       "document": "ГОСТ IEC 61869-3-2012",
-      "edition": "2012",
+      "edition": "2012; Поправка ИУС 7-2026",
       "status": "current",
       "title": "Трансформаторы измерительные. Часть 3. Дополнительные требования к индуктивным трансформаторам напряжения"
     },
@@ -61,7 +61,7 @@
       "id": "gost-r-52719-2007",
       "authority": "gost_r",
       "document": "ГОСТ Р 52719-2007",
-      "edition": "2007, изм. 1",
+      "edition": "2007; Поправка ИУС 8-2018; Изм. №1, ИУС 2-2021",
       "status": "current",
       "title": "Трансформаторы силовые. Общие технические условия"
     },
@@ -87,7 +87,7 @@
       "document": "ГОСТ Р 57114-2022",
       "edition": "2022",
       "status": "current",
-      "title": "Единая энергетическая система и изолированно работающие энергосистемы. Термины и определения"
+      "title": "Единая энергетическая система и изолированно работающие энергосистемы. Электроэнергетические системы. Оперативно-диспетчерское управление в электроэнергетике и оперативно-технологическое управление. Термины и определения"
     },
     {
       "id": "gost-iec-60050-651-2014",
@@ -886,8 +886,8 @@
           "locator": "IEV 651-01-15"
         }
       ],
-      "notes": "Canonical lexeme follows the standard; grammatical UI rendering may use «обесточено».",
-      "status": "accepted"
+      "notes": "Canonical lexeme follows the standard; grammatical UI rendering may use «обесточено». Source definition is scoped to live working; EnergoLogic operational-network energization semantics require a separate explicit predicate contract before acceptance.",
+      "status": "provisional"
     },
     {
       "id": "state.energization.energized",
@@ -914,8 +914,8 @@
           "locator": "IEV 651-01-14"
         }
       ],
-      "notes": "Definition is explicitly scoped to live working; project network-state semantics will later need to state how this predicate is computed.",
-      "status": "accepted"
+      "notes": "Definition is explicitly scoped to live working; project network-state semantics will later need to state how this predicate is computed. Source definition is scoped to live working; EnergoLogic operational-network energization semantics require a separate explicit predicate contract before acceptance.",
+      "status": "provisional"
     },
     {
       "id": "state.switch.closed",
@@ -1359,8 +1359,8 @@
           "locator": "IEV 151-12-07 (intentional electrical contact)"
         }
       ],
-      "notes": "The topology model must still define whether a record represents a physical connection, a conductive path, or an abstract graph edge.",
-      "status": "accepted"
+      "notes": "IEV evidence describes an intentional electrical contact/connection, while the canonical model record is an abstract topological edge. The terminology remains provisional until the physical-vs-graph contract is fixed.",
+      "status": "provisional"
     },
     {
       "id": "topology.node",

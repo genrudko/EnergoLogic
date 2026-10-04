@@ -20,11 +20,11 @@
 
 - R0: исследование API / bridge / реальной MCP-v2 — **done**;
 - R1: Duplicate Cell Right / Left — **live-qualified core / polish remains**: exact duplicate, Glue, identity reset и реальный Editor UI работают; one-user-Undo вынесен в deferred technical debt и не блокирует продукт;
-- R2: остальные P0 QoL-команды — **почти закрыты live**: Coordinates, Base Point copy/move, Exact Offset, Smart Nudge, Align X/Y, Select/Renumber Cell, Move Cell, Repair Glue, Scheme Doctor и Measure Pitch приняты live. Remaining blocker — topology-safe Cell Pitch distribute: v3.13 geometry phase работает, но C# restoration оставляет `244.End → 166/Connections.1` half-glued; 10-second delay не помогает, low-level `batch_glue_endpoints` тот же edge восстанавливает сразу;
+- R2: остальные P0 QoL-команды — **done / live-qualified**: Coordinates, Base Point copy/move, Exact Offset, Smart Nudge, Align X/Y, Select/Renumber Cell, Move Cell, Repair Glue, Scheme Doctor, Measure Pitch и topology-safe Cell Pitch distribute приняты live. v3.18 закрывает прежний `244.End → 166/Connections.1` half-Glue через ordered out-of-process topology restoration;
 - R3: P1 cell/model diagnostics / Replace & Insert Equipment / bus editing — после закрытия topology-safe pitch;
 - R4: P2 Ribbon/context menu/shortcuts/presets.
 
-Текущая точка релиза — довести уже работающий Editor v3.13 до topology-safe поведения и завершить пользовательский polish. Главный незакрытый acceptance case: Cell Pitch distribute на TSN cell с обязательной проверкой реального Glue.
+Текущая точка релиза — **Editor v3.18 / API 0.3.18 / managed extension 2026.10.04.116**. Topology blocker Cell Pitch закрыт live: fresh 44-shape acceptance завершён `state=success`, pitch 40 мм, bus Glue и полный TSN internal topology подтверждены. Следующий фокус — R3/R4: недостающий пользовательский функционал и polish.
 
 
 ## Canonical product target

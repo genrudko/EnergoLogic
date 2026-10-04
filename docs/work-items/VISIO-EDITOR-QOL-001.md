@@ -1,6 +1,6 @@
 # VISIO-EDITOR-QOL-001
 
-Status: In progress  
+Status: Functional implementation accepted live; owner review/merge pending  
 Issue: #11
 
 ## Цель
@@ -53,7 +53,7 @@ VTD masters массово не переписываются. Сначала ada
 - устойчивый anchor;
 - VTD groups / Actions / ShapeSheet.
 
-### R1 — главный P0 benchmark — In progress
+### R1 — главный P0 benchmark ✅
 
 Сделать первую рабочую команду:
 
@@ -87,27 +87,34 @@ VTD masters массово не переписываются. Сначала ada
 
 Copy/Move with Base Point, Exact Offset, Smart Nudge, Coordinates, Align X/Y, Select Cell, Renumber Cell, Measure Pitch и Cell Pitch distribute прошли live acceptance в реальном Visio. В v3.18 topology-safe distribute принят на TSN cell: bus anchor восстанавливается первым внешним COM-helper'ом, внутренние VTD Glue — после него; итоговый `244.End → 166/Connections.1` подтверждён native `Connects` и обеими ShapeSheet-формулами.
 
-### R3 — P1
+### R3 — P1 ✅
 
-- Logical Cell Membership / cell_id;
-- Select Cell;
-- Duplicate with Identity Reset;
-- safe Renumber Cell;
-- Replace Equipment;
-- Insert Equipment into Existing Connection;
-- Extend Bus;
-- Trim / Extend / Reconnect;
-- Smart Nudge;
-- Coordinates Panel;
-- Scheme Doctor;
-- Visual Diagnostics.
+- [x] Logical Cell Membership / cell_id;
+- [x] Select Cell;
+- [x] Duplicate with Identity Reset;
+- [x] safe Renumber Cell;
+- [x] Replace Equipment;
+- [x] Insert Equipment into Existing Connection;
+- [x] Extend Bus;
+- [x] Trim / Extend / Reconnect;
+- [x] Smart Nudge;
+- [x] Coordinates Panel;
+- [x] Scheme Doctor;
+- [x] Visual Diagnostics.
 
-### R4 — P2
+Live R3 acceptance включает штатное изменение VTD bus Shape Data `6 → 7 → 6` при неизменном pitch 40 мм и восстановление реального `244.End → 166/Connections.1` через `Reconnect End`.
 
-- EnergoLogic Ribbon/toolbar;
-- context menu;
-- keyboard shortcuts;
-- presets.
+### R4 — P2 ✅
+
+- [x] native EnergoLogic RibbonX;
+- [x] native Visio context menu;
+- [x] keyboard access через Ribbon KeyTips без глобального Windows hook;
+- [x] presets, включая 5-мм nudge и Cell Pitch 40 мм;
+- [x] parameter panel открывается только по явной команде;
+- [x] legacy toolbar скрыт и оставлен только как recovery path.
+
+Live `ui_status` финального v3.45:
+`Ribbon=loaded; ContextMenu=installed; ContextHosts=Drawing Page Selected,Drawing Object Selected; Panel=hidden; FallbackToolbar=hidden`.
 
 ## Transaction safety
 
@@ -174,16 +181,16 @@ Merge и Ready for Review — только по явной команде вла
 
 Текущее состояние:
 
-- текущий live Editor: **v3.18** (`EnergoLogic.VisioEditorAddinV318`, API `0.3.18`);
-- текущий managed bridge: **2026.10.04.116**; development-bridge HEAD `5c4e28b6e7c6ab702d383feab820189ffff9a379`;
-- Coordinates, Copy/Move with Base Point, Exact Offset, Smart Nudge, Align X/Y, Select Cell, Renumber Cell, Duplicate/Move Cell, Repair Glue, Scheme Doctor, Measure Pitch и **Cell Pitch distribute** подтверждены live;
+- текущий live Editor: **v3.45** (`EnergoLogic.VisioEditorAddinV345`, API `0.3.45`);
+- текущий managed bridge: **2026.10.04.145**; development-bridge HEAD `946c55441761f6e510bef5d6dc44c9e7373fde93`;
+- focused development-bridge Visio suite: **89/89 PASS**;
+- P0/R2 и topology-safe Cell Pitch подтверждены live;
+- R3 принят live: Replace/Insert, bus editing `6 → 7 → 6`, Reconnect, diagnostics;
+- R4 принят live: native RibbonX, Visio right-click submenu в contexts `9` и `75`, Ribbon KeyTips/presets, hidden fallback toolbar;
 - реальный pitch шины: **40 мм**;
 - TSN cell anchor `155` корректно раскрывается в 11 top-level members: `[155,158,160,162,166,182,240,242,244,249,250]`;
-- v3.14 normalization и v3.15 event-isolation не исправили `244.End`; v3.16 доказал рабочую out-of-process COM boundary, но повторное Glue уже корректных VTD edges вызвало побочный сбой; v3.17 сузил план до отсутствующих edges и локализовал зависимость от порядка;
-- v3.18 восстанавливает **bus anchor первым, затем missing internal Glue**. Fresh acceptance `UI-V318-Pitch-Acceptance`: 44 shapes, baseline 80 мм, итог `66.PinX=110 мм`, `155.PinX=150 мм`, то есть 40 мм;
-- финальный native topology содержит `155.BeginX → Sheet.105/Connections.2.X`, `244.BeginX → 242/Connections.2.X` и `244.EndX → 166/Connections.1.X`;
-- `244.EndX` и `EndY` оба имеют `PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))`;
-- операция завершилась `state=success`, verified internal Glue count = 7;
-- исходная `MCP-v2` после acceptance по-прежнему содержит **52 shapes**;
-- Undo остаётся deferred technical debt и не должен снова вытеснять пользовательский Editor;
+- финальная `Visual Diagnostics` на контрольной странице: **structural-проблем не найдено**;
+- полный diagnostic scan в текущем COM path занимает около **31.2 с** — performance debt, не повод менять доказанную topology semantics;
+- исходная `MCP-v2` после финальной acceptance по-прежнему содержит **52 shapes**;
+- One-user Undo остаётся deferred technical debt;
 - PR #12 остаётся **Draft**; Ready/merge только по явной команде владельца.

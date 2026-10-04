@@ -6,7 +6,7 @@ import json
 import math
 import re
 import unicodedata
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Protocol
 
 
 REPORT_VERSION = "legacy-visio-inspection-0.1"
@@ -103,6 +103,12 @@ class LegacyDocumentSnapshot:
     read_only: bool | None = None
     pages: tuple[LegacyPageSnapshot, ...] = ()
     metadata: Mapping[str, str | int | float | bool | None] = field(default_factory=dict)
+
+
+class LegacyVisioSnapshotSource(Protocol):
+    """Read-only transport boundary for future COM/bridge collectors."""
+
+    def capture_read_only(self) -> LegacyDocumentSnapshot: ...
 
 
 _NUMBER = re.compile(r"(?<![A-Za-z_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?")
@@ -443,6 +449,25 @@ def inspect_legacy_visio(snapshot: LegacyDocumentSnapshot) -> dict[str, Any]:
                         "rotation": shape.geometry.rotation,
                     },
                     "layers": list(shape.layers),
+                    "shape_sheet_cells": [
+                        {
+                            "section": cell.section,
+                            "row": cell.row,
+                            "cell": cell.cell,
+                            "formula": cell.formula,
+                            "value": cell.value,
+                            "unit": cell.unit,
+                        }
+                        for cell in sorted(
+                            shape.cells,
+                            key=lambda item: (
+                                item.section.casefold(),
+                                item.row.casefold(),
+                                item.cell.casefold(),
+                            ),
+                        )
+                    ],
+                    "normalized_geometry_rows": _geometry_cells(shape),
                     "text": shape.text,
                     "text_pattern": signals["text_pattern"],
                     "endpoint_formulas": {
@@ -504,7 +529,16 @@ def inspect_legacy_visio(snapshot: LegacyDocumentSnapshot) -> dict[str, Any]:
                     }
                 )
 
-            if confidence in {CONFIDENCE_AMBIGUOUS, CONFIDENCE_UNKNOWN}:
+            if shape.parent_shape_id is not None and shape.parent_shape_id not in by_id:
+                ambiguous.append(
+                    {
+                        "shape_ref": ref,
+                        "reason": "orphan_parent_shape",
+                        "details": {"parent_shape_id": shape.parent_shape_id},
+                        "confidence": CONFIDENCE_AMBIGUOUS,
+                    }
+                )
+            elif confidence in {CONFIDENCE_AMBIGUOUS, CONFIDENCE_UNKNOWN}:
                 ambiguous.append(
                     {
                         "shape_ref": ref,
@@ -526,6 +560,9 @@ def inspect_legacy_visio(snapshot: LegacyDocumentSnapshot) -> dict[str, Any]:
                 item.to_cell.casefold(),
             ),
         ):
+            dangling = (
+                connect.from_shape_id not in by_id or connect.to_shape_id not in by_id
+            )
             glue_edges.append(
                 {
                     "page_id": page.page_id,
@@ -537,8 +574,21 @@ def inspect_legacy_visio(snapshot: LegacyDocumentSnapshot) -> dict[str, Any]:
                     "evidence_type": "native_glue",
                     "confidence": CONFIDENCE_EXACT_NATIVE,
                     "inferred": False,
+                    "dangling_shape_reference": dangling,
                 }
             )
+            if dangling:
+                ambiguous.append(
+                    {
+                        "shape_ref": _shape_ref(page, connect.from_shape_id),
+                        "reason": "native_glue_references_missing_shape",
+                        "details": {
+                            "from_shape_id": connect.from_shape_id,
+                            "to_shape_id": connect.to_shape_id,
+                        },
+                        "confidence": CONFIDENCE_REVIEW,
+                    }
+                )
 
         pages.append(
             {
@@ -567,6 +617,18 @@ def inspect_legacy_visio(snapshot: LegacyDocumentSnapshot) -> dict[str, Any]:
             }
         )
 
+    master_frequency: dict[str, int] = {}
+    shape_type_frequency: dict[str, int] = {}
+    text_pattern_frequency: dict[str, int] = {}
+    for item in instances:
+        master = item["master"]["name_u"] or item["master"]["name"] or "<no-master>"
+        master_frequency[str(master)] = master_frequency.get(str(master), 0) + 1
+        shape_type = str(item["shape_type"] or "<unknown>")
+        shape_type_frequency[shape_type] = shape_type_frequency.get(shape_type, 0) + 1
+        pattern = str(item["text_pattern"] or "")
+        if pattern:
+            text_pattern_frequency[pattern] = text_pattern_frequency.get(pattern, 0) + 1
+
     stats = {
         "page_count": len(pages),
         "shape_count": len(instances),
@@ -578,6 +640,13 @@ def inspect_legacy_visio(snapshot: LegacyDocumentSnapshot) -> dict[str, Any]:
         "connection_point_count": len(connection_points),
         "endpoint_formula_shape_count": len(endpoint_formula_candidates),
         "ambiguous_or_unknown_shape_count": len(ambiguous),
+        "master_frequency": dict(sorted(master_frequency.items())),
+        "shape_type_frequency": dict(sorted(shape_type_frequency.items())),
+        "text_pattern_frequency": dict(sorted(text_pattern_frequency.items())),
+        "family_frequency": {
+            item["family_id"]: item["frequency"]
+            for item in sorted(families, key=lambda value: value["family_id"])
+        },
     }
 
     report: dict[str, Any] = {
@@ -647,6 +716,7 @@ __all__ = [
     "LegacyPageSnapshot",
     "LegacyShapeSheetCell",
     "LegacyShapeSnapshot",
+    "LegacyVisioSnapshotSource",
     "REPORT_VERSION",
     "inspect_legacy_visio",
     "report_json",

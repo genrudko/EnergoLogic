@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 import copy
+import json
+from pathlib import Path
 import unittest
 
 from energologic.frontends.visio.legacy_inspection import (
@@ -212,6 +214,37 @@ class LegacyVisioInspectorTests(unittest.TestCase):
         self.assertFalse(first["source_contract"]["mutates_source"])
         self.assertEqual(first["inspection_fingerprint"], second["inspection_fingerprint"])
         self.assertEqual(report_json(first), report_json(second))
+
+    def test_report_exposes_shapesheet_and_frequency_statistics(self):
+        first = breaker(10, x=100, y=100, text="QF-101")
+        second = breaker(20, x=200, y=200, text="QF-202")
+        report = report_for(first, second)
+        instance = report["instances"][0]
+        self.assertTrue(instance["shape_sheet_cells"])
+        self.assertTrue(instance["normalized_geometry_rows"])
+        self.assertEqual(
+            report["statistics"]["master_frequency"]["LegacyCircuitBreaker"],
+            2,
+        )
+        self.assertEqual(report["statistics"]["text_pattern_frequency"]["qf-#"], 2)
+
+    def test_report_contract_matches_declared_schema_required_keys(self):
+        report = report_for(breaker(1, x=0, y=0, text="QF-1"))
+        schema = json.loads(
+            Path("schema/legacy-visio-inspection-0.1.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertTrue(set(schema["required"]).issubset(report))
+        self.assertEqual(report["report_version"], "legacy-visio-inspection-0.1")
+
+    def test_orphan_parent_is_reported_for_review(self):
+        orphan = breaker(10, x=1, y=2, text="QF-1", parent=999)
+        report = report_for(orphan)
+        self.assertEqual(
+            report["ambiguous_unclassified"][0]["reason"],
+            "orphan_parent_shape",
+        )
 
     def test_absolute_translation_does_not_change_family_fingerprint(self):
         original = breaker(10, x=100, y=100, text="QF-1")

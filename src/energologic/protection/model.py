@@ -1051,7 +1051,6 @@ def setting_card_to_dict(card: ProtectionSettingCard) -> dict[str, object]:
             "id": item.id,
             "source_name": item.source_name,
             "enabled": item.enabled,
-            "measurement_input_ids": sorted(item.measurement_input_ids),
             "parameters": [
                 parameter(value)
                 for value in sorted(item.parameters, key=lambda value: value.id)
@@ -1070,6 +1069,7 @@ def setting_card_to_dict(card: ProtectionSettingCard) -> dict[str, object]:
             "source_name": item.source_name,
             "device_id": item.device_id,
             "enabled": item.enabled,
+            "measurement_input_ids": sorted(item.measurement_input_ids),
             "parameters": [
                 parameter(value)
                 for value in sorted(item.parameters, key=lambda value: value.id)
@@ -1460,10 +1460,6 @@ def _stage(value: object, path: str) -> ProtectionStage:
         id=_text(data, "id", path),
         source_name=_text(data, "source_name", path),
         enabled=_optional_bool(data, "enabled", path),
-        measurement_input_ids=_string_array(
-            data.get("measurement_input_ids"),
-            f"{path}/measurement_input_ids",
-        ),
         parameters=tuple(
             _parameter(item, f"{path}/parameters/{index}")
             for index, item in enumerate(
@@ -1492,6 +1488,10 @@ def _function(value: object, path: str) -> ProtectionFunctionSettings:
         source_name=_text(data, "source_name", path),
         device_id=_text(data, "device_id", path),
         enabled=_optional_bool(data, "enabled", path),
+        measurement_input_ids=_string_array(
+            data.get("measurement_input_ids"),
+            f"{path}/measurement_input_ids",
+        ),
         parameters=tuple(
             _parameter(item, f"{path}/parameters/{index}")
             for index, item in enumerate(

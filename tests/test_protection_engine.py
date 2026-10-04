@@ -67,8 +67,43 @@ def snapshot(
 
 
 class ProtectionEngineFoundationTests(unittest.TestCase):
+    def test_operational_summary_is_not_executable_by_default(self):
+        with self.assertRaises(ProtectionProgramValidationError) as caught:
+            compile_protection_program(card())
+        self.assertIn(
+            "incomplete_settings_scope",
+            {item.code for item in caught.exception.issues},
+        )
+
+    def test_full_configuration_is_executable_without_incomplete_override(self):
+        data = raw_fixture()
+        data["settings_scope"] = "full_configuration"
+        program = compile_protection_program(
+            setting_card_from_dict(data),
+            function_ids=[MTZ],
+        )
+        self.assertEqual(len(program.stages), 1)
+        self.assertEqual(program.settings_scope, "full_configuration")
+
+    def test_draft_settings_are_not_executable_by_default(self):
+        data = raw_fixture()
+        data["lifecycle_status"] = "draft"
+        with self.assertRaises(ProtectionProgramValidationError) as caught:
+            compile_protection_program(
+                setting_card_from_dict(data),
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
+        self.assertIn(
+            "non_authoritative_settings",
+            {item.code for item in caught.exception.issues},
+        )
+
     def test_default_compile_is_explicit_about_unsupported_breaker_failure(self):
-        program = compile_protection_program(card())
+        program = compile_protection_program(
+            card(),
+            allow_incomplete_settings=True,
+        )
         self.assertEqual(
             program.unsupported_function_ids,
             (BF,),
@@ -83,7 +118,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         )
 
     def test_mtz_picks_up_at_exact_threshold_and_operates_at_exact_delay(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
 
         step0 = evaluate_protection_step(
             program,
@@ -123,7 +162,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         self.assertEqual(step2.state.stages[0].status, "operated")
 
     def test_mtz_below_threshold_does_not_pick_up(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
         result = evaluate_protection_step(
             program,
             snapshot("0", measured(PHASE, "599.999")),
@@ -133,7 +176,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         self.assertEqual(result.state.stages[0].status, "inactive")
 
     def test_mtz_resets_below_pickup_and_timer_restarts(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
 
         picked = evaluate_protection_step(
             program,
@@ -173,7 +220,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         self.assertEqual(len(operated.requests), 1)
 
     def test_operated_stage_emits_request_once_until_reset(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
 
         picked = evaluate_protection_step(
             program,
@@ -203,7 +254,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         )
 
     def test_instantaneous_stage_with_explicit_zero_delay_operates_same_step(self):
-        program = compile_protection_program(card(), function_ids=[TO])
+        program = compile_protection_program(
+            card(),
+            function_ids=[TO],
+            allow_incomplete_settings=True,
+        )
         result = evaluate_protection_step(
             program,
             snapshot("0", measured(PHASE, "1200")),
@@ -224,7 +279,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         )
 
     def test_earth_fault_uses_residual_current_input(self):
-        program = compile_protection_program(card(), function_ids=[EARTH])
+        program = compile_protection_program(
+            card(),
+            function_ids=[EARTH],
+            allow_incomplete_settings=True,
+        )
 
         below = evaluate_protection_step(
             program,
@@ -249,7 +308,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         self.assertEqual(len(operated.requests), 1)
 
     def test_measurement_basis_mismatch_fails_closed(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
         bad = MeasuredQuantity(
             measurement_input_id=PHASE,
             quantity_kind="current",
@@ -268,7 +331,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         )
 
     def test_measurement_must_already_use_canonical_unit(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
         bad = MeasuredQuantity(
             measurement_input_id=PHASE,
             quantity_kind="current",
@@ -287,7 +354,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         )
 
     def test_missing_measurement_fails_closed(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
         with self.assertRaises(ProtectionRuntimeInputError) as caught:
             evaluate_protection_step(
                 program,
@@ -299,7 +370,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         )
 
     def test_duplicate_measurement_fails_closed(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
         value = measured(PHASE, "600")
         with self.assertRaises(ProtectionRuntimeInputError) as caught:
             evaluate_protection_step(
@@ -312,7 +387,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         )
 
     def test_logical_time_reversal_fails_closed(self):
-        program = compile_protection_program(card(), function_ids=[MTZ])
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
         first = evaluate_protection_step(
             program,
             snapshot("2", measured(PHASE, "700")),
@@ -334,7 +413,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         function["enabled"] = None
         program_card = setting_card_from_dict(data)
         with self.assertRaises(ProtectionProgramValidationError) as caught:
-            compile_protection_program(program_card, function_ids=[MTZ])
+            compile_protection_program(
+                program_card,
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
         self.assertIn(
             "indeterminate_function_enabled",
             {item.code for item in caught.exception.issues},
@@ -347,6 +430,7 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         program = compile_protection_program(
             setting_card_from_dict(data),
             function_ids=[MTZ],
+            allow_incomplete_settings=True,
         )
         self.assertEqual(program.stages, ())
         result = evaluate_protection_step(
@@ -366,9 +450,66 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         ]
         program_card = setting_card_from_dict(data)
         with self.assertRaises(ProtectionProgramValidationError) as caught:
-            compile_protection_program(program_card, function_ids=[MTZ])
+            compile_protection_program(
+                program_card,
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
         self.assertIn(
             "invalid_delay_parameter_count",
+            {item.code for item in caught.exception.issues},
+        )
+
+    def test_wrong_measurement_semantic_is_rejected(self):
+        data = raw_fixture()
+        function = next(item for item in data["functions"] if item["id"] == MTZ)
+        function["measurement_input_ids"] = [RESIDUAL]
+        program_card = setting_card_from_dict(data)
+        with self.assertRaises(ProtectionProgramValidationError) as caught:
+            compile_protection_program(
+                program_card,
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
+        self.assertIn(
+            "measurement_semantic_mismatch",
+            {item.code for item in caught.exception.issues},
+        )
+
+    def test_wrong_pickup_semantic_is_rejected(self):
+        data = raw_fixture()
+        function = next(item for item in data["functions"] if item["id"] == MTZ)
+        pickup = next(
+            item for item in function["stages"][0]["parameters"]
+            if item["role"] == "pickup"
+        )
+        pickup["semantic_key"] = "pickup_residual_current"
+        program_card = setting_card_from_dict(data)
+        with self.assertRaises(ProtectionProgramValidationError) as caught:
+            compile_protection_program(
+                program_card,
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
+        self.assertIn(
+            "pickup_semantic_mismatch",
+            {item.code for item in caught.exception.issues},
+        )
+
+    def test_function_level_actions_are_not_guessed_as_stage_actions(self):
+        data = raw_fixture()
+        function = next(item for item in data["functions"] if item["id"] == MTZ)
+        function["actions"] = function["stages"][0]["actions"]
+        function["stages"][0]["actions"] = []
+        program_card = setting_card_from_dict(data)
+        with self.assertRaises(ProtectionProgramValidationError) as caught:
+            compile_protection_program(
+                program_card,
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
+        self.assertIn(
+            "function_actions_unsupported",
             {item.code for item in caught.exception.issues},
         )
 
@@ -388,7 +529,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         stage["parameters"].append(extra)
         program_card = setting_card_from_dict(data)
         with self.assertRaises(ProtectionProgramValidationError) as caught:
-            compile_protection_program(program_card, function_ids=[MTZ])
+            compile_protection_program(
+                program_card,
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
         self.assertIn(
             "unsupported_stage_parameter",
             {item.code for item in caught.exception.issues},
@@ -397,7 +542,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
     def test_request_is_declarative_and_does_not_mutate_setting_card(self):
         program_card = card()
         before = setting_card_fingerprint(program_card)
-        program = compile_protection_program(program_card, function_ids=[TO])
+        program = compile_protection_program(
+            program_card,
+            function_ids=[TO],
+            allow_incomplete_settings=True,
+        )
         result = evaluate_protection_step(
             program,
             snapshot("0", measured(PHASE, "1300")),
@@ -407,7 +556,11 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         self.assertEqual(result.requests[0].cause, "stage_operated")
 
     def test_request_and_step_fingerprints_are_deterministic(self):
-        program = compile_protection_program(card(), function_ids=[TO])
+        program = compile_protection_program(
+            card(),
+            function_ids=[TO],
+            allow_incomplete_settings=True,
+        )
         input_snapshot = snapshot(
             "0",
             measured(PHASE, "1300"),
@@ -422,7 +575,10 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         )
 
     def test_default_program_is_independent_of_measurement_tuple_order(self):
-        program = compile_protection_program(card())
+        program = compile_protection_program(
+            card(),
+            allow_incomplete_settings=True,
+        )
         first_snapshot = snapshot(
             "0",
             measured(PHASE, "100"),

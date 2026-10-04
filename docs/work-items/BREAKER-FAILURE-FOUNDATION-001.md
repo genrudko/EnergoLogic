@@ -1,6 +1,6 @@
 # BREAKER-FAILURE-FOUNDATION-001 — Explicit breaker-failure state machine
 
-Status: **In progress**  
+Status: **Implementation complete in Draft; owner acceptance pending**  
 Workstream: **WS-9B — Generic Protection Engine / breaker-failure logic**  
 Issue: **#29**  
 Branch: `protection/breaker-failure-foundation-001`  
@@ -42,3 +42,35 @@ Add deterministic circuit-breaker-failure / УРОВ logic without importing WS-
 `python -m unittest discover -s tests -v`
 
 Ready/Merge remain owner-controlled.
+
+## Acceptance status
+
+- [x] dedicated stacked branch and Draft PR;
+- [x] explicit breaker-failure binding contract;
+- [x] deterministic runtime input/state/result model;
+- [x] maintained-start behavior tested;
+- [x] latched-start behavior tested;
+- [x] all four criterion modes tested;
+- [x] missing required feedback fails closed;
+- [x] criterion clearing before delay prevents backup trip;
+- [x] exact delay boundary operates;
+- [x] zero-delay operation qualified;
+- [x] output requests are deterministic and declarative;
+- [x] no repeated requests while operated;
+- [x] monitored-breaker retrip is explicitly rejected in this bounded foundation;
+- [x] unsupported current-threshold/multi-stage vendor semantics fail closed;
+- [x] no WS-6/solver/frontend dependency;
+- [x] architecture/how-to/evidence docs complete;
+- [x] implementation CI green;
+- [x] PR remains Draft until explicit owner command.
+
+## Verification checkpoint
+
+Implementation candidate
+`d1d449e1b334a1b530be2fd62423f5201f0b4519`:
+
+- CI **37218116201 — SUCCESS**;
+- representative Ubuntu job: **151 tests — OK**.
+
+A final documentation reconciliation commit is verified through the full matrix before
+owner acceptance.

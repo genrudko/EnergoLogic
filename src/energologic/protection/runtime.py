@@ -33,6 +33,18 @@ SUPPORTED_CONCEPT_IDS = frozenset(
 STAGE_STATUSES = frozenset({"inactive", "picked_up", "operated"})
 EVENT_TYPES = frozenset({"pickup", "reset", "operate"})
 
+_FUNCTION_CONTRACTS = {
+    "protection.overcurrent": ("phase_current", "pickup_current"),
+    "protection.instantaneous_overcurrent": (
+        "phase_current",
+        "pickup_current",
+    ),
+    "protection.earth_fault": (
+        "residual_current",
+        "pickup_residual_current",
+    ),
+}
+
 _CANONICAL_UNIT_BY_KIND = {
     "current": "A",
     "voltage": "V",
@@ -76,6 +88,7 @@ class ProtectionRuntimeInputError(ProtectionEngineError):
 @dataclass(frozen=True, slots=True)
 class MeasurementSpec:
     id: str
+    semantic_key: str
     quantity_kind: str
     basis: str
     canonical_unit: str
@@ -98,6 +111,8 @@ class StageDefinition:
 @dataclass(frozen=True, slots=True)
 class ProtectionProgram:
     card_fingerprint: str
+    settings_scope: str
+    lifecycle_status: str
     selected_function_ids: tuple[str, ...]
     unsupported_function_ids: tuple[str, ...]
     measurement_specs: tuple[MeasurementSpec, ...]
@@ -291,6 +306,8 @@ def compile_protection_program(
     card: ProtectionSettingCard,
     *,
     function_ids: Iterable[str] | None = None,
+    allow_incomplete_settings: bool = False,
+    allow_non_authoritative_settings: bool = False,
 ) -> ProtectionProgram:
     base_issues = validate_setting_card(card)
     if base_issues:
@@ -301,6 +318,37 @@ def compile_protection_program(
                 f"{item.code}: {item.message}",
             )
             for item in base_issues
+        )
+
+    issues: list[ProtectionEngineIssue] = []
+    if (
+        card.settings_scope != "full_configuration"
+        and not allow_incomplete_settings
+    ):
+        issues.append(
+            _issue(
+                "incomplete_settings_scope",
+                "/settings_scope",
+                (
+                    "production execution requires full_configuration; "
+                    "set allow_incomplete_settings=True only for explicit "
+                    "bounded engineering/synthetic evaluation"
+                ),
+            )
+        )
+    if (
+        card.lifecycle_status not in {"approved", "implemented"}
+        and not allow_non_authoritative_settings
+    ):
+        issues.append(
+            _issue(
+                "non_authoritative_settings",
+                "/lifecycle_status",
+                (
+                    "production execution requires approved or implemented "
+                    "settings; override only for explicit engineering use"
+                ),
+            )
         )
 
     by_function_id = {item.id: item for item in card.functions}
@@ -320,7 +368,6 @@ def compile_protection_program(
                 ]
             )
 
-    issues: list[ProtectionEngineIssue] = []
     measurement_by_id = {item.id: item for item in card.measurement_inputs}
     measurement_specs: dict[str, MeasurementSpec] = {}
     for measurement in card.measurement_inputs:
@@ -332,6 +379,7 @@ def compile_protection_program(
             continue
         measurement_specs[measurement.id] = MeasurementSpec(
             id=measurement.id,
+            semantic_key=measurement.semantic_key,
             quantity_kind=measurement.quantity_kind,
             basis=measurement.basis,
             canonical_unit=canonical_unit,
@@ -374,6 +422,18 @@ def compile_protection_program(
                     ),
                 )
             )
+        if function.actions:
+            issues.append(
+                _issue(
+                    "function_actions_unsupported",
+                    f"{function_path}/actions",
+                    (
+                        "foundation does not guess whether function-level "
+                        "actions apply to every stage; actions must be "
+                        "stage-scoped"
+                    ),
+                )
+            )
 
         if len(function.measurement_input_ids) != 1:
             issues.append(
@@ -390,6 +450,32 @@ def compile_protection_program(
 
         measurement_id = function.measurement_input_ids[0]
         measurement = measurement_by_id[measurement_id]
+        expected_measurement_key, expected_pickup_key = _FUNCTION_CONTRACTS[
+            function.concept_id
+        ]
+        if measurement.semantic_key != expected_measurement_key:
+            issues.append(
+                _issue(
+                    "measurement_semantic_mismatch",
+                    f"{function_path}/measurement_input_ids",
+                    (
+                        f"{function.concept_id!r} requires measurement "
+                        f"semantic_key={expected_measurement_key!r}, got "
+                        f"{measurement.semantic_key!r}"
+                    ),
+                )
+            )
+        if measurement.quantity_kind != "current":
+            issues.append(
+                _issue(
+                    "unsupported_operating_quantity",
+                    f"{function_path}/measurement_input_ids",
+                    (
+                        "foundation overcurrent functions require a "
+                        "current magnitude input"
+                    ),
+                )
+            )
         try:
             canonical_unit = _canonical_unit_for_quantity(
                 measurement.quantity_kind
@@ -463,6 +549,29 @@ def compile_protection_program(
 
             pickup_value = pickup.value
             delay_value = delay.value
+
+            if pickup.semantic_key != expected_pickup_key:
+                issues.append(
+                    _issue(
+                        "pickup_semantic_mismatch",
+                        f"{stage_path}/parameters/{pickup.id}/semantic_key",
+                        (
+                            f"expected {expected_pickup_key!r}, got "
+                            f"{pickup.semantic_key!r}"
+                        ),
+                    )
+                )
+            if delay.semantic_key != "operate_delay":
+                issues.append(
+                    _issue(
+                        "delay_semantic_mismatch",
+                        f"{stage_path}/parameters/{delay.id}/semantic_key",
+                        (
+                            "definite-time foundation requires "
+                            "semantic_key='operate_delay'"
+                        ),
+                    )
+                )
 
             if pickup_value.quantity_kind != measurement.quantity_kind:
                 issues.append(
@@ -558,7 +667,7 @@ def compile_protection_program(
 
             actions = tuple(
                 sorted(
-                    (*function.actions, *stage.actions),
+                    stage.actions,
                     key=lambda item: item.id,
                 )
             )
@@ -582,6 +691,8 @@ def compile_protection_program(
 
     return ProtectionProgram(
         card_fingerprint=setting_card_fingerprint(card),
+        settings_scope=card.settings_scope,
+        lifecycle_status=card.lifecycle_status,
         selected_function_ids=tuple(sorted(selected_supported)),
         unsupported_function_ids=tuple(sorted(unsupported)),
         measurement_specs=tuple(

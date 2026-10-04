@@ -12,7 +12,7 @@ from energologic.solvers.contracts import (
 )
 from energologic.solvers.pandapower_adapter import PandapowerAdapter
 
-from solver_spike_fixture import state_a_model, state_b_model, study
+from solver_spike_fixture import ROOT, state_a_model, state_b_model, study
 
 
 PANDAPOWER_AVAILABLE = importlib.util.find_spec("pandapower") is not None

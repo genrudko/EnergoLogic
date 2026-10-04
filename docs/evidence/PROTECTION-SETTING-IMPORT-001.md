@@ -25,8 +25,10 @@ The branch introduces a separate headless `energologic.protection` settings pack
 
 ### Ministry of Energy Order No. 100
 
-Current searched edition: Order of the Ministry of Energy of Russia dated
-13.02.2019 No. 100, amended 15.01.2024.
+Verified current edition for this work item: Order of the Ministry of Energy of
+Russia dated 13.02.2019 No. 100, revision 15.01.2024. The 15.01.2024 amendment is
+introduced by Order No. 7; its official publication record is
+0001202405240024 (published 24.05.2024).
 
 Relevant requirements captured in the v1 architecture:
 
@@ -51,7 +53,7 @@ WS-9A consequences:
 
 ### ГОСТ IEC 60255-151-2014
 
-Rosstandart lists ГОСТ IEC 60255-151-2014 as **Действует**.
+Rosstandart currently lists ГОСТ IEC 60255-151-2014 as **Действует**.
 
 The standard establishes functional requirements for over/under-current protection,
 including protection functions, measurement characteristics and time/reset behavior.
@@ -200,3 +202,39 @@ CI run **37208241974 — SUCCESS**:
   dependency while its PR remains unmerged.
 
 These are deliberate boundaries, not silently inferred capabilities.
+
+
+## Parallel WS-6 reconciliation
+
+At final WS-9A qualification the repository also contains:
+
+- WS-6 foundation Issue #19 / Draft PR #20 — energized traversal/source tracing;
+- WS-6 continuation Issue #23 / Draft PR #24 — switching operations/event sequence.
+
+Their declared scope excludes RZA/protection. WS-9A remains based directly on
+`main` and imports neither operational package nor stacked WS-6 code.
+
+Future Gate E integration therefore has a clean boundary:
+
+```text
+WS-6 event/measured operational context
+                +
+WS-9A validated protection settings
+                ↓
+future WS-9B protection execution
+```
+
+No integration behavior is implemented or implied by this PR.
+
+## Final verification
+
+Final implementation/documentation head before this evidence-only reconciliation:
+`a8ddbf0a1e8998c86b783682ca7d2b99a6674f97`.
+
+GitHub Actions run **37212137461 — SUCCESS**:
+
+- Ubuntu Python 3.11 — success;
+- Ubuntu Python 3.12 — success;
+- Windows Python 3.11 — success;
+- Windows Python 3.12 — success;
+- representative matrix job: **97 tests — OK**.

@@ -124,3 +124,22 @@ python -m unittest discover -s tests -v
 
 A final documentation/regression commit is run through the same Linux/Windows
 Python 3.11/3.12 matrix before owner acceptance.
+
+
+## Parallel WS-6 status
+
+WS-6 is active independently in Issue #19 / Draft PR #20 and Issue #23 / Draft PR #24.
+Those work items explicitly exclude RZA/protection. WS-9A imports no WS-6 modules and
+remains directly based on `main`.
+
+Future integration belongs to Gate E / WS-9B, not this importer work item.
+
+## Final candidate checkpoint
+
+Head before final evidence-only reconciliation:
+`a8ddbf0a1e8998c86b783682ca7d2b99a6674f97`.
+
+CI **37212137461 — SUCCESS**, Linux/Windows × Python 3.11/3.12,
+**97 tests — OK** in the representative job.
+
+Owner acceptance is not assumed. Draft/merge governance remains unchanged.

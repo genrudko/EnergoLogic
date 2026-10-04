@@ -30,8 +30,10 @@ trips under a measured electrical condition.
 
 ### Russian setting documentation is not one document type
 
-The Rules approved by Ministry of Energy Order No. 100 of 2019, current revision
-15.01.2024, distinguish several artifacts with different completeness and purposes:
+The Rules approved by Ministry of Energy Order No. 100 dated 13.02.2019 are used in
+the current verified revision of 15.01.2024 (including the amendment introduced by
+Ministry of Energy Order No. 7 dated 15.01.2024). They distinguish several artifacts
+with different completeness and purposes:
 
 - dispatcher-centre setting assignments;
 - owner setting assignments;

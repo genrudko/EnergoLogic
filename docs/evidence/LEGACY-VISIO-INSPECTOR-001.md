@@ -22,7 +22,7 @@ Covered invariants: stable family under Shape ID and absolute coordinate changes
 
 Command: `PYTHONPATH=src python3 -m compileall -q src && PYTHONPATH=src python3 -m unittest discover -s tests -v`
 
-After adding the read-only VSDX package source, full result: **81/81 PASS** (`Ran 81 tests`, `OK`).
+After VSDX integration plus adversarial fingerprint hardening, full result: **83/83 PASS** (`Ran 83 tests`, `OK`). Additional pinned invariants: stable `Master.NameU` dominates display-name changes, and uniform symbol scaling preserves the family.
 
 ## VSDX package integration evidence
 

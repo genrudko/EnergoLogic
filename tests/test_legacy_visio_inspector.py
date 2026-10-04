@@ -126,6 +126,35 @@ class LegacyVisioInspectorTests(unittest.TestCase):
             report["instances"][1]["text"],
         )
 
+    def test_master_name_u_is_stable_identity_and_display_name_is_not(self):
+        first = breaker(10, x=100, y=100, text="QF-101")
+        second = replace(
+            breaker(20, x=200, y=200, text="QF-202"),
+            master_name="Переименованный отображаемый master",
+        )
+        report = report_for(first, second)
+        self.assertEqual(report["statistics"]["symbol_family_count"], 1)
+
+    def test_uniform_scale_preserves_symbol_family(self):
+        first = breaker(10, x=100, y=100, text="QF-101")
+        second = breaker(20, x=300, y=300, text="QF-202")
+        second = replace(
+            second,
+            geometry=replace(
+                second.geometry,
+                width=second.geometry.width * 2,
+                height=second.geometry.height * 2,
+            ),
+            cells=geometry_cells(((0, 0), (10, 20), (20, 0)))
+            + tuple(cell for cell in second.cells if not cell.section.startswith("Geometry")),
+            connection_points=(
+                LegacyConnectionPoint("1", 10, 0, "Width*0.5", "0"),
+                LegacyConnectionPoint("2", 10, 40, "Width*0.5", "Height"),
+            ),
+        )
+        report = report_for(first, second)
+        self.assertEqual(report["statistics"]["symbol_family_count"], 1)
+
     def test_different_geometry_does_not_collapse(self):
         first = breaker(10, x=100, y=100, text="QF-101")
         second = breaker(20, x=200, y=200, text="QF-102", variant=0.55)

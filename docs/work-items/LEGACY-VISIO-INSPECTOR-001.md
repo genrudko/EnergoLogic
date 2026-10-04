@@ -64,7 +64,7 @@ Family fingerprint не зависит от Shape ID и абсолютных Pin
 5. `connection_point_signature`;
 6. `text_pattern` — отдельно от geometry family.
 
-Numeric Master/Shape IDs сохраняются в raw instance data, но не входят в stable family key. Geometry нормализуется по собственному bounding box. Child geometry нормализуется относительно родителя. ShapeSheet formula structure нормализуется: literal numbers/strings маскируются, XForm исключён, Geometry анализируется отдельно.
+Numeric Master/Shape IDs сохраняются в raw instance data, но не входят в stable family key. Для master identity приоритет имеет стабильный `Master.NameU`; display/localized `Master.Name` используется только как fallback и не должен раскалывать family после переименования. Geometry нормализуется по собственному bounding box, поэтому абсолютный перенос и uniform scaling не меняют family. Child geometry нормализуется относительно родителя. ShapeSheet formula structure нормализуется: literal numbers/strings маскируются, XForm исключён, Geometry анализируется отдельно.
 
 Designation text не ломает family. Например, `QF-101` и `QF-202` имеют один `text_pattern = qf-#`.
 

@@ -165,10 +165,11 @@ def _normalized_point(value: float | None, extent: float) -> float | None:
 def _master_signal(shape: LegacyShapeSnapshot) -> dict[str, object]:
     # Numeric Master/Shape IDs are retained in raw instance data but excluded
     # from the stable family key because they are document-local identities.
-    return {
-        "master_name_u": _norm_text(shape.master_name_u).casefold(),
-        "master_name": _norm_text(shape.master_name).casefold(),
-    }
+    # NameU is the stable Visio identity when available; localized/display Name
+    # is only a fallback and must not split one family after a display rename.
+    name_u = _norm_text(shape.master_name_u).casefold()
+    name = _norm_text(shape.master_name).casefold()
+    return {"stable_name": name_u or name}
 
 
 def _geometry_cells(shape: LegacyShapeSnapshot) -> list[dict[str, object]]:

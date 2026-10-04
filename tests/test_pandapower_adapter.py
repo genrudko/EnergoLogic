@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import importlib.util
 import json
 import math
@@ -300,6 +301,29 @@ class PandapowerAdapterIntegrationTests(unittest.TestCase):
                         expected["skss_va"],
                         delta=tol["short_circuit_power_va"],
                     )
+
+
+    def test_inactive_equipment_and_transformer_side_currents_are_normalized(self):
+        base = study()
+        normal = self.adapter.power_flow(base)
+        inactive = self.adapter.power_flow(
+            replace(
+                base,
+                inactive_equipment_ids=frozenset({"load:section-a"}),
+            )
+        )
+        self.assertEqual(normal.status, SolverStatus.SUCCESS, normal.errors)
+        self.assertEqual(inactive.status, SolverStatus.SUCCESS, inactive.errors)
+
+        self.assertGreater(
+            normal.branch("line:feed-a").current_a or 0.0,
+            inactive.branch("line:feed-a").current_a or 0.0,
+        )
+
+        transformer = normal.branch("transformer:t1")
+        self.assertIsNone(transformer.current_a)
+        self.assertGreater(transformer.from_current_a or 0.0, 0.0)
+        self.assertGreater(transformer.to_current_a or 0.0, 0.0)
 
 
 if __name__ == "__main__":

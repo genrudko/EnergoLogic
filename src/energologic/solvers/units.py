@@ -47,3 +47,10 @@ def ohm_per_metre_to_ohm_per_kilometre(value: float) -> float:
 
 def farad_per_metre_to_nanofarad_per_kilometre(value: float) -> float:
     return value * 1_000_000_000_000.0
+
+def volt_amperes_to_megavolt_amperes(value_va: float) -> float:
+    return value_va / 1_000_000.0
+
+
+def megavolt_amperes_to_volt_amperes(value_mva: float) -> float:
+    return value_mva * 1_000_000.0

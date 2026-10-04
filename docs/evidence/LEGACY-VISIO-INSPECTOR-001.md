@@ -22,7 +22,22 @@ Covered invariants: stable family under Shape ID and absolute coordinate changes
 
 Command: `PYTHONPATH=src python3 -m compileall -q src && PYTHONPATH=src python3 -m unittest discover -s tests -v`
 
-Result: **80/80 PASS** (`Ran 80 tests in 0.581s`, `OK`).
+After adding the read-only VSDX package source, full result: **81/81 PASS** (`Ran 81 tests`, `OK`).
+
+## VSDX package integration evidence
+
+A separately generated safe VSDX package on the VPS was captured through `capture_vsdx_package()` without Visio/COM.
+
+Observed result:
+
+- pages: 1;
+- shapes: 3;
+- candidate families: 3;
+- native Glue edges: 2;
+- ambiguous/unknown: 0;
+- source SHA-256 before/after capture unchanged.
+
+This evidence is intentionally **not** presented as Kochubeevskaya statistics; it validates the real VSDX package read path only.
 
 ## Live Visio acceptance
 

@@ -33,6 +33,26 @@ Snapshot не является canonical electrical model.
 
 `inspect_legacy_visio(snapshot)` — pure/read-only transformation. Она не мутирует snapshot, не создаёт canonical electrical entities, не меняет Glue и не регенерирует Visio.
 
+### Read-only VSDX package source
+
+`capture_vsdx_package(path)` реализует первый реальный source adapter без COM: VSDX открывается как OPC/ZIP package строго на чтение, XML разбирается стандартной библиотекой Python, а SHA-256 исходного файла проверяется до и после capture.
+
+Из VSDX package source извлекаются:
+
+- page metadata/dimensions;
+- recursive/nested Shapes;
+- Shape ID / Name / NameU / Type;
+- Master Name/NameU и MasterShape ID;
+- XForm geometry/rotation;
+- raw ShapeSheet cells + Geometry rows;
+- text;
+- layer membership;
+- connection-point rows;
+- BeginX/BeginY/EndX/EndY formulas;
+- native `<Connects>/<Connect>` relations.
+
+Этот adapter покрывает VSDX. Старый binary `.vsd` и live COM остаются отдельными future collectors за тем же `LegacyVisioSnapshotSource` contract и не требуют изменения inspection/fingerprint layer.
+
 ## Fingerprinting
 
 Family fingerprint не зависит от Shape ID и абсолютных PinX/PinY. Отдельно считаются:

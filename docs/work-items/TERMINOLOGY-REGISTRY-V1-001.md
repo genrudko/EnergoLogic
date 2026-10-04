@@ -73,7 +73,7 @@ The registry is the controlled contract between:
 - [x] documentation explains how to add a term;
 - [x] disputed terms and competing evidence are explicit;
 - [x] repository test suite passes on the pre-correction head;
-- [ ] corrected breaker/earthing terminology head has final green CI recorded.
+- [x] corrected breaker/earthing terminology head has final green CI recorded.
 
 Owner acceptance, Ready for Review and merge are intentionally **not** implied by
 implementation checks.
@@ -137,4 +137,4 @@ Repository CI matrix:
 - Windows latest / Python 3.11;
 - Windows latest / Python 3.12.
 
-Final corrected-head result is recorded in PR #18 before owner acceptance.
+Corrected code head `9323c5979f65077686934bc654efd52384494b03`: CI run **37205909855 — SUCCESS**, **95 tests — OK** in each matrix job.\n\nDocumentation-reconciled head `e9f3599e7922f828c8cf911363b578199b9663a1`: CI run **37206082055 — SUCCESS**.

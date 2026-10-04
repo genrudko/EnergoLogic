@@ -195,5 +195,112 @@ class PandapowerAdapterIntegrationTests(unittest.TestCase):
         self.assertEqual(result.node.canonical_id, "bus:section-a-35kv")
 
 
+    def test_pandapower_355_matches_committed_numerical_golden(self):
+        golden = json.loads(
+            (
+                ROOT
+                / "tests"
+                / "fixtures"
+                / "ws8-pandapower-3.5.5-golden.json"
+            ).read_text(encoding="utf-8")
+        )
+        tol = golden["tolerances"]
+
+        result_a = self.adapter.power_flow(study(state_a_model()))
+        result_b = self.adapter.power_flow(study(state_b_model()))
+        self.assertEqual(result_a.status, SolverStatus.SUCCESS, result_a.errors)
+        self.assertEqual(result_b.status, SolverStatus.SUCCESS, result_b.errors)
+
+        for label, result in (("state_a", result_a), ("state_b", result_b)):
+            expected = golden["power_flow"][label]
+            self.assertAlmostEqual(
+                result.bus("bus:section-a-35kv").voltage_v or 0.0,
+                expected["section_a_voltage_v"],
+                delta=tol["voltage_v"],
+            )
+            self.assertAlmostEqual(
+                result.bus("bus:section-b-35kv").voltage_v or 0.0,
+                expected["section_b_voltage_v"],
+                delta=tol["voltage_v"],
+            )
+            self.assertAlmostEqual(
+                result.branch("line:feed-a").current_a or 0.0,
+                expected["line_a_current_a"],
+                delta=tol["current_a"],
+            )
+            self.assertAlmostEqual(
+                result.branch("line:feed-b").current_a or 0.0,
+                expected["line_b_current_a"],
+                delta=tol["current_a"],
+            )
+            self.assertAlmostEqual(
+                result.branch("transformer:t1").loading_percent or 0.0,
+                expected["transformer_loading_percent"],
+                delta=tol["loading_percent"],
+            )
+
+        requests = (
+            ("section_a_3ph", FaultType.THREE_PHASE, True, True),
+            ("section_a_2ph", FaultType.PHASE_TO_PHASE, False, False),
+            (
+                "section_a_1ph",
+                FaultType.SINGLE_PHASE_TO_EARTH,
+                False,
+                False,
+            ),
+        )
+        for key, fault_type, peak, thermal in requests:
+            with self.subTest(fault=fault_type.value):
+                result = self.adapter.short_circuit(
+                    study(),
+                    ShortCircuitRequest(
+                        canonical_bus_id="bus:section-a-35kv",
+                        fault_type=fault_type,
+                        calculate_peak=peak,
+                        calculate_thermal=thermal,
+                        branch_results=True,
+                    ),
+                )
+                self.assertEqual(
+                    result.status,
+                    SolverStatus.SUCCESS,
+                    result.errors,
+                )
+                assert result.node is not None
+                expected = golden["short_circuit"][key]
+                self.assertAlmostEqual(
+                    result.node.initial_symmetrical_current_a or 0.0,
+                    expected["ikss_a"],
+                    delta=tol["short_circuit_current_a"],
+                )
+                contributions = {
+                    item.canonical_id: item
+                    for item in result.branch_contributions
+                }
+                self.assertAlmostEqual(
+                    contributions["line:feed-a"].initial_current_a or 0.0,
+                    expected["line_a_ikss_a"],
+                    delta=tol["short_circuit_current_a"],
+                )
+                if "ip_a" in expected:
+                    self.assertAlmostEqual(
+                        result.node.peak_current_a or 0.0,
+                        expected["ip_a"],
+                        delta=tol["short_circuit_current_a"],
+                    )
+                if "ith_a" in expected:
+                    self.assertAlmostEqual(
+                        result.node.thermal_current_a or 0.0,
+                        expected["ith_a"],
+                        delta=tol["short_circuit_current_a"],
+                    )
+                if "skss_va" in expected:
+                    self.assertAlmostEqual(
+                        result.node.short_circuit_power_va or 0.0,
+                        expected["skss_va"],
+                        delta=tol["short_circuit_power_va"],
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()

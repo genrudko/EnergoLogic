@@ -26,6 +26,17 @@
 
 Текущая точка релиза — довести уже работающий Editor v3.13 до topology-safe поведения и завершить пользовательский polish. Главный незакрытый acceptance case: Cell Pitch distribute на TSN cell с обязательной проверкой реального Glue.
 
+
+## Canonical product target
+
+Authoritative target architecture: `docs/architecture/CANONICAL-PRODUCT-ARCHITECTURE.md`.
+
+EnergoLogic target scope now explicitly includes: Visio engineering frontend/mnemonic; canonical electrical model; operational switching simulation; switching forms/training; power-flow and short-circuit solver layer; protection/RZA including arc-fault protection; Russian normative + site-rule validation with provenance; legacy Visio migration; automatic scheme generation; self-contained offline deployment.
+
+Cross-cutting requirements: Windows 10/11; desktop Visio 2010 through latest supported desktop/Microsoft 365 Visio; x86/x64 qualification as applicable; bundled runtimes/libraries; Russian UI with canonical Russian power-engineering terminology; English code/API identifiers using canonical international electrical terminology; controlled RU↔EN Terminology Registry.
+
+Planned bounded workstreams after the current editor baseline: canonical architecture hardening → legacy Visio migration (Kochubeevskaya WPP as real acceptance case) → scheme generator → energized-network traversal → switching simulation/forms → electrical solver v1 (pandapower preferred initial adapter) → protection engine v1 → arc/advanced protection → Russian normative rules → compatibility/product hardening.
+
 ## Следующий основной архитектурный этап
 
 После промежуточного Visio UX work item вернуться к:

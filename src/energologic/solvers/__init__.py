@@ -35,3 +35,4 @@ __all__ = [
     "SolverStudyInput",
     "Transformer2WParameters",
 ]
+\nfrom .pandapower_adapter import PandapowerAdapter\n

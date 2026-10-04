@@ -37,6 +37,7 @@ from .units import (
     metres_to_kilometres,
     ohm_per_metre_to_ohm_per_kilometre,
     vars_to_megavars,
+    volt_amperes_to_megavolt_amperes,
     volts_to_kilovolts,
     watts_to_kilowatts,
     watts_to_megawatts,
@@ -582,7 +583,9 @@ def _build_network(
             kwargs: dict[str, object] = {
                 "vm_pu": p.voltage_pu,
                 "va_degree": p.angle_deg,
-                "s_sc_max_mva": watts_to_megawatts(p.short_circuit_power_max_va),
+                "s_sc_max_mva": volt_amperes_to_megavolt_amperes(
+                    p.short_circuit_power_max_va
+                ),
                 "rx_max": p.rx_max,
                 "in_service": active,
                 "name": element.id,
@@ -642,7 +645,7 @@ def _build_network(
             hv_bus = endpoint_bus[Endpoint(element.id, "hv")]
             lv_bus = endpoint_bus[Endpoint(element.id, "lv")]
             kwargs = {
-                "sn_mva": watts_to_megawatts(p.rated_power_va),
+                "sn_mva": volt_amperes_to_megavolt_amperes(p.rated_power_va),
                 "vn_hv_kv": volts_to_kilovolts(p.hv_voltage_v),
                 "vn_lv_kv": volts_to_kilovolts(p.lv_voltage_v),
                 "vkr_percent": p.short_circuit_resistance_percent,
@@ -785,11 +788,11 @@ def _power_flow_branches(
     for canonical_id in sorted(built.maps.line):
         index = built.maps.line[canonical_id]
         row = built.net.res_line.loc[index]
-        currents = [
-            _finite_or_none(_row_value(row, "i_from_ka")),
-            _finite_or_none(_row_value(row, "i_to_ka")),
+        from_ka = _finite_or_none(_row_value(row, "i_from_ka"))
+        to_ka = _finite_or_none(_row_value(row, "i_to_ka"))
+        finite_currents = [
+            item for item in (from_ka, to_ka) if item is not None
         ]
-        finite_currents = [item for item in currents if item is not None]
         rows.append(
             BranchPowerFlowResult(
                 canonical_id=canonical_id,
@@ -797,6 +800,16 @@ def _power_flow_branches(
                 current_a=(
                     kiloamperes_to_amperes(max(finite_currents))
                     if finite_currents
+                    else None
+                ),
+                from_current_a=(
+                    kiloamperes_to_amperes(from_ka)
+                    if from_ka is not None
+                    else None
+                ),
+                to_current_a=(
+                    kiloamperes_to_amperes(to_ka)
+                    if to_ka is not None
                     else None
                 ),
                 active_power_from_w=_scaled(
@@ -826,18 +839,21 @@ def _power_flow_branches(
     for canonical_id in sorted(built.maps.transformer_2w):
         index = built.maps.transformer_2w[canonical_id]
         row = built.net.res_trafo.loc[index]
-        currents = [
-            _finite_or_none(_row_value(row, "i_hv_ka")),
-            _finite_or_none(_row_value(row, "i_lv_ka")),
-        ]
-        finite_currents = [item for item in currents if item is not None]
+        hv_ka = _finite_or_none(_row_value(row, "i_hv_ka"))
+        lv_ka = _finite_or_none(_row_value(row, "i_lv_ka"))
         rows.append(
             BranchPowerFlowResult(
                 canonical_id=canonical_id,
                 element_kind="transformer_2w",
-                current_a=(
-                    kiloamperes_to_amperes(max(finite_currents))
-                    if finite_currents
+                current_a=None,
+                from_current_a=(
+                    kiloamperes_to_amperes(hv_ka)
+                    if hv_ka is not None
+                    else None
+                ),
+                to_current_a=(
+                    kiloamperes_to_amperes(lv_ka)
+                    if lv_ka is not None
                     else None
                 ),
                 active_power_from_w=_scaled(
@@ -944,7 +960,7 @@ def _short_circuit_branches(
                 ShortCircuitBranchResult(
                     canonical_id=canonical_id,
                     element_kind="transformer_2w",
-                    initial_current_a=max(currents) if currents else None,
+                    initial_current_a=None,
                     from_current_a=from_a,
                     to_current_a=to_a,
                     peak_current_a=_scaled(

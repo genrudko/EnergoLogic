@@ -35,6 +35,36 @@ class TerminologyRegistryTests(unittest.TestCase):
             "switchgear.circuit_breaker",
         )
 
+    def test_power_domain_operational_terms_are_scope_aware(self):
+        self.assertEqual(
+            self.registry.canonical_term("bus.busbar", "ru"),
+            "сборная шина",
+        )
+        self.assertEqual(
+            self.registry.canonical_term("state.switch.closed", "ru"),
+            "включенное положение",
+        )
+        self.assertEqual(
+            self.registry.canonical_term("state.switch.open", "ru"),
+            "отключенное положение",
+        )
+        self.assertEqual(
+            self.registry.canonical_term("operation.switch.closing", "ru"),
+            "включение",
+        )
+        self.assertEqual(
+            self.registry.canonical_term("operation.switch.opening", "ru"),
+            "отключение",
+        )
+        self.assertEqual(
+            self.registry.resolve_unique(
+                "замкнутое положение",
+                language="ru",
+                domain="power.switchgear.state",
+            )["id"],
+            "state.switch.closed",
+        )
+
     def test_alias_lookup_does_not_promote_alias_to_canonical(self):
         matches = self.registry.lookup("предохранитель", language="ru")
         self.assertEqual(

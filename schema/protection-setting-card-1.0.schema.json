@@ -1,0 +1,579 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://energologic.local/schema/protection-setting-card-1.0.schema.json",
+  "title": "EnergoLogic Protection Setting Card v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "card_id",
+    "card_revision",
+    "site_id",
+    "settings_scope",
+    "lifecycle_status",
+    "primary_source_id",
+    "protected_object_ids",
+    "sources",
+    "devices",
+    "functions",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "protection-settings-v1"
+    },
+    "card_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "card_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "site_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "settings_scope": {
+      "enum": [
+        "operational_summary",
+        "partial_configuration",
+        "full_configuration"
+      ]
+    },
+    "lifecycle_status": {
+      "enum": [
+        "draft",
+        "approved",
+        "implemented",
+        "superseded",
+        "unknown"
+      ]
+    },
+    "primary_source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "protected_object_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/source_document"
+      }
+    },
+    "devices": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/device"
+      }
+    },
+    "functions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/function"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "source_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "locator_kind",
+        "locator"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locator_kind": {
+          "enum": [
+            "json_pointer",
+            "csv_row",
+            "csv_cell",
+            "sheet_cell",
+            "sheet_range",
+            "page",
+            "vendor_path",
+            "document",
+            "other"
+          ]
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "source_document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "document_type",
+        "title",
+        "revision",
+        "sha256",
+        "issue_date",
+        "source_uri",
+        "notes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "document_type": {
+          "enum": [
+            "setting_card",
+            "dispatcher_setting_task",
+            "owner_setting_task",
+            "vendor_setting_template",
+            "parameter_file",
+            "commissioning_record",
+            "other"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "issue_date": {
+          "type": "string"
+        },
+        "source_uri": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "technology",
+        "dispatch_name",
+        "manufacturer",
+        "model",
+        "software_version",
+        "parameter_file_source_ids",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "technology": {
+          "enum": [
+            "electromechanical",
+            "static",
+            "microprocessor",
+            "unknown"
+          ]
+        },
+        "dispatch_name": {
+          "type": "string"
+        },
+        "manufacturer": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "software_version": {
+          "type": "string"
+        },
+        "parameter_file_source_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_reference"
+          }
+        }
+      }
+    },
+    "setting_value": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "raw_text",
+            "source_value",
+            "source_unit",
+            "quantity_kind",
+            "basis",
+            "normalized_value",
+            "normalized_unit"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quantity"
+            },
+            "raw_text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source_value": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source_unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "quantity_kind": {
+              "enum": [
+                "current",
+                "voltage",
+                "time",
+                "frequency",
+                "impedance",
+                "power_active",
+                "power_reactive",
+                "angle",
+                "ratio",
+                "scalar"
+              ]
+            },
+            "basis": {
+              "enum": [
+                "primary",
+                "secondary",
+                "relative",
+                "device_native",
+                "not_applicable"
+              ]
+            },
+            "normalized_value": {
+              "type": "string",
+              "minLength": 1
+            },
+            "normalized_unit": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "raw_text",
+            "boolean_value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "boolean"
+            },
+            "raw_text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "boolean_value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "raw_text",
+            "enum_value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "enum"
+            },
+            "raw_text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "enum_value": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "raw_text",
+            "text_value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "raw_text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "text_value": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "semantic_key",
+        "role",
+        "value",
+        "provenance",
+        "notes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "semantic_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "pickup",
+            "delay",
+            "reset",
+            "measurement",
+            "direction",
+            "characteristic",
+            "enable",
+            "logic",
+            "coordination",
+            "other"
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/setting_value"
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_reference"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "action_type",
+        "target_kind",
+        "target_id",
+        "source_label",
+        "provenance",
+        "notes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action_type": {
+          "enum": [
+            "trip",
+            "signal",
+            "start",
+            "block",
+            "unblock",
+            "initiate_breaker_failure",
+            "other"
+          ]
+        },
+        "target_kind": {
+          "enum": [
+            "equipment",
+            "protection_function",
+            "protection_device",
+            "binary_output",
+            "other"
+          ]
+        },
+        "target_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_label": {
+          "type": "string"
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_reference"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_name",
+        "enabled",
+        "parameters",
+        "actions",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/parameter"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_reference"
+          }
+        }
+      }
+    },
+    "function": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "concept_id",
+        "source_name",
+        "device_id",
+        "enabled",
+        "parameters",
+        "stages",
+        "actions",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "concept_id": {
+          "type": "string",
+          "pattern": "^protection\\.[a-z0-9._-]+$"
+        },
+        "source_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "device_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/parameter"
+          }
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stage"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_reference"
+          }
+        }
+      }
+    }
+  }
+}

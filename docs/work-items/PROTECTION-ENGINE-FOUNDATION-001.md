@@ -1,6 +1,6 @@
 # PROTECTION-ENGINE-FOUNDATION-001 — Generic protection engine foundation
 
-Status: **In progress**  
+Status: **Implementation complete in Draft; owner acceptance pending**  
 Workstream: **WS-9B — Protection & Automation / generic protection engine**  
 Issue: **#25**  
 Branch: `protection/protection-engine-foundation-001`  
@@ -59,3 +59,36 @@ python -m unittest discover -s tests -v
 ```
 
 Ready/Merge remain owner-controlled.
+
+
+## Acceptance status
+
+- [x] dedicated stacked branch and Draft PR;
+- [x] deterministic measured-value snapshot model;
+- [x] deterministic runtime state;
+- [x] МТЗ pickup/delay/reset qualified;
+- [x] ТО pickup/delay/reset qualified;
+- [x] earth-fault pickup/delay/reset qualified;
+- [x] explicit zero-delay operation qualified;
+- [x] exact threshold boundary behavior tested;
+- [x] missing/ambiguous settings fail closed;
+- [x] incompatible measurement basis/unit fails closed;
+- [x] time reversal fails closed;
+- [x] trip/output requests are deterministic and do not mutate electrical state;
+- [x] disabled/null-enabled behavior tested;
+- [x] incomplete/non-authoritative settings are fail-closed by default;
+- [x] architecture tests prohibit wall-clock and cross-workstream execution dependencies;
+- [x] breaker-failure remains explicitly unsupported rather than guessed;
+- [x] architecture/how-to/evidence docs complete;
+- [x] current implementation CI green;
+- [x] PR remains Draft until explicit owner command.
+
+## Verification checkpoints
+
+- 48afdb1e4d13727d3b965e1fd00f0722c393055b —
+  CI 37215872927 SUCCESS, 118 tests on representative job.
+- 9227a21427235f1edf31be6652fa6bbd7a47a237 —
+  CI 37216082437 SUCCESS, 124 tests on representative job.
+
+A final documentation reconciliation commit is run through the same
+Ubuntu/Windows × Python 3.11/3.12 matrix before owner acceptance.

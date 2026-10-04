@@ -1,8 +1,9 @@
 # TERMINOLOGY-REGISTRY-V1-001 — Terminology Registry v1
 
-Status: **In progress**  
+Status: **Implementation complete in Draft; owner terminology decisions pending**  
 Workstream: **WS-2 — Terminology & Normative Foundations**  
 Issue: **#17**  
+Draft PR: **#18**  
 Branch: `terminology/terminology-registry-v1-001`
 
 ## Goal
@@ -57,38 +58,73 @@ The registry is the controlled contract between:
 
 ## Acceptance
 
-- [ ] schema is understandable and extensible;
-- [ ] requested baseline concepts are represented with provenance;
-- [ ] canonical RU/EN and code identifiers are internally consistent;
-- [ ] aliases are structurally separate from canonical terminology;
-- [ ] duplicate IDs/code identifiers fail closed;
-- [ ] canonical names are singular fields, not synonym sets;
-- [ ] ambiguous normative homonyms are surfaced, never silently selected;
-- [ ] lookup API and alias lookup are tested;
-- [ ] terminology lint is tested;
-- [ ] documentation explains how to add a term;
-- [ ] disputed terms and competing evidence are explicit;
-- [ ] repository test suite passes;
-- [ ] CI evidence is recorded.
+- [x] schema is understandable and extensible;
+- [x] requested baseline concepts are represented with provenance;
+- [x] canonical RU/EN and code identifiers are internally consistent;
+- [x] aliases are structurally separate from canonical terminology;
+- [x] duplicate IDs/code identifiers fail closed;
+- [x] canonical names are singular fields, not synonym sets;
+- [x] ambiguous normative homonyms are surfaced, never silently selected;
+- [x] lookup API and alias lookup are tested;
+- [x] terminology lint is tested;
+- [x] documentation explains how to add a term;
+- [x] disputed terms and competing evidence are explicit;
+- [x] repository test suite passes;
+- [x] CI evidence is recorded.
 
-## Known terminology decisions requiring evidence
+Owner acceptance, Ready for Review and merge are intentionally **not** implied by these
+implementation checks.
 
-The initial research has already identified cases that must not be flattened into one informal vocabulary:
+## Resolved terminology findings
 
-- `circuit-breaker`: Russian high-voltage product standards use «выключатель», while generic IEC-derived low-voltage terminology also uses «автоматический выключатель»;
-- `earthing switch`: current Russian high-voltage apparatus standards use «заземлитель», while another normative vocabulary also uses «заземлитель» for `earth electrode`; the registry therefore must support domain-qualified homonyms;
-- `terminal`: IEC terminology distinguishes physical equipment terminals from abstract circuit/topology connection points;
-- bus/bay/feeder terminology: Russian power-system standards distinguish «присоединение» and «ячейка», and their IEC English counterparts must not be collapsed;
-- energized/de-energized terminology has edition/scope differences in IEC live-working vocabulary.
+- A physical electrical `terminal` is canonical Russian **«вывод»**; literal
+  «электрический терминал» is forbidden as a UI/code translation.
+- `присоединение распределительного устройства` maps to `feeder bay`, while
+  `ячейка` maps to `bay`; they are separate concepts.
+- In the EnergoLogic power/KRU scope, **«сборная шина»** is used as the Russian
+  `busbar` canonical candidate; generic «шина» remains an alias/supporting IEV form.
+- For the operational Russian UI, current switching rules support
+  **«включение/отключение»** and **«включенное/отключенное положение»**.
+  IEV mechanical wording remains searchable as aliases.
+- `заземлитель` is modeled explicitly as `earth electrode`, while its historical
+  use for `earthing switch` is a deprecated alias. Lookup therefore fails closed on
+  the real normative homonym instead of guessing.
 
-These are to be resolved or marked provisional with evidence in the implementation/PR rather than chosen implicitly.
+## Owner decisions still required
+
+1. **Circuit-breaker Russian UI canonical**
+   - generic current ГОСТ IEC terminology: «автоматический выключатель»;
+   - current 3–750 kV Russian equipment standard: «выключатель»;
+   - WS-2 proposal: **«выключатель»** for EnergoLogic's power/HV domain, with
+     «автоматический выключатель» as an alias.
+
+2. **Earthing-switch Russian UI canonical**
+   - current ГОСТ IEC terminology: «заземляющий выключатель»;
+   - current ГОСТ Р 57190 terminology: «выключатель заземления»;
+   - WS-2 proposal: **«заземляющий выключатель»**, with
+     «выключатель заземления» as an alias and historical «заземлитель» deprecated.
+
+Other `provisional` entries are retained because their final wording depends on
+additional primary evidence or on future WS-1 domain boundaries. They must not be
+promoted by guesswork.
 
 ## Verification
 
-Canonical local command:
+Canonical command:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Additional registry-specific validation/lint commands will be documented with the implementation.
+Repository CI matrix:
+
+- Ubuntu latest / Python 3.11;
+- Ubuntu latest / Python 3.12;
+- Windows latest / Python 3.11;
+- Windows latest / Python 3.12.
+
+Implementation head `16b3ea6f73a8cd2a60c5e0ae950a8cb6329c88e8`:
+CI run **37204617645 — SUCCESS**.
+
+Final Draft head may contain documentation-only reconciliation commits after this
+implementation checkpoint; those commits must also retain green CI before acceptance.

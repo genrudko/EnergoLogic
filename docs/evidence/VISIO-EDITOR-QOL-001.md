@@ -669,3 +669,155 @@ Topology-safe Cell Pitch distribute больше не является blocker'�
 Следующий продуктовый фокус: R3/R4 — недостающие пользовательские команды, интеграция интерфейса и polish.
 
 One-user-Undo остаётся deferred technical debt и не возвращается в critical path без нового основания.
+
+## Editor v3.45 — R3/R4 final live acceptance (2026-10-04)
+
+Этот checkpoint является текущим authoritative состоянием VISIO-EDITOR-QOL-001 и supersede'ит более ранние operational checkpoints v3.13/v3.18 для текущего Editor runtime.
+
+### Финальный runtime baseline
+
+- Editor: `EnergoLogic.VisioEditorAddinV345`;
+- API: `0.3.45`;
+- managed Visio extension: `2026.10.04.145`;
+- development-bridge branch HEAD: `946c55441761f6e510bef5d6dc44c9e7373fde93`;
+- focused development-bridge Visio suite: **89/89 PASS**;
+- embedded C# source verification: **PASS**;
+- `git diff --check`: **PASS**;
+- `LoadBehavior=0` сохранён: add-in не возвращён к crash-prone startup-load модели.
+
+Live `version` на исходной `MCP-v2` подтвердил:
+
+- API `0.3.45`;
+- ProgID `EnergoLogic.VisioEditorAddinV345`;
+- shape count `52 → 52`.
+
+### R3 — P1 принят live
+
+#### Bus editing
+
+На disposable page `UI-V337-Bus-Acceptance` шина shape `101` квалифицирована через штатные VTD Shape Data:
+
+Baseline:
+
+- `Prop.tp = 6`;
+- `Prop.rt = 40 мм`;
+- `Width = 210 мм`;
+- заняты slots 1..6.
+
+`Extend Bus Right`:
+
+- `6 → 7` точек;
+- pitch остаётся `40 мм`;
+- width `210 → 250 мм`;
+- новый slot 7 реально свободен.
+
+`Trim Bus Right`:
+
+- `7 → 6`;
+- удаляется именно свободный крайний slot 7;
+- pitch остаётся `40 мм`;
+- width возвращается к `210 мм`;
+- исходная occupancy slots 1..6 сохраняется.
+
+#### Reconnect
+
+На disposable page `UI-V337-Reconnect-Acceptance` shape `244` был намеренно оставлен с broken End endpoint:
+
+- `EndX = 190 mm`;
+- `EndY = 152.5 mm`;
+- native End Glue отсутствовал.
+
+`Reconnect End` выбрал фактическую ближайшую connection point:
+
+`244.End → 166 / Connections.1`
+
+и восстановил:
+
+- native `244.EndX → ТСН2 / Connections.1.X`;
+- `EndX/EndY = PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))`;
+- существующий `244.Begin → 242 / Connections.2` сохранён.
+
+Тем самым пользовательские `Extend/Trim Bus` и `Reconnect Begin/End` приняты на реальном VTD-документе.
+
+### R4 — native Visio UX принят live
+
+Нормальный пользовательский UI больше не основан на отдельном постоянно открытом WinForms-окне.
+
+Реализовано и live-подтверждено:
+
+- native Office RibbonX tab **EnergoLogic** через `IRibbonExtensibility`;
+- группы команд: Ячейка, Оборудование, Соединения и шина, Геометрия, Проверка;
+- Ribbon KeyTips для клавиатурного доступа к основным командам;
+- preset-команды, включая сдвиги 5 мм и Cell Pitch 40 мм;
+- native right-click submenu **EnergoLogic** в штатных Visio popup menus:
+  - `Drawing Object Selected`, Context `9`;
+  - `Drawing Page Selected`, Context `75`;
+- modeless parameter panel доступна по явной команде, но по умолчанию скрыта;
+- legacy CommandBar toolbar сохранён только как recovery path и скрыт.
+
+Финальный live `ui_status` v3.45:
+
+`Ribbon=loaded; ContextMenu=installed; ContextHosts=Drawing Page Selected,Drawing Object Selected; Panel=hidden; FallbackToolbar=hidden`
+
+### Visual Diagnostics — корректность принята, performance вынесен в debt
+
+На контрольной странице `UI-V337-Reconnect-Acceptance` финальный v3.45 вернул:
+
+`✓ Visual Diagnostics: structural-проблем не найдено. Проверено cell_id: 0.`
+
+Shape count остался `52 → 52`.
+
+Фактическое время этой полной диагностики в текущем in-process COM path:
+
+- claimed: `1791135340.1406274`;
+- completed: `1791135371.3528893`;
+- около **31.2 с**.
+
+Это признано неблокирующим performance debt: диагностика корректна, но для интерактивной команды медленна.
+
+Проверены и **отвергнуты** три ускорения, потому что нарушали topology semantics:
+
+- v3.42 / `f19872c...`: `Page.Connects` snapshot + direct `CellsSRC` — быстро, но **69 ложных** `касание без Glue`;
+- v3.43 / `999c159...`: one-pass direct `Shape.Connects` — осталась ложная проблема `shape 166 end`;
+- v3.44 / `1b48d77...`: native-only one-pass + VTD aliases — снова **69 ложных** проблем.
+
+v3.45 / `946c554...` поэтому осознанно восстановил доказанный алгоритм v3.41:
+
+`TryGetGlueTarget(source, endpoint) → native Shape.Connects → FormulaU fallback`
+
+с VTD-qualified connection-point aliases.
+
+Правило для дальнейшей оптимизации: **не жертвовать topology correctness ради COM latency**. Следующее ускорение должно быть отдельным work item / instrumented helper, а не очередной заменой proven connectivity semantics.
+
+### Source safety
+
+Во всех финальных R3/R4 acceptance:
+
+- destructive проверки выполнялись на disposable pages;
+- исходная `MCP-v2` оставалась **52 shapes**;
+- VTD masters массово не переписывались.
+
+### Незакрытые технические хвосты
+
+Они не блокируют принятую пользовательскую функциональность Editor:
+
+1. **One-user Undo** — deferred technical debt. В текущем внешнем Automation invocation context один Ctrl+Z после успешной compound operation не является надёжно квалифицированным.
+2. **Visual Diagnostics performance** — около 31 с на текущем реальном документе; semantics v3.45 корректна и должна сохраняться.
+
+### Итог R3/R4
+
+Пользовательский функциональный контур VISIO-EDITOR-QOL-001 завершён и live-квалифицирован:
+
+- P0 geometry/cell operations;
+- topology-safe Cell Pitch;
+- identity / replace / insert;
+- bus editing;
+- reconnect;
+- Scheme Doctor / Visual Diagnostics;
+- native RibbonX;
+- native Visio context menu;
+- keyboard access through Ribbon KeyTips;
+- presets.
+
+PR #12 остаётся **Draft**. Ready for Review / merge — только по явной команде владельца.
+

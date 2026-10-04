@@ -217,21 +217,32 @@ not require pandapower to be installed.
 The spike pins pandapower to `3.5.5` so numerical goldens and backend behavior
 are reproducible.
 
-## 9. Explicitly unresolved by this contract
+## 9. Production boundary after the spike
 
-The spike does not decide:
+The architectural questions exposed by this contract are resolved/reclassified
+in:
 
-- production canonical semantics for lines/cables, loads and external sources;
-- generator and motor semantics;
-- shunts/capacitors/reactors;
-- three-winding transformers or autotransformers;
-- tap changer/RPN semantics;
-- explicit phase-domain canonical topology;
-- neutral and earthing network representation;
-- current through switching devices as a first-class normalized result;
-- minimum short-circuit case parameters;
-- solver selection policy for unbalanced/harmonic/QSTS studies;
-- production process boundary / IPC / crash isolation;
-- final Windows runtime bundling mechanism.
+ELECTRICAL-SOLVER-PRODUCTION-DECISIONS.md
 
-Those require later bounded architectural decisions.
+The resulting production boundary is:
+
+- canonical electrical parameters are solver-neutral canonical engineering
+  facts;
+- the current SolverStudyInput parameter tuples are spike DTOs, not persisted
+  source of truth;
+- electrical-v1 remains unchanged; production calculation semantics are added
+  through a separately qualified electrical-calculation-v1 contract;
+- sequence and zero-sequence data is explicit and provenance-bearing;
+- balanced AC power flow plus qualified IEC 60909 is the first production
+  calculation scope;
+- switchgear current is terminal-scoped and may be unavailable when solver
+  topology does not permit unique attribution;
+- the packaged production solver runs out-of-process in a bundled x64 worker;
+- solver selection is explicit capability routing with no silent fallback;
+- pandapower is the first/default adapter for the qualified scope;
+- OpenDSS is introduced after phase/neutral topology qualification for
+  unbalanced/neutral/harmonic/QSTS study classes;
+- solver and numerical-golden versions are release-controlled.
+
+Remaining implementation/data dependencies are represented as bounded follow-up
+work items instead of open architecture questions.

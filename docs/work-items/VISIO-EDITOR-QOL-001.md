@@ -74,7 +74,7 @@ VTD masters массово не переписываются. Сначала ada
 10. выделить новую ячейку;
 11. откатываться одним Undo.
 
-### R2 — остальные P0 — In progress
+### R2 — остальные P0 ✅
 
 - [x] Copy with Base Point — pure planner + exact bridge request; external electrical Glue и managed identity обрабатываются fail-closed;
 - [x] Move with Base Point — pure planner для свободного selection + отдельный cell-aware Move Cell;
@@ -85,7 +85,7 @@ VTD masters массово не переписываются. Сначала ada
 - [x] Cell Pitch: measure / set / distribute — measure + deterministic distribution planner по реальным native bus slots;
 - [x] минимальный Scheme Doctor для Glue/pitch/identity structural checks.
 
-Copy/Move with Base Point, Exact Offset, Smart Nudge, Coordinates, Align X/Y, Select Cell, Renumber Cell и измерение шага уже прошли live acceptance в реальном Visio. Cell Pitch distribute остаётся незакрытым только по topology-safety: геометрия 40 мм работает, но восстановление одного внутреннего VTD Glue edge ещё требует ремонта.
+Copy/Move with Base Point, Exact Offset, Smart Nudge, Coordinates, Align X/Y, Select Cell, Renumber Cell, Measure Pitch и Cell Pitch distribute прошли live acceptance в реальном Visio. В v3.18 topology-safe distribute принят на TSN cell: bus anchor восстанавливается первым внешним COM-helper'ом, внутренние VTD Glue — после него; итоговый `244.End → 166/Connections.1` подтверждён native `Connects` и обеими ShapeSheet-формулами.
 
 ### R3 — P1
 
@@ -127,7 +127,7 @@ Live-квалификация подтвердила rollback внутри от�
 - его `CommandBarButton.Execute()` реально выполняет Duplicate внутри add-in (`44 → 52`), но последующий физический Ctrl+Z оставляет `52`;
 - попытка физически кликнуть кнопку синхронно из активного bridge COM-вызова приводит к reentrancy deadlock.
 
-One-user-Undo больше не блокирует завершение Editor UI: исследование зафиксировано как отдельный технический хвост. Текущий acceptance blocker — только topology-safe завершение Cell Pitch distribute на реальной VTD-ячейке.
+One-user-Undo больше не блокирует завершение Editor UI: исследование зафиксировано как отдельный технический хвост. Topology blocker Cell Pitch закрыт live в v3.18; текущая работа возвращается к R3/R4 — пользовательскому функционалу и polish.
 
 ## Acceptance benchmark
 
@@ -174,17 +174,16 @@ Merge и Ready for Review — только по явной команде вла
 
 Текущее состояние:
 
-- текущий live Editor: **v3.13** (`EnergoLogic.VisioEditorAddinV313`, API `0.3.13`);
-- текущий managed bridge: **2026.10.03.111**; bridge branch HEAD `05a877e`;
-- Coordinates, Copy/Move with Base Point, Exact Offset, Smart Nudge, Align X/Y, Select Cell, Renumber Cell, Duplicate/Move Cell, Repair Glue, Scheme Doctor и Measure Pitch — подтверждены live;
+- текущий live Editor: **v3.18** (`EnergoLogic.VisioEditorAddinV318`, API `0.3.18`);
+- текущий managed bridge: **2026.10.04.116**; development-bridge HEAD `5c4e28b6e7c6ab702d383feab820189ffff9a379`;
+- Coordinates, Copy/Move with Base Point, Exact Offset, Smart Nudge, Align X/Y, Select Cell, Renumber Cell, Duplicate/Move Cell, Repair Glue, Scheme Doctor, Measure Pitch и **Cell Pitch distribute** подтверждены live;
 - реальный pitch шины: **40 мм**;
 - TSN cell anchor `155` корректно раскрывается в 11 top-level members: `[155,158,160,162,166,182,240,242,244,249,250]`;
-- Cell Pitch distribute в v3.13 разделён на geometry phase и explicit topology-completion phase с operation status;
-- deliberate 10-second delay между phase 1 и phase 2 **не устраняет** дефект; гипотеза «VTD просто не успевает стабилизироваться» отвергнута;
-- точный remaining failure: `244.End → 166/Connections.1`;
-- после failure endpoint остаётся half-glued: `EndX = 190 mm`, а `EndY = PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))`;
-- тот же edge на той же странице немедленно восстанавливается low-level `batch_glue_endpoints`, после чего `get_connections` подтверждает настоящий `244.EndX → 166/Connections.1.X`;
-- следовательно, native `GlueTo` и connection point исправны; дефект локализован в C# add-in restoration/detach path, а не в тайминге;
-- исходная `MCP-v2` не мутируется; acceptance выполняется только на disposable copies;
-- Undo остаётся deferred technical debt и не должен снова вытеснять работу над пользовательским Editor;
+- v3.14 normalization и v3.15 event-isolation не исправили `244.End`; v3.16 доказал рабочую out-of-process COM boundary, но повторное Glue уже корректных VTD edges вызвало побочный сбой; v3.17 сузил план до отсутствующих edges и локализовал зависимость от порядка;
+- v3.18 восстанавливает **bus anchor первым, затем missing internal Glue**. Fresh acceptance `UI-V318-Pitch-Acceptance`: 44 shapes, baseline 80 мм, итог `66.PinX=110 мм`, `155.PinX=150 мм`, то есть 40 мм;
+- финальный native topology содержит `155.BeginX → Sheet.105/Connections.2.X`, `244.BeginX → 242/Connections.2.X` и `244.EndX → 166/Connections.1.X`;
+- `244.EndX` и `EndY` оба имеют `PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))`;
+- операция завершилась `state=success`, verified internal Glue count = 7;
+- исходная `MCP-v2` после acceptance по-прежнему содержит **52 shapes**;
+- Undo остаётся deferred technical debt и не должен снова вытеснять пользовательский Editor;
 - PR #12 остаётся **Draft**; Ready/merge только по явной команде владельца.

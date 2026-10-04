@@ -1,0 +1,281 @@
+{
+  "schema_version": "0.1",
+  "model_id": "ws8:synthetic-two-section-network",
+  "metadata": {
+    "purpose": "ELECTRICAL-SOLVER-SPIKE-001 synthetic canonical fixture",
+    "state": "A"
+  },
+  "elements": [
+    {
+      "id": "bus:grid-35kv",
+      "kind": "bus",
+      "name": "Grid 35 kV",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "bus:feeder-a-35kv",
+      "kind": "bus",
+      "name": "Feeder A node",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "bus:feeder-b-35kv",
+      "kind": "bus",
+      "name": "Feeder B node",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "bus:section-a-35kv",
+      "kind": "bus",
+      "name": "35 kV bus section A",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "bus:section-b-35kv",
+      "kind": "bus",
+      "name": "35 kV bus section B",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "bus:transformer-hv-35kv",
+      "kind": "bus",
+      "name": "Transformer HV node",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "bus:lv-400v",
+      "kind": "bus",
+      "name": "0.4 kV bus",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 400}
+    },
+    {
+      "id": "source:grid",
+      "kind": "external_grid",
+      "name": "External grid",
+      "terminals": [{"id": "node"}],
+      "attributes": {}
+    },
+    {
+      "id": "line:feed-a",
+      "kind": "line",
+      "name": "35 kV cable A",
+      "terminals": [{"id": "from"}, {"id": "to"}],
+      "attributes": {}
+    },
+    {
+      "id": "line:feed-b",
+      "kind": "line",
+      "name": "35 kV cable B",
+      "terminals": [{"id": "from"}, {"id": "to"}],
+      "attributes": {}
+    },
+    {
+      "id": "breaker:incomer-a",
+      "kind": "circuit_breaker",
+      "name": "Incomer A",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "closed",
+        "mounting_type": "fixed"
+      }
+    },
+    {
+      "id": "breaker:incomer-b",
+      "kind": "circuit_breaker",
+      "name": "Incomer B",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "closed",
+        "mounting_type": "fixed"
+      }
+    },
+    {
+      "id": "breaker:bus-coupler",
+      "kind": "circuit_breaker",
+      "name": "Bus coupler",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "open",
+        "mounting_type": "fixed"
+      }
+    },
+    {
+      "id": "disconnector:transformer-hv",
+      "kind": "disconnector",
+      "name": "Transformer HV disconnector",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "closed",
+        "mounting_type": "fixed"
+      }
+    },
+    {
+      "id": "transformer:t1",
+      "kind": "transformer_2w",
+      "name": "T1 35/0.4 kV",
+      "terminals": [
+        {
+          "id": "hv",
+          "attributes": {
+            "nominal_voltage_v": 35000,
+            "winding_connection": "delta"
+          }
+        },
+        {
+          "id": "lv",
+          "attributes": {
+            "nominal_voltage_v": 400,
+            "winding_connection": "star_grounded_neutral"
+          }
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "id": "load:section-a",
+      "kind": "load",
+      "name": "Section A load",
+      "terminals": [{"id": "node"}],
+      "attributes": {}
+    },
+    {
+      "id": "load:lv",
+      "kind": "load",
+      "name": "LV load",
+      "terminals": [{"id": "node"}],
+      "attributes": {}
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection:grid-source",
+      "endpoints": [
+        {"element_id": "bus:grid-35kv", "terminal_id": "node"},
+        {"element_id": "source:grid", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:grid-line-a",
+      "endpoints": [
+        {"element_id": "bus:grid-35kv", "terminal_id": "node"},
+        {"element_id": "line:feed-a", "terminal_id": "from"}
+      ]
+    },
+    {
+      "id": "connection:line-a-feeder",
+      "endpoints": [
+        {"element_id": "line:feed-a", "terminal_id": "to"},
+        {"element_id": "bus:feeder-a-35kv", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:feeder-a-breaker",
+      "endpoints": [
+        {"element_id": "bus:feeder-a-35kv", "terminal_id": "node"},
+        {"element_id": "breaker:incomer-a", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "connection:breaker-a-section",
+      "endpoints": [
+        {"element_id": "breaker:incomer-a", "terminal_id": "b"},
+        {"element_id": "bus:section-a-35kv", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:grid-line-b",
+      "endpoints": [
+        {"element_id": "bus:grid-35kv", "terminal_id": "node"},
+        {"element_id": "line:feed-b", "terminal_id": "from"}
+      ]
+    },
+    {
+      "id": "connection:line-b-feeder",
+      "endpoints": [
+        {"element_id": "line:feed-b", "terminal_id": "to"},
+        {"element_id": "bus:feeder-b-35kv", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:feeder-b-breaker",
+      "endpoints": [
+        {"element_id": "bus:feeder-b-35kv", "terminal_id": "node"},
+        {"element_id": "breaker:incomer-b", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "connection:breaker-b-section",
+      "endpoints": [
+        {"element_id": "breaker:incomer-b", "terminal_id": "b"},
+        {"element_id": "bus:section-b-35kv", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:coupler-a",
+      "endpoints": [
+        {"element_id": "bus:section-a-35kv", "terminal_id": "node"},
+        {"element_id": "breaker:bus-coupler", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "connection:coupler-b",
+      "endpoints": [
+        {"element_id": "breaker:bus-coupler", "terminal_id": "b"},
+        {"element_id": "bus:section-b-35kv", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:section-a-load",
+      "endpoints": [
+        {"element_id": "bus:section-a-35kv", "terminal_id": "node"},
+        {"element_id": "load:section-a", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:section-b-disconnector",
+      "endpoints": [
+        {"element_id": "bus:section-b-35kv", "terminal_id": "node"},
+        {"element_id": "disconnector:transformer-hv", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "connection:disconnector-transformer-bus",
+      "endpoints": [
+        {"element_id": "disconnector:transformer-hv", "terminal_id": "b"},
+        {"element_id": "bus:transformer-hv-35kv", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:transformer-hv",
+      "endpoints": [
+        {"element_id": "bus:transformer-hv-35kv", "terminal_id": "node"},
+        {"element_id": "transformer:t1", "terminal_id": "hv"}
+      ]
+    },
+    {
+      "id": "connection:transformer-lv",
+      "endpoints": [
+        {"element_id": "transformer:t1", "terminal_id": "lv"},
+        {"element_id": "bus:lv-400v", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "connection:lv-load",
+      "endpoints": [
+        {"element_id": "bus:lv-400v", "terminal_id": "node"},
+        {"element_id": "load:lv", "terminal_id": "node"}
+      ]
+    }
+  ]
+}

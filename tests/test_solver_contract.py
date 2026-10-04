@@ -86,9 +86,10 @@ class SolverContractTests(unittest.TestCase):
         self.assertEqual(vars_to_megavars(2_500_000.0), 2.5)
         self.assertEqual(megavars_to_vars(2.5), 2_500_000.0)
         self.assertEqual(metres_to_kilometres(1_500.0), 1.5)
-        self.assertEqual(
+        self.assertAlmostEqual(
             ohm_per_metre_to_ohm_per_kilometre(0.00012),
             0.12,
+            places=12,
         )
         self.assertEqual(
             farad_per_metre_to_nanofarad_per_kilometre(1.0e-11),

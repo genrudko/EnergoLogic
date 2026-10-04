@@ -8,7 +8,12 @@ from datetime import date
 from decimal import Decimal
 from typing import Iterable, Mapping, Sequence
 
-from .units import (\n    QUANTITY_KINDS,\n    UnitNormalizationError,\n    normalize_quantity,\n    parse_decimal_source,\n)
+from .units import (
+    QUANTITY_KINDS,
+    UnitNormalizationError,
+    normalize_quantity,
+    parse_decimal_source,
+)
 
 
 SCHEMA_VERSION = "protection-settings-v1"

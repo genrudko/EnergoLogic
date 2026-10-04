@@ -1,0 +1,1621 @@
+{
+  "registry_version": "1.0",
+  "sources": [
+    {
+      "id": "gost-12.2.007.4-75",
+      "authority": "gost",
+      "document": "ГОСТ 12.2.007.4-75",
+      "edition": "1975; Изм. №1–6; действует только в РФ",
+      "status": "current",
+      "title": "ССБТ. Шкафы комплектных распределительных устройств и комплектных трансформаторных подстанций, камеры сборные одностороннего обслуживания, ячейки герметизированных элегазовых распределительных устройств"
+    },
+    {
+      "id": "gost-17717-79",
+      "authority": "gost",
+      "document": "ГОСТ 17717-79",
+      "edition": "1979, переиздание/изменения по фонду стандартов",
+      "status": "current",
+      "title": "Выключатели нагрузки переменного тока на напряжение от 3 до 10 кВ. Общие технические условия"
+    },
+    {
+      "id": "gost-24291-90",
+      "authority": "gost",
+      "document": "ГОСТ 24291-90",
+      "edition": "1990",
+      "status": "current",
+      "title": "Электрическая часть электростанции и электрической сети. Термины и определения"
+    },
+    {
+      "id": "gost-iec-60050-151-2014",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60050-151-2014",
+      "edition": "2014",
+      "status": "current",
+      "title": "Международный электротехнический словарь. Часть 151. Электрические и магнитные устройства"
+    },
+    {
+      "id": "gost-iec-60050-321-2014",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60050-321-2014",
+      "edition": "2014",
+      "status": "current",
+      "title": "Международный электротехнический словарь. Часть 321. Измерительные трансформаторы"
+    },
+    {
+      "id": "gost-iec-60050-411-2015",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60050-411-2015",
+      "edition": "2015",
+      "status": "current",
+      "title": "Международный электротехнический словарь. Часть 411. Машины вращающиеся"
+    },
+    {
+      "id": "gost-iec-60050-441-2015",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60050-441-2015",
+      "edition": "2015",
+      "status": "current",
+      "title": "Международный электротехнический словарь. Часть 441. Аппаратура коммутационная, аппаратура управления и плавкие предохранители"
+    },
+    {
+      "id": "gost-iec-60050-651-2014",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60050-651-2014",
+      "edition": "2014",
+      "status": "current",
+      "title": "Международный электротехнический словарь. Часть 651. Работа под напряжением"
+    },
+    {
+      "id": "gost-iec-60947-2-2021",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 60947-2-2021",
+      "edition": "2021; введен в РФ с 2022-03-01",
+      "status": "current",
+      "title": "Аппаратура распределения и управления низковольтная. Часть 2. Автоматические выключатели",
+      "notes": "Russian adoption of IEC 60947-2:2016 + Amd.1:2019; scope primarily up to 1000 V AC / 1500 V DC."
+    },
+    {
+      "id": "gost-iec-61869-3-2012",
+      "authority": "gost_iec",
+      "document": "ГОСТ IEC 61869-3-2012",
+      "edition": "2012; Поправка ИУС 7-2026",
+      "status": "current",
+      "title": "Трансформаторы измерительные. Часть 3. Дополнительные требования к индуктивным трансформаторам напряжения"
+    },
+    {
+      "id": "gost-r-52565-2006",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 52565-2006",
+      "edition": "2006; Изм. №1, ИУС 2-2022",
+      "status": "current",
+      "title": "Выключатели переменного тока на напряжения от 3 до 750 кВ. Общие технические условия"
+    },
+    {
+      "id": "gost-r-52719-2007",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 52719-2007",
+      "edition": "2007; Поправка ИУС 8-2018; Изм. №1, ИУС 2-2021",
+      "status": "current",
+      "title": "Трансформаторы силовые. Общие технические условия"
+    },
+    {
+      "id": "gost-r-52726-2007",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 52726-2007",
+      "edition": "2007; с Поправкой",
+      "status": "current",
+      "title": "Разъединители и заземлители переменного тока на напряжение свыше 1 кВ и приводы к ним. Общие технические условия"
+    },
+    {
+      "id": "gost-r-55190-2022",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 55190-2022",
+      "edition": "2022; Поправка ИУС 10-2023",
+      "status": "current",
+      "title": "Устройства комплектные распределительные в металлической оболочке (КРУ) на номинальное напряжение до 35 кВ. Общие технические условия"
+    },
+    {
+      "id": "gost-r-57114-2022",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 57114-2022",
+      "edition": "2022",
+      "status": "current",
+      "title": "Единая энергетическая система и изолированно работающие энергосистемы. Электроэнергетические системы. Оперативно-диспетчерское управление в электроэнергетике и оперативно-технологическое управление. Термины и определения"
+    },
+    {
+      "id": "gost-r-57190-2016",
+      "authority": "gost_r",
+      "document": "ГОСТ Р 57190-2016",
+      "edition": "2016; переиздание февраль 2020",
+      "status": "current",
+      "title": "Заземлители и заземляющие устройства различного назначения. Термины и определения"
+    },
+    {
+      "id": "gost-r-iec-60050-441-2012",
+      "authority": "gost_r_iec",
+      "document": "ГОСТ Р МЭК 60050-441-2012",
+      "edition": "2012",
+      "status": "superseded",
+      "title": "Аппаратура коммутационная, аппаратура управления и предохранители. Глава 441. Термины и определения",
+      "notes": "Отменен с 2021-03-01; заменен ГОСТ IEC 60050-441-2015. Используется только как provenance legacy aliases."
+    },
+    {
+      "id": "gost-r-iec-61869-2-2015",
+      "authority": "gost_r_iec",
+      "document": "ГОСТ Р МЭК 61869-2-2015",
+      "edition": "2015",
+      "status": "current",
+      "title": "Трансформаторы измерительные. Часть 2. Дополнительные требования к трансформаторам тока"
+    },
+    {
+      "id": "iec-60050-131",
+      "authority": "iec_iev",
+      "document": "IEC 60050-131",
+      "edition": "online IEV, incl. AMD5:2021 evidence",
+      "status": "current",
+      "title": "International Electrotechnical Vocabulary — Part 131: Circuit theory"
+    },
+    {
+      "id": "iec-60050-448",
+      "authority": "iec_iev",
+      "document": "IEC 60050-448",
+      "edition": "IEV protection entries",
+      "status": "current",
+      "title": "International Electrotechnical Vocabulary — Part 448: Power system protection"
+    },
+    {
+      "id": "minenergo-757-2018",
+      "authority": "russian_normative",
+      "document": "Приказ Минэнерго России от 13.09.2018 № 757",
+      "edition": "ред. от 06.07.2026",
+      "status": "current",
+      "title": "Об утверждении Правил переключений в электроустановках"
+    }
+  ],
+  "concepts": [
+    {
+      "id": "bus.busbar",
+      "domain": "power.busbar",
+      "category": "topology",
+      "canonical": {
+        "ru": "сборная шина",
+        "en": "busbar"
+      },
+      "code_identifier": "Busbar",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "шина"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-r-55190-2022",
+          "role": "primary",
+          "locator": "3.1.44",
+          "notes": "Current metal-clad switchgear standard uses «сборная шина» for busbar."
+        },
+        {
+          "source_id": "gost-iec-60050-151-2014",
+          "role": "supporting",
+          "locator": "IEV 151-12-30",
+          "notes": "Generic IEV concept uses «шина» / busbar."
+        }
+      ],
+      "semantic_bindings": [
+        {
+          "namespace": "energologic.element.kind",
+          "value": "bus"
+        }
+      ],
+      "notes": "Power-domain canonical Russian term is scoped as «сборная шина»; generic IEV «шина» remains an accepted search/import alias. Broader non-switchgear bus semantics remain reviewable.",
+      "status": "provisional"
+    },
+    {
+      "id": "bus.busbar_section",
+      "domain": "power.busbar",
+      "category": "topology",
+      "canonical": {
+        "ru": "секция шин",
+        "en": "busbar section"
+      },
+      "code_identifier": "BusbarSection",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "секция системы сборных шин"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-24291-90",
+          "role": "primary",
+          "locator": "term 44 / IEV 605-02-08"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "bus.busbar_system",
+      "domain": "power.busbar",
+      "category": "topology",
+      "canonical": {
+        "ru": "система сборных шин",
+        "en": "busbars"
+      },
+      "code_identifier": "BusbarSystem",
+      "abbreviations": {
+        "ru": [
+          "СШ"
+        ],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "система шин"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-24291-90",
+          "role": "primary",
+          "locator": "term 41 / IEV 605-02-02"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "earthing.earth_electrode",
+      "domain": "electrical.earthing",
+      "category": "equipment",
+      "canonical": {
+        "ru": "заземлитель",
+        "en": "earth electrode"
+      },
+      "code_identifier": "EarthElectrode",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "заземляющий электрод"
+        ],
+        "en": [
+          "grounding electrode"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-24291-90",
+          "role": "primary",
+          "locator": "term 47 / IEV 604-04-05",
+          "notes": "Current Russian power-system terminology uses «заземлитель» for earth electrode."
+        }
+      ],
+      "notes": "Physical earth electrode. Russian canonical «заземлитель» is a real cross-domain normative homonym with the high-voltage earthing switching apparatus. Lookup must use concept/domain context and must never infer identity from the Russian string alone.",
+      "status": "accepted"
+    },
+    {
+      "id": "fault.short_circuit",
+      "domain": "electrical.fault",
+      "category": "fault",
+      "canonical": {
+        "ru": "короткое замыкание",
+        "en": "short-circuit"
+      },
+      "code_identifier": "ShortCircuit",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "short circuit"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-151-2014",
+          "role": "primary",
+          "locator": "IEV 151-12-04"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "fault.short_circuit_current",
+      "domain": "electrical.fault",
+      "category": "quantity",
+      "canonical": {
+        "ru": "ток короткого замыкания",
+        "en": "short-circuit current"
+      },
+      "code_identifier": "ShortCircuitCurrent",
+      "abbreviations": {
+        "ru": [
+          "ток КЗ"
+        ],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "short circuit current"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-151-2014",
+          "role": "supporting",
+          "locator": "IEV 151 short-circuit terminology"
+        },
+        {
+          "source_id": "gost-r-57114-2022",
+          "role": "primary",
+          "locator": "usage throughout short-circuit/protection terminology"
+        }
+      ],
+      "notes": "Exact IEV locator for short-circuit current is to be added when the Russian current IEV entry is pinned; term itself is stable.",
+      "status": "provisional"
+    },
+    {
+      "id": "instrument_transformer.current",
+      "domain": "power.measurement",
+      "category": "equipment",
+      "canonical": {
+        "ru": "трансформатор тока",
+        "en": "current transformer"
+      },
+      "code_identifier": "CurrentTransformer",
+      "abbreviations": {
+        "ru": [
+          "ТТ"
+        ],
+        "en": [
+          "CT"
+        ]
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-r-iec-61869-2-2015",
+          "role": "primary",
+          "locator": "3.1.201 / IEV 321-02-01"
+        },
+        {
+          "source_id": "gost-iec-60050-321-2014",
+          "role": "supporting",
+          "locator": "IEV 321-02-01"
+        }
+      ],
+      "semantic_bindings": [
+        {
+          "namespace": "energologic.element.kind",
+          "value": "current_transformer"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "instrument_transformer.voltage",
+      "domain": "power.measurement",
+      "category": "equipment",
+      "canonical": {
+        "ru": "трансформатор напряжения",
+        "en": "voltage transformer"
+      },
+      "code_identifier": "VoltageTransformer",
+      "abbreviations": {
+        "ru": [
+          "ТН"
+        ],
+        "en": [
+          "VT"
+        ]
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-61869-3-2012",
+          "role": "primary",
+          "locator": "3.1.301 / IEV 321-03-01"
+        },
+        {
+          "source_id": "gost-iec-60050-321-2014",
+          "role": "supporting",
+          "locator": "IEV 321-03-01"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "line.cable_line",
+      "domain": "power.line",
+      "category": "equipment",
+      "canonical": {
+        "ru": "кабельная линия электропередачи",
+        "en": "cable line"
+      },
+      "code_identifier": "CableLine",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "кабельная линия"
+        ],
+        "en": [
+          "underground cable"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-24291-90",
+          "role": "primary",
+          "locator": "term 52",
+          "notes": "English equivalent in this standard is «underground cable»."
+        }
+      ],
+      "notes": "Preferred English code/UI form needs a modern IEC source; the GOST English equivalent is retained as alias evidence.",
+      "status": "provisional"
+    },
+    {
+      "id": "line.electric_line",
+      "domain": "power.line",
+      "category": "equipment",
+      "canonical": {
+        "ru": "линия электропередачи",
+        "en": "electric line"
+      },
+      "code_identifier": "ElectricLine",
+      "abbreviations": {
+        "ru": [
+          "ЛЭП"
+        ],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "power line"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-24291-90",
+          "role": "primary",
+          "locator": "term 2 / IEV 601-03-03"
+        },
+        {
+          "source_id": "gost-iec-60050-151-2014",
+          "role": "supporting",
+          "locator": "IEV 151-12-31",
+          "notes": "Uses «transmission line» for bulk electric-power transfer."
+        }
+      ],
+      "notes": "English terminology has a scope tension between legacy IEV «electric line» and current IEV 151 «transmission line» for bulk transfer; kept provisional.",
+      "status": "provisional"
+    },
+    {
+      "id": "line.overhead_line",
+      "domain": "power.line",
+      "category": "equipment",
+      "canonical": {
+        "ru": "воздушная линия электропередачи",
+        "en": "overhead line"
+      },
+      "code_identifier": "OverheadLine",
+      "abbreviations": {
+        "ru": [
+          "ВЛ"
+        ],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "воздушная линия"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-24291-90",
+          "role": "primary",
+          "locator": "term 51"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "machine.generator",
+      "domain": "power.machine",
+      "category": "equipment",
+      "canonical": {
+        "ru": "генератор",
+        "en": "generator"
+      },
+      "code_identifier": "Generator",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-411-2015",
+          "role": "primary",
+          "locator": "IEV 411-32-01"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "operation.switch.closing",
+      "domain": "power.switchgear.operation",
+      "category": "operation",
+      "canonical": {
+        "ru": "включение",
+        "en": "closing operation"
+      },
+      "code_identifier": "ClosingOperation",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "замыкание",
+          "включить"
+        ],
+        "en": [
+          "close",
+          "closing"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "minenergo-757-2018",
+          "role": "primary",
+          "locator": "гл. IX, operations with circuit-breakers/disconnectors/load switches",
+          "notes": "Operational rules consistently use «включение»."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-16-08",
+          "notes": "Mechanical-device term «замыкание» / closing operation."
+        }
+      ],
+      "notes": "Canonical Russian operational action noun is «включение»; UI imperative «Включить» is an alias/presentation form.",
+      "status": "accepted"
+    },
+    {
+      "id": "operation.switch.opening",
+      "domain": "power.switchgear.operation",
+      "category": "operation",
+      "canonical": {
+        "ru": "отключение",
+        "en": "opening operation"
+      },
+      "code_identifier": "OpeningOperation",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "размыкание",
+          "отключить"
+        ],
+        "en": [
+          "open",
+          "opening"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "minenergo-757-2018",
+          "role": "primary",
+          "locator": "гл. IX, operations with circuit-breakers/disconnectors/load switches",
+          "notes": "Operational rules consistently use «отключение»."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-16-09",
+          "notes": "Mechanical-device term «размыкание» / opening operation."
+        }
+      ],
+      "notes": "Canonical Russian operational action noun is «отключение»; UI imperative «Отключить» is an alias/presentation form.",
+      "status": "accepted"
+    },
+    {
+      "id": "protection.arc",
+      "domain": "power.protection",
+      "category": "protection",
+      "canonical": {
+        "ru": "дуговая защита",
+        "en": "arc protection"
+      },
+      "code_identifier": "ArcProtection",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "arc-fault protection"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-r-57114-2022",
+          "role": "supporting",
+          "locator": "RZA terminology context"
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "arc/switchgear vocabulary"
+        }
+      ],
+      "notes": "Do not conflate switchgear arc protection with personnel arc-flash incident-energy analysis. A primary terminology source for this protection-function name is still required.",
+      "status": "provisional"
+    },
+    {
+      "id": "protection.breaker_failure",
+      "domain": "power.protection",
+      "category": "protection",
+      "canonical": {
+        "ru": "устройство резервирования при отказе выключателя",
+        "en": "circuit-breaker failure protection"
+      },
+      "code_identifier": "BreakerFailureProtection",
+      "abbreviations": {
+        "ru": [
+          "УРОВ"
+        ],
+        "en": [
+          "CBFP",
+          "BFP"
+        ]
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "breaker failure protection"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "iec-60050-448",
+          "role": "primary",
+          "locator": "IEV 448-11-18"
+        }
+      ],
+      "notes": "Russian expansion «УРОВ» is established industry usage but needs a current Russian normative locator before status can be accepted.",
+      "status": "provisional"
+    },
+    {
+      "id": "protection.earth_fault",
+      "domain": "power.protection",
+      "category": "protection",
+      "canonical": {
+        "ru": "защита от замыканий на землю",
+        "en": "earth-fault protection"
+      },
+      "code_identifier": "EarthFaultProtection",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "ground-fault protection"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "iec-60050-448",
+          "role": "primary",
+          "locator": "IEV 448-14-28"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "protection.instantaneous_overcurrent",
+      "domain": "power.protection",
+      "category": "protection",
+      "canonical": {
+        "ru": "токовая отсечка",
+        "en": "instantaneous overcurrent protection"
+      },
+      "code_identifier": "InstantaneousOvercurrentProtection",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "iec-60050-448",
+          "role": "primary",
+          "locator": "protection vocabulary; exact preferred IEV entry pending verification"
+        }
+      ],
+      "notes": "Common IEC 61850 function wording is «instantaneous overcurrent» (PIOC); exact IEV preferred-term evidence is pending.",
+      "status": "provisional"
+    },
+    {
+      "id": "protection.overcurrent",
+      "domain": "power.protection",
+      "category": "protection",
+      "canonical": {
+        "ru": "максимальная токовая защита",
+        "en": "overcurrent protection"
+      },
+      "code_identifier": "OvercurrentProtection",
+      "abbreviations": {
+        "ru": [
+          "МТЗ"
+        ],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "iec-60050-448",
+          "role": "primary",
+          "locator": "IEV 448-14-26"
+        },
+        {
+          "source_id": "gost-r-57114-2022",
+          "role": "supporting",
+          "locator": "term 199 usage: ступенчатые защиты"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "protection.relay_protection_and_automation",
+      "domain": "power.protection",
+      "category": "protection",
+      "canonical": {
+        "ru": "релейная защита и автоматика",
+        "en": "relay protection and automation"
+      },
+      "code_identifier": "RelayProtectionAndAutomation",
+      "abbreviations": {
+        "ru": [
+          "РЗА"
+        ],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-r-57114-2022",
+          "role": "primary",
+          "locator": "term 182"
+        }
+      ],
+      "notes": "Russian umbrella term is normative. English is a project translation rather than a single proven IEC preferred concept, so status remains provisional.",
+      "status": "provisional"
+    },
+    {
+      "id": "state.earthing.earthed",
+      "domain": "electrical.earthing.state",
+      "category": "state",
+      "canonical": {
+        "ru": "заземленный",
+        "en": "earthed"
+      },
+      "code_identifier": "EarthedState",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "заземлено"
+        ],
+        "en": [
+          "grounded"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-651-2014",
+          "role": "supporting",
+          "locator": "earthing vocabulary in live-working context"
+        }
+      ],
+      "notes": "Generic equipment/topology-state wording requires a more direct IEV locator before acceptance.",
+      "status": "provisional"
+    },
+    {
+      "id": "state.earthing.unearthed",
+      "domain": "electrical.earthing.state",
+      "category": "state",
+      "canonical": {
+        "ru": "незаземленный",
+        "en": "unearthed"
+      },
+      "code_identifier": "UnearthedState",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "не заземлено"
+        ],
+        "en": [
+          "not earthed",
+          "ungrounded"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-651-2014",
+          "role": "supporting",
+          "locator": "earthing vocabulary in live-working context"
+        }
+      ],
+      "notes": "Generic equipment/topology-state wording requires a more direct IEV locator before acceptance.",
+      "status": "provisional"
+    },
+    {
+      "id": "state.energization.de_energized",
+      "domain": "electrical.energization",
+      "category": "state",
+      "canonical": {
+        "ru": "обесточенный",
+        "en": "de-energized"
+      },
+      "code_identifier": "DeEnergizedState",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "обесточено"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-651-2014",
+          "role": "primary",
+          "locator": "IEV 651-01-15"
+        }
+      ],
+      "notes": "Canonical lexeme follows the standard; grammatical UI rendering may use «обесточено». Source definition is scoped to live working; EnergoLogic operational-network energization semantics require a separate explicit predicate contract before acceptance.",
+      "status": "provisional"
+    },
+    {
+      "id": "state.energization.energized",
+      "domain": "electrical.energization",
+      "category": "state",
+      "canonical": {
+        "ru": "под напряжением",
+        "en": "energized"
+      },
+      "code_identifier": "EnergizedState",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-651-2014",
+          "role": "primary",
+          "locator": "IEV 651-01-14"
+        }
+      ],
+      "notes": "Definition is explicitly scoped to live working; project network-state semantics will later need to state how this predicate is computed. Source definition is scoped to live working; EnergoLogic operational-network energization semantics require a separate explicit predicate contract before acceptance.",
+      "status": "provisional"
+    },
+    {
+      "id": "state.switch.closed",
+      "domain": "power.switchgear.state",
+      "category": "state",
+      "canonical": {
+        "ru": "включенное положение",
+        "en": "closed position"
+      },
+      "code_identifier": "ClosedPosition",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "замкнутое положение",
+          "включен",
+          "включено"
+        ],
+        "en": [
+          "closed"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "minenergo-757-2018",
+          "role": "primary",
+          "locator": "гл. IX; пп. 197, 199 и связанные положения",
+          "notes": "Operational switching rules use включение/отключение and включенное/отключенное положение."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-16-22",
+          "notes": "Mechanical switching-device vocabulary: «замкнутое положение» / closed position."
+        }
+      ],
+      "semantic_bindings": [
+        {
+          "namespace": "energologic.switch_state",
+          "value": "closed"
+        }
+      ],
+      "notes": "EnergoLogic UI is an operational power-system interface, so Russian canonical wording follows current switching rules; IEV mechanical wording remains an alias. Internal semantic value stays closed.",
+      "status": "accepted"
+    },
+    {
+      "id": "state.switch.open",
+      "domain": "power.switchgear.state",
+      "category": "state",
+      "canonical": {
+        "ru": "отключенное положение",
+        "en": "open position"
+      },
+      "code_identifier": "OpenPosition",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "разомкнутое положение",
+          "отключен",
+          "отключено"
+        ],
+        "en": [
+          "open"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "minenergo-757-2018",
+          "role": "primary",
+          "locator": "гл. IX; пп. 197, 199 и связанные положения",
+          "notes": "Operational switching rules use включение/отключение and включенное/отключенное положение."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-16-23",
+          "notes": "Mechanical switching-device vocabulary: «разомкнутое положение» / open position."
+        }
+      ],
+      "semantic_bindings": [
+        {
+          "namespace": "energologic.switch_state",
+          "value": "open"
+        }
+      ],
+      "notes": "Operational Russian canonical wording; IEV mechanical wording remains an alias. Internal semantic value stays open.",
+      "status": "accepted"
+    },
+    {
+      "id": "switchgear.circuit_breaker",
+      "domain": "power.switchgear.high_voltage",
+      "category": "equipment",
+      "canonical": {
+        "ru": "выключатель",
+        "en": "circuit-breaker"
+      },
+      "code_identifier": "CircuitBreaker",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "circuit breaker",
+          "breaker"
+        ]
+      },
+      "deprecated_aliases": [
+        {
+          "language": "en",
+          "term": "Vyklyuchatel",
+          "disposition": "forbidden",
+          "reason": "Transliteration is not an EnergoLogic code/UI term."
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "gost-r-52565-2006",
+          "role": "primary",
+          "locator": "title and scope: AC circuit-breakers for 3–750 kV",
+          "notes": "Direct Russian high-voltage equipment standard uses «выключатель»."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-14-20",
+          "notes": "Generic IEV-derived Russian vocabulary uses «автоматический выключатель»; EnergoLogic does not treat that as an alias here because low-voltage automatic circuit-breaker is a separate concept."
+        }
+      ],
+      "semantic_bindings": [
+        {
+          "namespace": "energologic.element.kind",
+          "value": "circuit_breaker"
+        }
+      ],
+      "notes": "High-voltage/power-system circuit-breaker. Existing energologic.element.kind=circuit_breaker is bound to this concept because the qualified canonical profile is based on 35 kV switchgear. Do not merge with the low-voltage automatic circuit-breaker concept.",
+      "status": "accepted"
+    },
+    {
+      "id": "switchgear.disconnector",
+      "domain": "power.switchgear",
+      "category": "equipment",
+      "canonical": {
+        "ru": "разъединитель",
+        "en": "disconnector"
+      },
+      "code_identifier": "Disconnector",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "isolator"
+        ]
+      },
+      "deprecated_aliases": [
+        {
+          "language": "en",
+          "term": "Razedinitel",
+          "disposition": "forbidden",
+          "reason": "Transliteration is not an EnergoLogic code/UI term."
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "primary",
+          "locator": "IEV 441-14-05"
+        }
+      ],
+      "semantic_bindings": [
+        {
+          "namespace": "energologic.element.kind",
+          "value": "disconnector"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "switchgear.earthing_switch",
+      "domain": "power.switchgear.high_voltage",
+      "category": "equipment",
+      "canonical": {
+        "ru": "заземлитель",
+        "en": "earthing switch"
+      },
+      "code_identifier": "EarthingSwitch",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "заземляющий выключатель",
+          "выключатель заземления",
+          "заземляющий разъединитель",
+          "заземляющий нож",
+          "нож заземления"
+        ],
+        "en": [
+          "grounding switch"
+        ]
+      },
+      "deprecated_aliases": [
+        {
+          "language": "en",
+          "term": "Zazemlitel",
+          "disposition": "forbidden",
+          "reason": "Transliteration is not an EnergoLogic code/UI term."
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "gost-r-52726-2007",
+          "role": "primary",
+          "locator": "title; 3.17; 3.18–3.20",
+          "notes": "Direct equipment standard for AC disconnectors and earthing switches above 1 kV defines the Russian apparatus term «заземлитель»."
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-14-11",
+          "notes": "Generic vocabulary uses «заземляющий выключатель»; retained as a search/import alias."
+        },
+        {
+          "source_id": "gost-r-57190-2016",
+          "role": "supporting",
+          "locator": "01-12-11",
+          "notes": "Uses «выключатель заземления»; retained as a search/import alias."
+        },
+        {
+          "source_id": "gost-12.2.007.4-75",
+          "role": "supporting",
+          "locator": "2.3; 2.4; 2.8",
+          "notes": "Current Russian KRU/KSO safety standard uses «заземляющие ножи», «ножи заземления» and «заземляющий разъединитель»."
+        }
+      ],
+      "notes": "High-voltage earthing switching apparatus. Russian canonical follows the directly applicable equipment standard ГОСТ Р 52726-2007: «заземлитель». This is a deliberate cross-domain homonym with earth electrode; identity must come from concept/domain, not from the surface string.",
+      "status": "accepted"
+    },
+    {
+      "id": "switchgear.fuse",
+      "domain": "power.switchgear",
+      "category": "equipment",
+      "canonical": {
+        "ru": "плавкий предохранитель",
+        "en": "fuse"
+      },
+      "code_identifier": "Fuse",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "предохранитель"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "primary",
+          "locator": "IEV 441-18-01"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "switchgear.load_break_switch",
+      "domain": "power.switchgear",
+      "category": "equipment",
+      "canonical": {
+        "ru": "выключатель нагрузки",
+        "en": "load-break switch"
+      },
+      "code_identifier": "LoadBreakSwitch",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": [
+          "load break switch",
+          "switch"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-17717-79",
+          "role": "primary",
+          "locator": "title and scope"
+        },
+        {
+          "source_id": "gost-iec-60050-441-2015",
+          "role": "supporting",
+          "locator": "IEV 441-14-10 / 441-14-12",
+          "notes": "Current IEV vocabulary uses switch/switch-disconnector; English load-break wording is scope-sensitive."
+        }
+      ],
+      "notes": "Russian term is stable for 3–10 kV practice; preferred international English form remains scope-sensitive between switch and load-break switch.",
+      "status": "provisional"
+    },
+    {
+      "id": "switchgear.low_voltage_circuit_breaker",
+      "domain": "power.switchgear.low_voltage",
+      "category": "equipment",
+      "canonical": {
+        "ru": "автоматический выключатель",
+        "en": "circuit-breaker"
+      },
+      "code_identifier": "LowVoltageCircuitBreaker",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "автомат"
+        ],
+        "en": [
+          "circuit breaker",
+          "low-voltage circuit-breaker",
+          "low voltage circuit-breaker"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60947-2-2021",
+          "role": "primary",
+          "locator": "title and clause 1.1 scope",
+          "notes": "Low-voltage switchgear standard explicitly uses «автоматические выключатели»; English title uses «Circuit-breakers»."
+        }
+      ],
+      "notes": "Distinct low-voltage protective switching apparatus. It is intentionally not bound to the existing energologic.element.kind=circuit_breaker, which currently represents the qualified 35 kV/high-voltage device semantics.",
+      "status": "accepted"
+    },
+    {
+      "id": "switchyard.bay",
+      "domain": "power.switchyard",
+      "category": "structure",
+      "canonical": {
+        "ru": "ячейка",
+        "en": "bay"
+      },
+      "code_identifier": "Bay",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "ячейка распределительного устройства",
+          "ячейка электрической подстанции"
+        ],
+        "en": [
+          "bay of a substation"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-24291-90",
+          "role": "primary",
+          "locator": "term 35 / IEV 605-02-09"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "switchyard.feeder_bay",
+      "domain": "power.switchyard",
+      "category": "structure",
+      "canonical": {
+        "ru": "присоединение распределительного устройства",
+        "en": "feeder bay"
+      },
+      "code_identifier": "FeederBay",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "присоединение"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-24291-90",
+          "role": "primary",
+          "locator": "term 34 / IEV 605-02-10"
+        }
+      ],
+      "notes": "Do not collapse to generic feeder: the Russian concept is a part of switchgear associated with a transformer, generator or another circuit.",
+      "status": "accepted"
+    },
+    {
+      "id": "system.load",
+      "domain": "power.system",
+      "category": "equipment",
+      "canonical": {
+        "ru": "нагрузка",
+        "en": "load"
+      },
+      "code_identifier": "Load",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-151-2014",
+          "role": "primary",
+          "locator": "IEV 151-15-15 (device load)"
+        }
+      ],
+      "notes": "This concept means a device intended to absorb power, not the separate IEV quantity «load» (power) in 151-15-16.",
+      "status": "accepted"
+    },
+    {
+      "id": "system.source",
+      "domain": "power.system",
+      "category": "topology",
+      "canonical": {
+        "ru": "источник",
+        "en": "source"
+      },
+      "code_identifier": "Source",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "источник электрической энергии"
+        ],
+        "en": [
+          "electrical source"
+        ]
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "iec-60050-131",
+          "role": "primary",
+          "locator": "Part 131 source concepts; e.g. source voltage 131-12-22"
+        }
+      ],
+      "notes": "Generic source concept is intentionally provisional until the canonical domain model specifies whether it means an ideal circuit source, generation source, or supply source.",
+      "status": "provisional"
+    },
+    {
+      "id": "topology.connection",
+      "domain": "electrical.topology",
+      "category": "topology",
+      "canonical": {
+        "ru": "соединение",
+        "en": "connection"
+      },
+      "code_identifier": "ElectricalConnection",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "электрическое соединение"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-151-2014",
+          "role": "primary",
+          "locator": "IEV 151-12-07 (intentional electrical contact)"
+        }
+      ],
+      "notes": "IEV evidence describes an intentional electrical contact/connection, while the canonical model record is an abstract topological edge. The terminology remains provisional until the physical-vs-graph contract is fixed.",
+      "status": "provisional"
+    },
+    {
+      "id": "topology.node",
+      "domain": "electrical.topology",
+      "category": "topology",
+      "canonical": {
+        "ru": "узел",
+        "en": "node"
+      },
+      "code_identifier": "ElectricalNode",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "электрический узел"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "iec-60050-131",
+          "role": "primary",
+          "locator": "IEV 131-13-07, in circuit theory"
+        }
+      ],
+      "notes": "Canonical Russian wording is provisional because the current directly verified IEV evidence is English; project uses «электрический узел» as a qualified alias.",
+      "status": "provisional"
+    },
+    {
+      "id": "topology.terminal",
+      "domain": "electrical.topology",
+      "category": "topology",
+      "canonical": {
+        "ru": "вывод",
+        "en": "terminal"
+      },
+      "code_identifier": "Terminal",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [
+        {
+          "language": "ru",
+          "term": "электрический терминал",
+          "disposition": "forbidden",
+          "reason": "Literal calque is not the preferred Russian IEV term for a physical electrical terminal."
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "gost-iec-60050-151-2014",
+          "role": "primary",
+          "locator": "IEV 151-12-12"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "transformer.power",
+      "domain": "power.transformer",
+      "category": "equipment",
+      "canonical": {
+        "ru": "силовой трансформатор",
+        "en": "power transformer"
+      },
+      "code_identifier": "PowerTransformer",
+      "abbreviations": {
+        "ru": [],
+        "en": []
+      },
+      "aliases": {
+        "ru": [],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-r-52719-2007",
+          "role": "primary",
+          "locator": "title and clause 1 scope"
+        }
+      ],
+      "notes": "",
+      "status": "accepted"
+    },
+    {
+      "id": "transformer.station_service",
+      "domain": "power.transformer",
+      "category": "equipment",
+      "canonical": {
+        "ru": "трансформатор собственных нужд",
+        "en": "station service transformer"
+      },
+      "code_identifier": "StationServiceTransformer",
+      "abbreviations": {
+        "ru": [
+          "ТСН"
+        ],
+        "en": []
+      },
+      "aliases": {
+        "ru": [
+          "трансформатор собственных нужд электростанции"
+        ],
+        "en": []
+      },
+      "deprecated_aliases": [],
+      "sources": [
+        {
+          "source_id": "gost-r-52719-2007",
+          "role": "primary",
+          "locator": "clause 1; Appendix A marking «С»"
+        }
+      ],
+      "notes": "Russian equipment class is authoritative. The preferred English project term requires an IEC/industry terminology source before acceptance.",
+      "status": "provisional"
+    }
+  ]
+}

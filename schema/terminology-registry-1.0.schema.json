@@ -1,0 +1,281 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://energologic.local/schema/terminology-registry-1.0.schema.json",
+  "title": "EnergoLogic Terminology Registry 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "registry_version",
+    "sources",
+    "concepts"
+  ],
+  "properties": {
+    "registry_version": {
+      "const": "1.0"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "concepts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/concept"
+      }
+    }
+  },
+  "$defs": {
+    "localized_lists": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ru",
+        "en"
+      ],
+      "properties": {
+        "ru": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "en": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "authority",
+        "document",
+        "edition",
+        "status",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "authority": {
+          "enum": [
+            "gost",
+            "gost_iec",
+            "gost_r",
+            "gost_r_iec",
+            "iec_iev",
+            "iec",
+            "russian_normative"
+          ]
+        },
+        "document": {
+          "type": "string",
+          "minLength": 1
+        },
+        "edition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "current",
+            "historical",
+            "superseded"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "source_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "role",
+        "locator"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "primary",
+            "supporting",
+            "legacy"
+          ]
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "deprecated_alias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "term",
+        "disposition",
+        "reason"
+      ],
+      "properties": {
+        "language": {
+          "enum": [
+            "ru",
+            "en"
+          ]
+        },
+        "term": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "enum": [
+            "deprecated",
+            "forbidden"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "semantic_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "value"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "domain",
+        "category",
+        "canonical",
+        "code_identifier",
+        "abbreviations",
+        "aliases",
+        "deprecated_aliases",
+        "sources",
+        "notes",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "domain": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "category": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "canonical": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ru",
+            "en"
+          ],
+          "properties": {
+            "ru": {
+              "type": "string",
+              "minLength": 1
+            },
+            "en": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "code_identifier": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "abbreviations": {
+          "$ref": "#/$defs/localized_lists"
+        },
+        "aliases": {
+          "$ref": "#/$defs/localized_lists"
+        },
+        "deprecated_aliases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/deprecated_alias"
+          },
+          "uniqueItems": true
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_ref"
+          }
+        },
+        "semantic_bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/semantic_binding"
+          },
+          "uniqueItems": true
+        },
+        "notes": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "provisional",
+            "deprecated"
+          ]
+        }
+      }
+    }
+  }
+}

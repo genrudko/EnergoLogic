@@ -421,19 +421,39 @@ evidence/documentation commit.
   https://opendss.epri.com/IntroductiontoOpenDSS.html
   https://opendss.epri.com/OpenDSSDistributionSystem.html
 
-## 14. Remaining architectural questions
+## 14. Production architecture decisions
 
-1. What are the production canonical semantics for `line`, `cable`,
-   `load`, `external_grid`, generators and shunts?
-2. Which positive-, negative- and zero-sequence parameters become canonical
-   first-class fields, and what provenance is required?
-3. Should solver study parameters live directly on equipment, in a versioned
-   electrical-parameter profile, or in Site Profile overlays?
-4. How should breaker/disconnector current be normalized and associated with
-   terminals without imposing solver topology on canonical topology?
-5. What is the production solver process boundary: embedded Python runtime,
-   dedicated local service/process, or another IPC host?
-6. What versioning policy governs solver adapter contract and numerical goldens?
-7. Which study classes mandate OpenDSS versus pandapower?
-8. What independent trusted reference set will be used for Kochubeevskaya site
-   acceptance?
+The questions discovered by the spike are resolved/reclassified in:
+
+ELECTRICAL-SOLVER-PRODUCTION-DECISIONS.md
+
+Key decisions:
+
+- canonical electrical parameters remain solver-neutral canonical engineering
+  facts; SolverStudyInput is a spike DTO, not a second source of truth;
+- accepted electrical-v1 is not silently expanded; production calculation
+  semantics move through a separate bounded electrical-calculation-v1 contract;
+- sequence/zero-sequence data is explicit and provenance-bearing;
+- balanced AC + qualified IEC 60909 is production solver v1;
+- switchgear current is terminal-scoped and must not be invented when topology
+  makes attribution ambiguous;
+- the production solver runtime is an out-of-process bundled x64 worker,
+  decoupled from Visio bitness;
+- solver routing is explicit: pandapower first/default for the qualified scope,
+  OpenDSS after phase/neutral qualification for unbalance/neutral/harmonics/QSTS;
+- solver/golden versions are release-controlled and cannot silently drift;
+- Kochubeevskaya site acceptance uses a defined hierarchy of hand,
+  authoritative-source, second-solver and invariant references.
+
+The remaining work is no longer an unbounded question list. It is split into
+named dependent work items:
+
+- ELECTRICAL-CALCULATION-DOMAIN-001;
+- PHASE-NEUTRAL-TOPOLOGY-001;
+- SOLVER-RUNTIME-HOST-001;
+- SWITCH-FLOW-RESULTS-001 when required by a consumer;
+- OPENDSS-ADAPTER-001 after phase/neutral qualification;
+- SITE-SOLVER-ACCEPTANCE-001.
+
+Only real-data values and the final IPC implementation remain data/implementation
+dependent.

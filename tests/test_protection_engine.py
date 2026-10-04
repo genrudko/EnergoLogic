@@ -440,6 +440,26 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         self.assertEqual(result.events, ())
         self.assertEqual(result.requests, ())
 
+    def test_delay_basis_must_be_not_applicable(self):
+        data = raw_fixture()
+        function = next(item for item in data["functions"] if item["id"] == MTZ)
+        delay = next(
+            item for item in function["stages"][0]["parameters"]
+            if item["role"] == "delay"
+        )
+        delay["value"]["basis"] = "primary"
+        program_card = setting_card_from_dict(data)
+        with self.assertRaises(ProtectionProgramValidationError) as caught:
+            compile_protection_program(
+                program_card,
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
+        self.assertIn(
+            "delay_basis_mismatch",
+            {item.code for item in caught.exception.issues},
+        )
+
     def test_missing_delay_setting_fails_program_compile(self):
         data = raw_fixture()
         function = next(item for item in data["functions"] if item["id"] == MTZ)
@@ -457,6 +477,35 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
             )
         self.assertIn(
             "invalid_delay_parameter_count",
+            {item.code for item in caught.exception.issues},
+        )
+
+    def test_overcurrent_rejects_non_current_operating_quantity(self):
+        data = raw_fixture()
+        measurement = next(
+            item for item in data["measurement_inputs"]
+            if item["id"] == PHASE
+        )
+        measurement["quantity_kind"] = "voltage"
+        function = next(item for item in data["functions"] if item["id"] == MTZ)
+        pickup = next(
+            item for item in function["stages"][0]["parameters"]
+            if item["role"] == "pickup"
+        )
+        pickup["value"]["quantity_kind"] = "voltage"
+        pickup["value"]["source_value"] = "600"
+        pickup["value"]["source_unit"] = "V"
+        pickup["value"]["normalized_value"] = "600"
+        pickup["value"]["normalized_unit"] = "V"
+        program_card = setting_card_from_dict(data)
+        with self.assertRaises(ProtectionProgramValidationError) as caught:
+            compile_protection_program(
+                program_card,
+                function_ids=[MTZ],
+                allow_incomplete_settings=True,
+            )
+        self.assertIn(
+            "unsupported_operating_quantity",
             {item.code for item in caught.exception.issues},
         )
 
@@ -537,6 +586,32 @@ class ProtectionEngineFoundationTests(unittest.TestCase):
         self.assertIn(
             "unsupported_stage_parameter",
             {item.code for item in caught.exception.issues},
+        )
+
+    def test_active_runtime_state_requires_last_time(self):
+        program = compile_protection_program(
+            card(),
+            function_ids=[MTZ],
+            allow_incomplete_settings=True,
+        )
+        picked = evaluate_protection_step(
+            program,
+            snapshot("1", measured(PHASE, "700")),
+        )
+        broken_state = type(picked.state)(
+            card_fingerprint=picked.state.card_fingerprint,
+            last_time_s="",
+            stages=picked.state.stages,
+        )
+        with self.assertRaises(ProtectionRuntimeInputError) as caught:
+            evaluate_protection_step(
+                program,
+                snapshot("1.1", measured(PHASE, "700")),
+                state=broken_state,
+            )
+        self.assertEqual(
+            caught.exception.issue.code,
+            "missing_last_time_for_active_state",
         )
 
     def test_request_is_declarative_and_does_not_mutate_setting_card(self):

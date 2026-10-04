@@ -77,3 +77,6 @@ jobs:
 
       - name: Full suite with pandapower
         run: python -m unittest discover -s tests -v
+
+      - name: Solver dependency footprint
+        run: python tools/solver_dependency_probe.py

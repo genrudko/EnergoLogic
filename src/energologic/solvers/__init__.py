@@ -16,6 +16,7 @@ from .contracts import (
     SolverStudyInput,
     Transformer2WParameters,
 )
+from .pandapower_adapter import PandapowerAdapter
 
 __all__ = [
     "BranchPowerFlowResult",
@@ -24,6 +25,7 @@ __all__ = [
     "FaultType",
     "LineParameters",
     "LoadParameters",
+    "PandapowerAdapter",
     "PowerFlowRequest",
     "PowerFlowResult",
     "ShortCircuitBranchResult",
@@ -35,4 +37,3 @@ __all__ = [
     "SolverStudyInput",
     "Transformer2WParameters",
 ]
-\nfrom .pandapower_adapter import PandapowerAdapter\n

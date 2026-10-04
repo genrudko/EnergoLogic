@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Iterable, Mapping, Sequence
 
-from .units import UnitNormalizationError, normalize_quantity, parse_decimal_source
+from .units import (\n    QUANTITY_KINDS,\n    UnitNormalizationError,\n    normalize_quantity,\n    parse_decimal_source,\n)
 
 
 SCHEMA_VERSION = "protection-settings-v1"
@@ -149,6 +149,19 @@ class ProtectionDevice:
 
 
 @dataclass(frozen=True, slots=True)
+class MeasurementInput:
+    id: str
+    semantic_key: str
+    quantity_kind: str
+    basis: str
+    source_label: str
+    provenance: tuple[SourceReference, ...]
+    source_object_id: str = ""
+    terminal_id: str = ""
+    notes: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class SettingValue:
     kind: str
     raw_text: str
@@ -201,6 +214,7 @@ class ProtectionFunctionSettings:
     source_name: str
     device_id: str
     enabled: bool | None
+    measurement_input_ids: tuple[str, ...]
     parameters: tuple[SettingParameter, ...]
     stages: tuple[ProtectionStage, ...]
     actions: tuple[SettingAction, ...]
@@ -218,6 +232,7 @@ class ProtectionSettingCard:
     primary_source_id: str
     protected_object_ids: tuple[str, ...]
     sources: tuple[SourceDocument, ...]
+    measurement_inputs: tuple[MeasurementInput, ...]
     devices: tuple[ProtectionDevice, ...]
     functions: tuple[ProtectionFunctionSettings, ...]
     notes: str = ""
@@ -612,6 +627,57 @@ def validate_setting_card(
             "at least one protection device is required",
         )
 
+    measurement_input_ids: set[str] = set()
+    for index, measurement in enumerate(card.measurement_inputs):
+        path = f"/measurement_inputs/{index}"
+        if measurement.id in measurement_input_ids:
+            _issue(
+                issues,
+                "duplicate_measurement_input_id",
+                f"{path}/id",
+                measurement.id,
+            )
+        measurement_input_ids.add(measurement.id)
+        for field_name, value in (
+            ("id", measurement.id),
+            ("semantic_key", measurement.semantic_key),
+            ("source_label", measurement.source_label),
+        ):
+            _check_text(
+                value,
+                issues=issues,
+                path=f"{path}/{field_name}",
+                code=f"missing_measurement_{field_name}",
+            )
+        if measurement.quantity_kind not in QUANTITY_KINDS:
+            _issue(
+                issues,
+                "invalid_measurement_quantity_kind",
+                f"{path}/quantity_kind",
+                repr(measurement.quantity_kind),
+            )
+        if measurement.basis not in SETTING_BASES:
+            _issue(
+                issues,
+                "invalid_measurement_basis",
+                f"{path}/basis",
+                repr(measurement.basis),
+            )
+        if not measurement.provenance:
+            _issue(
+                issues,
+                "missing_measurement_provenance",
+                f"{path}/provenance",
+                "measurement input requires source provenance",
+            )
+        for ref_index, ref in enumerate(measurement.provenance):
+            _validate_source_reference(
+                ref,
+                known_source_ids=source_ids,
+                issues=issues,
+                path=f"{path}/provenance/{ref_index}",
+            )
+
     function_ids: set[str] = set()
     stage_ids: set[str] = set()
     parameter_ids: set[str] = set()
@@ -755,6 +821,26 @@ def validate_setting_card(
                 f"{path}/device_id",
                 function.device_id,
             )
+        seen_measurement_refs: set[str] = set()
+        for ref_index, measurement_id in enumerate(
+            function.measurement_input_ids
+        ):
+            ref_path = f"{path}/measurement_input_ids/{ref_index}"
+            if measurement_id in seen_measurement_refs:
+                _issue(
+                    issues,
+                    "duplicate_function_measurement_ref",
+                    ref_path,
+                    measurement_id,
+                )
+            seen_measurement_refs.add(measurement_id)
+            if measurement_id not in measurement_input_ids:
+                _issue(
+                    issues,
+                    "unknown_function_measurement_input",
+                    ref_path,
+                    measurement_id,
+                )
         if not function.provenance:
             _issue(
                 issues,
@@ -960,6 +1046,7 @@ def setting_card_to_dict(card: ProtectionSettingCard) -> dict[str, object]:
             "id": item.id,
             "source_name": item.source_name,
             "enabled": item.enabled,
+            "measurement_input_ids": sorted(item.measurement_input_ids),
             "parameters": [
                 parameter(value)
                 for value in sorted(item.parameters, key=lambda value: value.id)
@@ -1014,6 +1101,23 @@ def setting_card_to_dict(card: ProtectionSettingCard) -> dict[str, object]:
                 "notes": item.notes,
             }
             for item in sorted(card.sources, key=lambda item: item.id)
+        ],
+        "measurement_inputs": [
+            {
+                "id": item.id,
+                "semantic_key": item.semantic_key,
+                "quantity_kind": item.quantity_kind,
+                "basis": item.basis,
+                "source_label": item.source_label,
+                "source_object_id": item.source_object_id,
+                "terminal_id": item.terminal_id,
+                "provenance": refs(item.provenance),
+                "notes": item.notes,
+            }
+            for item in sorted(
+                card.measurement_inputs,
+                key=lambda item: item.id,
+            )
         ],
         "devices": [
             {
@@ -1132,6 +1236,7 @@ _ROOT_FIELDS = frozenset(
         "primary_source_id",
         "protected_object_ids",
         "sources",
+        "measurement_inputs",
         "devices",
         "functions",
         "notes",
@@ -1162,6 +1267,19 @@ _DEVICE_FIELDS = frozenset(
     }
 )
 _REFERENCE_FIELDS = frozenset({"source_id", "locator_kind", "locator"})
+_MEASUREMENT_FIELDS = frozenset(
+    {
+        "id",
+        "semantic_key",
+        "quantity_kind",
+        "basis",
+        "source_label",
+        "source_object_id",
+        "terminal_id",
+        "provenance",
+        "notes",
+    }
+)
 _PARAMETER_FIELDS = frozenset(
     {"id", "semantic_key", "role", "value", "provenance", "notes"}
 )
@@ -1186,6 +1304,7 @@ _FUNCTION_FIELDS = frozenset(
         "source_name",
         "device_id",
         "enabled",
+        "measurement_input_ids",
         "parameters",
         "stages",
         "actions",
@@ -1336,6 +1455,10 @@ def _stage(value: object, path: str) -> ProtectionStage:
         id=_text(data, "id", path),
         source_name=_text(data, "source_name", path),
         enabled=_optional_bool(data, "enabled", path),
+        measurement_input_ids=_string_array(
+            data.get("measurement_input_ids"),
+            f"{path}/measurement_input_ids",
+        ),
         parameters=tuple(
             _parameter(item, f"{path}/parameters/{index}")
             for index, item in enumerate(
@@ -1404,6 +1527,25 @@ def _source_document(value: object, path: str) -> SourceDocument:
     )
 
 
+def _measurement_input(value: object, path: str) -> MeasurementInput:
+    data = _expect_exact_mapping(
+        value,
+        path,
+        allowed=_MEASUREMENT_FIELDS,
+    )
+    return MeasurementInput(
+        id=_text(data, "id", path),
+        semantic_key=_text(data, "semantic_key", path),
+        quantity_kind=_text(data, "quantity_kind", path),
+        basis=_text(data, "basis", path),
+        source_label=_text(data, "source_label", path),
+        source_object_id=_text(data, "source_object_id", path),
+        terminal_id=_text(data, "terminal_id", path),
+        provenance=_refs(data.get("provenance"), f"{path}/provenance"),
+        notes=_text(data, "notes", path),
+    )
+
+
 def _device(value: object, path: str) -> ProtectionDevice:
     data = _expect_exact_mapping(
         value,
@@ -1451,6 +1593,15 @@ def setting_card_from_dict(
             _source_document(item, f"/sources/{index}")
             for index, item in enumerate(
                 _expect_list(data.get("sources"), "/sources")
+            )
+        ),
+        measurement_inputs=tuple(
+            _measurement_input(item, f"/measurement_inputs/{index}")
+            for index, item in enumerate(
+                _expect_list(
+                    data.get("measurement_inputs"),
+                    "/measurement_inputs",
+                )
             )
         ),
         devices=tuple(

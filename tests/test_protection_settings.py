@@ -41,6 +41,53 @@ class ProtectionSettingModelTests(unittest.TestCase):
             },
         )
 
+    def test_measurement_inputs_are_explicit_and_function_scoped(self):
+        card = setting_card_from_dict(raw_fixture())
+        self.assertEqual(
+            {item.id for item in card.measurement_inputs},
+            {
+                "measurement:kl-1:phase-current",
+                "measurement:kl-1:residual-current",
+            },
+        )
+        mtz = next(
+            item for item in card.functions
+            if item.concept_id == "protection.overcurrent"
+        )
+        earth_fault = next(
+            item for item in card.functions
+            if item.concept_id == "protection.earth_fault"
+        )
+        self.assertEqual(
+            mtz.measurement_input_ids,
+            ("measurement:kl-1:phase-current",),
+        )
+        self.assertEqual(
+            earth_fault.measurement_input_ids,
+            ("measurement:kl-1:residual-current",),
+        )
+
+    def test_unknown_function_measurement_reference_is_rejected(self):
+        data = raw_fixture()
+        data["functions"][0]["measurement_input_ids"] = [
+            "measurement:missing"
+        ]
+        card = setting_card_from_dict(data, require_valid=False)
+        self.assertIn(
+            "unknown_function_measurement_input",
+            {issue.code for issue in validate_setting_card(card)},
+        )
+
+    def test_duplicate_measurement_input_id_is_rejected(self):
+        data = raw_fixture()
+        duplicate = copy.deepcopy(data["measurement_inputs"][0])
+        data["measurement_inputs"].append(duplicate)
+        card = setting_card_from_dict(data, require_valid=False)
+        self.assertIn(
+            "duplicate_measurement_input_id",
+            {issue.code for issue in validate_setting_card(card)},
+        )
+
     def test_quantity_normalization_preserves_raw_source_text(self):
         value = make_quantity_value(
             raw_text="1,250 кА",

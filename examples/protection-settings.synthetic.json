@@ -133,6 +133,9 @@
           "locator_kind": "page",
           "locator": "page 1; MTZ"
         }
+      ],
+      "measurement_input_ids": [
+        "measurement:kl-1:phase-current"
       ]
     },
     {
@@ -228,6 +231,9 @@
           "locator_kind": "page",
           "locator": "page 1; TO"
         }
+      ],
+      "measurement_input_ids": [
+        "measurement:kl-1:phase-current"
       ]
     },
     {
@@ -323,6 +329,9 @@
           "locator_kind": "page",
           "locator": "page 2; earth fault"
         }
+      ],
+      "measurement_input_ids": [
+        "measurement:kl-1:residual-current"
       ]
     },
     {
@@ -395,8 +404,45 @@
           "locator_kind": "page",
           "locator": "page 2; breaker failure"
         }
-      ]
+      ],
+      "measurement_input_ids": []
     }
   ],
-  "notes": "Synthetic WS-9A fixture. Values are not Kochubeevskaya site settings."
+  "notes": "Synthetic WS-9A fixture. Values are not Kochubeevskaya site settings.",
+  "measurement_inputs": [
+    {
+      "id": "measurement:kl-1:phase-current",
+      "semantic_key": "phase_current",
+      "quantity_kind": "current",
+      "basis": "primary",
+      "source_label": "Фазный ток линии КЛ-1",
+      "source_object_id": "line:kl-1",
+      "terminal_id": "",
+      "provenance": [
+        {
+          "source_id": "source:setting-card:kl-1",
+          "locator_kind": "page",
+          "locator": "page 1; measurement basis"
+        }
+      ],
+      "notes": "Synthetic measurement association only."
+    },
+    {
+      "id": "measurement:kl-1:residual-current",
+      "semantic_key": "residual_current",
+      "quantity_kind": "current",
+      "basis": "primary",
+      "source_label": "Ток нулевой последовательности / остаточный ток",
+      "source_object_id": "line:kl-1",
+      "terminal_id": "",
+      "provenance": [
+        {
+          "source_id": "source:setting-card:kl-1",
+          "locator_kind": "page",
+          "locator": "page 2; earth-fault measurement basis"
+        }
+      ],
+      "notes": "Synthetic measurement association only."
+    }
+  ]
 }

@@ -76,6 +76,7 @@ Key types:
 - `ProtectionSettingCard`;
 - `SourceDocument` / `SourceReference`;
 - `ProtectionDevice`;
+- `MeasurementInput`;
 - `ProtectionFunctionSettings`;
 - `ProtectionStage`;
 - `SettingParameter`;
@@ -95,6 +96,23 @@ Explicit numeric basis:
 - `relative`;
 - `device_native`;
 - `not_applicable`.
+
+## Measurement-input contract
+
+The v1 contract explicitly represents measurement inputs and binds them to protection
+functions by stable IDs.
+
+Synthetic qualification includes:
+
+- phase-current input used by overcurrent/current-cutoff functions;
+- residual-current input used by earth-fault protection.
+
+Measurement references are function-scoped. Stages do not carry their own
+`measurement_input_ids` in v1. This was regression-tested after an adversarial repair
+found an accidental stage-decoder coupling.
+
+The objects are configuration metadata only; they are not live measured values and do
+not depend on WS-6 or WS-8.
 
 ## Exact quantity handling
 
@@ -155,6 +173,12 @@ unknown fields.
 Repair commit `e6c9dfe3fc563a5e1cbfd8fe9b3dd48399c71e76` makes decode fail closed at every
 nested shape and adds duplicate protected-object validation.
 
+A later measurement-input extension exposed two mechanical defects: escaped newline
+characters in the import block and accidental stage-level decoding of
+`measurement_input_ids`. Commits `66f06fd0ab1d01cae847cf059243f5da152c37f5`
+and `6153d09ef744af88258b44819ec9c23dbf53a410` repair those issues. CI run
+`37211970711` is green after both repairs.
+
 CI run **37208241974 — SUCCESS**:
 
 - Ubuntu / Python 3.11 — success;
@@ -170,7 +194,8 @@ CI run **37208241974 — SUCCESS**:
 - no vendor parameter-file parser;
 - no canonical site-profile existence check for external equipment target IDs yet;
 - no protection execution/event logic;
-- no solver or measured-value integration;
+- measurement-input identities exist, but there is no live measured-value feed or
+  solver integration;
 - function concept IDs are WS-2-compatible strings, but WS-2 is not a runtime
   dependency while its PR remains unmerged.
 

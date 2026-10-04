@@ -157,6 +157,28 @@ preserve exact file hash and software/device compatibility metadata.
 
 Do not parse arbitrary PDF/image content with OCR/LLM in the production critical path.
 
+## Measurement inputs
+
+Protection functions may reference explicit `measurement_inputs`.
+
+Example conceptually:
+
+```text
+measurement:feeder-1:phase-current
+  quantity_kind = current
+  basis = primary
+
+protection.overcurrent
+  measurement_input_ids = [measurement:feeder-1:phase-current]
+```
+
+In v1 these references are attached to the **function**, not to each stage. Do not
+invent stage-specific measurement channels in a source adapter unless a later contract
+explicitly introduces that capability.
+
+A measurement input describes configured source/basis identity only. It is not a live
+measurement feed and does not create a WS-6 or solver dependency.
+
 ## Action matrices
 
 WS-9A may store an action association such as:

@@ -1,6 +1,6 @@
 # PROTECTION-SETTING-IMPORT-001 — Protection setting-card import foundation
 
-Status: **In progress**  
+Status: **Implementation complete in Draft; owner acceptance pending**  
 Workstream: **WS-9A — Protection & Automation / setting-card importer and data model**  
 Issue: **#21**  
 Branch: `protection/protection-setting-import-001`  
@@ -54,6 +54,7 @@ WS-6 is explicitly allowed to proceed in parallel.
 - deterministic validator;
 - exact quantity/unit normalization;
 - source-document provenance + locators;
+- explicit function-level measurement-input references;
 - JSON adapter;
 - configurable CSV/tabular adapter;
 - synthetic protection-card fixtures;
@@ -86,23 +87,24 @@ No algorithm is implemented for these functions.
 
 ## Acceptance
 
-- [ ] separate issue / branch / Draft PR;
-- [ ] schema is versioned and extensible;
-- [ ] provenance is mandatory;
-- [ ] source precision/text is preserved;
-- [ ] normalized quantities use controlled units;
-- [ ] incompatible unit/quantity pairs fail closed;
-- [ ] duplicate IDs fail closed;
-- [ ] delay semantics are represented as settings, not executed;
-- [ ] action/target associations are representable without acting on equipment;
-- [ ] JSON import is deterministic;
-- [ ] tabular import requires explicit mapping;
-- [ ] ambiguous/missing required source values fail explicitly;
-- [ ] tests cover round-trip/data-loss invariants;
-- [ ] docs explain adding a new source adapter;
-- [ ] no WS-6/Visio/solver coupling;
-- [ ] Linux/Windows CI green;
-- [ ] PR remains Draft until explicit owner command.
+- [x] separate issue / branch / Draft PR;
+- [x] schema is versioned and extensible;
+- [x] provenance is mandatory;
+- [x] source precision/text is preserved;
+- [x] normalized quantities use controlled units;
+- [x] incompatible unit/quantity pairs fail closed;
+- [x] duplicate IDs fail closed;
+- [x] delay semantics are represented as settings, not executed;
+- [x] action/target associations are representable without acting on equipment;
+- [x] measurement inputs are explicit and function-scoped;
+- [x] JSON import is deterministic and rejects unknown/duplicate fields;
+- [x] tabular import requires explicit mapping;
+- [x] ambiguous/missing required source values fail explicitly;
+- [x] tests cover round-trip/data-loss invariants;
+- [x] docs explain adding a new source adapter;
+- [x] no WS-6/Visio/solver coupling;
+- [x] repaired runtime head has Linux/Windows CI green;
+- [x] PR remains Draft until explicit owner command.
 
 ## Verification
 
@@ -111,3 +113,14 @@ Primary command:
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+
+## Verification checkpoints
+
+- fail-closed decoder repair: CI `37208241974` — SUCCESS, representative job
+  **93 tests — OK**;
+- measurement-input repair head `6153d09ef744af88258b44819ec9c23dbf53a410`:
+  CI `37211970711` — SUCCESS.
+
+A final documentation/regression commit is run through the same Linux/Windows
+Python 3.11/3.12 matrix before owner acceptance.

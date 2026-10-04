@@ -67,6 +67,19 @@ class ProtectionSettingModelTests(unittest.TestCase):
             ("measurement:kl-1:residual-current",),
         )
 
+    def test_measurement_input_ids_serialize_only_on_function(self):
+        card = setting_card_from_dict(raw_fixture())
+        payload = setting_card_to_dict(card)
+        function = next(
+            item for item in payload["functions"]
+            if item["concept_id"] == "protection.overcurrent"
+        )
+        self.assertEqual(
+            function["measurement_input_ids"],
+            ["measurement:kl-1:phase-current"],
+        )
+        self.assertNotIn("measurement_input_ids", function["stages"][0])
+
     def test_unknown_function_measurement_reference_is_rejected(self):
         data = raw_fixture()
         data["functions"][0]["measurement_input_ids"] = [

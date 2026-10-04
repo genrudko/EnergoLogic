@@ -173,7 +173,23 @@ normalized_unit = "A"
 The v1 controlled quantities include current, voltage, time, frequency, impedance,
 active/reactive power, angle, ratio and scalar.
 
-## 6. Functions, stages and actions
+## 6. Measurement inputs, functions, stages and actions
+
+Measured-quantity references are explicit configuration data rather than free-form
+labels. A `MeasurementInput` records:
+
+- stable input ID;
+- semantic key;
+- quantity kind;
+- basis (`primary`, `secondary`, etc.);
+- source label;
+- optional protected-object / terminal reference;
+- provenance.
+
+A protection function references zero or more measurement inputs by stable ID.
+Measurement inputs are **function-scoped in v1**. A stage does not carry an independent
+measurement-input list; it inherits the function's configured measurement context.
+Introducing stage-specific channels later requires an explicit contract change.
 
 A protection function contains:
 
@@ -182,6 +198,7 @@ A protection function contains:
 - original source name;
 - device ID;
 - explicit enabled state or unknown (`null`);
+- measurement-input references;
 - function-level settings;
 - zero or more stages;
 - zero or more action associations;
@@ -295,3 +312,20 @@ Examples:
 - unconfigured localized boolean token.
 
 Missing information is not guessed.
+
+
+## 11. Current qualification status
+
+The contract is qualified with a synthetic fixture covering:
+
+- maximum/overcurrent protection;
+- instantaneous overcurrent / current cutoff;
+- earth-fault protection;
+- breaker-failure settings/actions;
+- phase-current and residual-current measurement inputs.
+
+The fixture is deliberately synthetic and is not site setting data.
+
+The runtime and JSON schema are both fail-closed. A regression specifically proves
+that `measurement_input_ids` serialize on a protection function and do not leak into
+the stage shape.

@@ -121,6 +121,8 @@ class BranchPowerFlowResult:
     canonical_id: str
     element_kind: str
     current_a: float | None
+    from_current_a: float | None
+    to_current_a: float | None
     active_power_from_w: float | None
     reactive_power_from_var: float | None
     active_power_to_w: float | None

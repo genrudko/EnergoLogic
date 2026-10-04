@@ -92,3 +92,16 @@ Ready/Merge remain owner-controlled.
 
 A final documentation reconciliation commit is run through the same
 Ubuntu/Windows × Python 3.11/3.12 matrix before owner acceptance.
+
+
+## Final adversarial checkpoint
+
+Head 55ab646b5c3e65e8616f455eec13e0af626fad75 adds the last bounded safety checks:
+
+- delay basis must be not_applicable;
+- qualified overcurrent functions reject non-current operating quantities;
+- active restored runtime state requires a logical last_time_s.
+
+CI 37216416925 — SUCCESS, 4/4 matrix jobs, 127 tests — OK on the representative job.
+
+Owner acceptance is not assumed. PR #26 remains Draft.

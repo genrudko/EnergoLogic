@@ -109,3 +109,23 @@ IEC/GOST relay performance tolerance.
   CI 37216082437 — SUCCESS, 124 tests on representative Ubuntu job.
 
 Final documentation/head CI is recorded before owner acceptance.
+
+
+## Final adversarial checkpoint
+
+Additional fail-closed review added:
+
+- delay basis must be not_applicable;
+- non-current operating quantities are rejected for the qualified overcurrent family;
+- externally restored picked_up/operated state requires last_time_s.
+
+Final implementation head before this evidence-only reconciliation:
+55ab646b5c3e65e8616f455eec13e0af626fad75.
+
+GitHub Actions run 37216416925 — SUCCESS:
+
+- Ubuntu Python 3.11 — SUCCESS;
+- Ubuntu Python 3.12 — SUCCESS;
+- Windows Python 3.11 — SUCCESS;
+- Windows Python 3.12 — SUCCESS;
+- representative job: 127 tests — OK.

@@ -17,6 +17,9 @@ _NAMESPACE_RE = re.compile(r"^[a-z][a-z0-9._-]*$")
 _LANGUAGES = ("ru", "en")
 _CONCEPT_STATUSES = frozenset({"accepted", "provisional", "deprecated"})
 _SOURCE_STATUSES = frozenset({"current", "historical", "superseded"})
+_SOURCE_AUTHORITIES = frozenset(
+    {"gost", "gost_iec", "gost_r", "gost_r_iec", "iec_iev", "iec", "russian_normative"}
+)
 _SOURCE_ROLES = frozenset({"primary", "supporting", "legacy"})
 _ALIAS_DISPOSITIONS = frozenset({"deprecated", "forbidden"})
 _HYPHENS = str.maketrans({"‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "−": "-"})
@@ -170,8 +173,15 @@ def validate_registry_data(data: object) -> tuple[RegistryIssue, ...]:
                 _issue(issues, "duplicate_source_id", f"{path}/id", source_id)
             else:
                 source_by_id[source_id] = raw
-        for field in ("authority", "document", "edition", "title"):
+        authority = _require_text(raw.get("authority"), path=f"{path}/authority", issues=issues)
+        if authority is not None and authority not in _SOURCE_AUTHORITIES:
+            _issue(issues, "invalid_source_authority", f"{path}/authority", authority)
+        for field in ("document", "edition", "title"):
             _require_text(raw.get(field), path=f"{path}/{field}", issues=issues)
+        if "url" in raw and (not isinstance(raw["url"], str) or not raw["url"].strip()):
+            _issue(issues, "invalid_source_url", f"{path}/url", "expected a non-empty string")
+        if "notes" in raw and not isinstance(raw["notes"], str):
+            _issue(issues, "invalid_source_notes", f"{path}/notes", "expected a string")
         status = raw.get("status")
         if status not in _SOURCE_STATUSES:
             _issue(issues, "invalid_source_status", f"{path}/status", repr(status))

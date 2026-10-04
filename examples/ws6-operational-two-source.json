@@ -1,0 +1,187 @@
+{
+  "schema_version": "0.1",
+  "model_id": "ws6:two-source-operational",
+  "elements": [
+    {
+      "id": "source:a",
+      "kind": "external_link",
+      "name": "Source A",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "disconnector:source-a",
+      "kind": "disconnector",
+      "name": "QS-A",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "closed",
+        "mounting_type": "fixed"
+      }
+    },
+    {
+      "id": "ct:source-a",
+      "kind": "current_transformer",
+      "name": "CT-A",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "bus:a",
+      "kind": "bus",
+      "name": "Bus A",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "breaker:coupler",
+      "kind": "circuit_breaker",
+      "name": "QF-C",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "open",
+        "mounting_type": "fixed"
+      }
+    },
+    {
+      "id": "bus:b",
+      "kind": "bus",
+      "name": "Bus B",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "disconnector:source-b",
+      "kind": "disconnector",
+      "name": "QS-B",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "closed",
+        "mounting_type": "fixed"
+      }
+    },
+    {
+      "id": "source:b",
+      "kind": "external_link",
+      "name": "Source B",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 35000}
+    },
+    {
+      "id": "breaker:transformer",
+      "kind": "circuit_breaker",
+      "name": "QF-T",
+      "terminals": [{"id": "a"}, {"id": "b"}],
+      "attributes": {
+        "nominal_voltage_v": 35000,
+        "switch_state": "closed",
+        "mounting_type": "withdrawable",
+        "withdrawable_position": "working"
+      }
+    },
+    {
+      "id": "transformer:t1",
+      "kind": "transformer_2w",
+      "name": "T1",
+      "terminals": [
+        {
+          "id": "hv",
+          "attributes": {
+            "nominal_voltage_v": 35000,
+            "winding_connection": "delta"
+          }
+        },
+        {
+          "id": "lv",
+          "attributes": {
+            "nominal_voltage_v": 400,
+            "winding_connection": "star_grounded_neutral"
+          }
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "id": "external:lv",
+      "kind": "external_link",
+      "name": "LV boundary",
+      "terminals": [{"id": "node"}],
+      "attributes": {"nominal_voltage_v": 400}
+    }
+  ],
+  "connections": [
+    {
+      "id": "c01",
+      "endpoints": [
+        {"element_id": "source:a", "terminal_id": "node"},
+        {"element_id": "disconnector:source-a", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "c02",
+      "endpoints": [
+        {"element_id": "disconnector:source-a", "terminal_id": "b"},
+        {"element_id": "ct:source-a", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "c03",
+      "endpoints": [
+        {"element_id": "ct:source-a", "terminal_id": "b"},
+        {"element_id": "bus:a", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "c04",
+      "endpoints": [
+        {"element_id": "bus:a", "terminal_id": "node"},
+        {"element_id": "breaker:coupler", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "c05",
+      "endpoints": [
+        {"element_id": "breaker:coupler", "terminal_id": "b"},
+        {"element_id": "bus:b", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "c06",
+      "endpoints": [
+        {"element_id": "source:b", "terminal_id": "node"},
+        {"element_id": "disconnector:source-b", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "c07",
+      "endpoints": [
+        {"element_id": "disconnector:source-b", "terminal_id": "b"},
+        {"element_id": "bus:b", "terminal_id": "node"}
+      ]
+    },
+    {
+      "id": "c08",
+      "endpoints": [
+        {"element_id": "bus:b", "terminal_id": "node"},
+        {"element_id": "breaker:transformer", "terminal_id": "a"}
+      ]
+    },
+    {
+      "id": "c09",
+      "endpoints": [
+        {"element_id": "breaker:transformer", "terminal_id": "b"},
+        {"element_id": "transformer:t1", "terminal_id": "hv"}
+      ]
+    },
+    {
+      "id": "c10",
+      "endpoints": [
+        {"element_id": "transformer:t1", "terminal_id": "lv"},
+        {"element_id": "external:lv", "terminal_id": "node"}
+      ]
+    }
+  ]
+}

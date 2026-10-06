@@ -821,3 +821,155 @@ v3.45 / `946c554...` поэтому осознанно восстановил д
 
 PR #12 остаётся **Draft**. Ready for Review / merge — только по явной команде владельца.
 
+## Editor v3.49 — selected-object UX and portable kit (2026-10-06)
+
+Этот checkpoint supersede'ит v3.45 как текущий runtime baseline, не отменяя более раннее topology evidence.
+
+### Runtime / implementation
+
+- Editor: `EnergoLogic.VisioEditorAddinV349`;
+- API: `0.3.49`;
+- development-bridge functional commit: `bb342f472bc3760646998c51007e7ee6a066184f`;
+- portable-kit commit: `d1f1282d9451c4c6949cb770db502501f294a007`;
+- managed extension transport/package: `2026.10.06.153`;
+- focused Visio suite after portable work: **113/113 PASS**;
+- `py_compile`: PASS;
+- `git diff --check`: PASS.
+
+### Selected-object copy — live acceptance
+
+На disposable page `UI-V349-Final-Acceptance` проверен сценарий «копировать только то, что выделено», без автоматического расширения до всей ячейки.
+
+Один выбранный аппарат:
+
+- source shape `155`: `PinX = 190 мм`;
+- `duplicate_selected_right([155])`;
+- page `68 → 69` shapes;
+- создана ровно одна новая фигура `288`;
+- `288.PinX = 230 мм` — ровно **+40 мм**;
+- `PinY` сохранён;
+- `User.EnergoLogicCellId` не унаследован;
+- исходник имел одну внешнюю электрическую связь;
+- у копии `288` — **0 native external Connections**.
+
+Два выбранных связанных элемента:
+
+- source selection `[155,158]`;
+- page `69 → 71`;
+- новые IDs `[291,294]`;
+- сохранена ровно внутренняя связь:
+  `294 → 291 / Connections.2.X`;
+- наружные связи исходной ячейки на копию не перенесены.
+
+Итоговый пользовательский контракт:
+
+> команды **«Копировать выбранное ← / →»** и **«Дублировать выбранное»** работают ровно с текущим выделением. Команды со словом **«ячейка»** остаются отдельными предметными операциями всей ячейки.
+
+Base-point copy использует тот же принцип: внешние связи исходника не блокируют копирование, но не наследуются новой копией. Base-point move остаётся fail-closed для внешне подключённого selection.
+
+### Геометрические helper-команды — live acceptance
+
+На независимых копиях `288/296/299`:
+
+- **Измерить расстояние**:
+  - ΔX = `12,6 мм`;
+  - ΔY = `-12,6 мм`;
+  - L = `17,819 мм`;
+- **Align X** повторно квалифицирован на v3.49:
+  - `[288,296]` → X = `230 мм`;
+- **Align Y** повторно квалифицирован на v3.49:
+  - `[288,296]` → Y = `239,625 мм`;
+- **Распределить X** по трём элементам — PASS, шаг `6,3 мм`;
+- **Распределить Y** — PASS, шаг `6,3 мм`;
+- **На сетку 5 мм** для shape `299`:
+  - final `PinX = 245 мм`;
+  - final `PinY = 225 мм`;
+- добавлены пресеты точного сдвига **1 мм** наряду с 5 мм.
+
+### UX v3.47–v3.49
+
+Перед v3.49 выполнен финальный UX-проход:
+
+- ScreenTip + SuperTip у Ribbon-команд;
+- явные dialog-results для:
+  - «Проверка связей»;
+  - «Диагностика шины»;
+  - «Визуальная диагностика»;
+  - «Координаты»;
+- transient status-toast для обычных команд;
+- полноценная русская **«Справка EnergoLogic»**;
+- reusable base-point clipboard:
+  - «Копировать с базовой точкой»;
+  - «Вставить по базовой точке»;
+  - многократная вставка из одного буфера;
+  - ПКМ по объекту и ПКМ по пустой странице показывают разные предметные действия.
+
+### Managed-extension transport
+
+Старый способ доставки упёрся в Fusion argument limit из-за роста Editor C#.
+
+Текущий transport:
+
+- Python managed extension доставляется как self-extracting **LZMA loader**;
+- Editor C# передаётся отдельными bounded chunks;
+- каждый chunk позиционируется по offset;
+- final payload проверяется по size + SHA-256;
+- live staged source:
+  - size `269766` bytes;
+  - SHA-256 `73233b850fe9f9da96f224144abe3030deac72fe187bc689807246afd8221bb0`;
+  - `ready=true`.
+
+Таким образом размер Ribbon/help больше не привязан к Fusion argument limit.
+
+### Offline portable kit — built and CompileOnly-qualified
+
+Реально собран на Windows-хосте:
+
+`EnergoLogic-Visio-Editor-Kit-0.3.49.zip`
+
+Результат:
+
+- размер ZIP: **564814 bytes**;
+- SHA-256:
+  `b455c9f95eaecd6ed67066715bd7d61eb9a2b3412e2b8eb5139b87bda139ff07`;
+- personal GOST stencils included: **10**;
+- manifest payload files: **21**;
+- third-party VTD files included: **false**;
+- exact package installer `-CompileOnly`: **PASS**.
+
+Пакет включает:
+
+- Editor C# payload;
+- topology helper C# payload;
+- installer / launcher / uninstaller;
+- manifest с size + SHA-256 каждого файла;
+- 10 пользовательских ГОСТ-трафаретов из `Мои фигуры/ГОСТ`.
+
+Target install:
+
+- per-user HKCU;
+- `%LOCALAPPDATA%\EnergoLogic\VisioEditor\0.3.49`;
+- stencils: `%LOCALAPPDATA%\EnergoLogic\Stencils`;
+- `LoadBehavior=0`;
+- launcher явно подключает add-in и открывает bundled stencils read-only/docked.
+
+Для обычной работы пакета не нужны ChatGPT, MCP, Python, Visual Studio или Интернет.
+
+В пакет намеренно **не копируются** сторонние файлы `C:\ProgramData\VTD`.
+
+### Ограничение qualification
+
+Portable kit скомпилирован и CompileOnly-проверен на текущем Windows/Visio host. Это **не является полной квалификацией** матрицы Visio 2010/2013/2016/2019/2021/M365 и не заменяет WS-3 compatibility gate. На втором чистом рабочем ПК полный install/start acceptance ещё не выполнен.
+
+### Source page note
+
+На 2026-10-06 текущая пользовательская `MCP-v2` содержит **68 shapes**. Это уже изменённое пользователем состояние документа между сессиями. v3.49 acceptance выполнялась только на disposable page; текущую `MCP-v2` обратно к историческим 52 shapes не изменять.
+
+### Remaining debt / governance
+
+- One-user Undo — deferred technical debt;
+- полный Visual Diagnostics остаётся медленным (~31 с) при сохранённой корректности;
+- cross-version / clean-second-PC portable qualification — отдельный WS-3 gate;
+- PR #12 остаётся **Draft**;
+- Ready for Review / merge — только по явной команде владельца.
+

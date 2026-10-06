@@ -24,7 +24,7 @@
 - R3: P1 cell/model diagnostics / Replace & Insert Equipment / bus editing — **done / live-qualified**;
 - R4: P2 native RibbonX / Visio context menu / Ribbon KeyTips / presets — **done / live-qualified**.
 
-Текущая точка релиза — **Editor v3.45 / API 0.3.45 / managed extension 2026.10.04.145**. R3/R4 приняты live: bus editing, reconnect, diagnostics, native RibbonX и штатные Visio right-click menus работают на реальном VTD-документе; исходная MCP-v2 сохранена 52 shapes. One-user Undo и ~31-секундный полный Visual Diagnostics остаются отдельными неблокирующими technical-debt пунктами. Work item функционально завершён; PR #12 остаётся Draft до явного owner decision.
+Текущая точка релиза — **Editor v3.49 / API 0.3.49 / managed extension 2026.10.06.153**. После базовой R3/R4-приёмки добавлены context help/feedback, reusable base-point copy/paste, операции ровно над текущим selection, distribute/measure/snap helpers и 1-мм presets; Align X/Y повторно live-квалифицированы. Offline portable kit 0.3.49 с manifest/SHA-256 и 10 личными ГОСТ-трафаретами реально собран и прошёл CompileOnly на текущем Windows/Visio host. Полная clean-second-PC / Visio-version matrix qualification остаётся WS-3. One-user Undo и ~31-секундный полный Visual Diagnostics остаются неблокирующими technical-debt пунктами. PR #12 остаётся Draft до явного owner decision.
 
 
 ## Canonical product target

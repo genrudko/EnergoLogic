@@ -113,8 +113,7 @@ Live R3 acceptance включает штатное изменение VTD bus Sh
 - [x] parameter panel открывается только по явной команде;
 - [x] legacy toolbar скрыт и оставлен только как recovery path.
 
-Live `ui_status` финального v3.45:
-`Ribbon=loaded; ContextMenu=installed; ContextHosts=Drawing Page Selected,Drawing Object Selected; Panel=hidden; FallbackToolbar=hidden`.
+Live native UX после v3.47-v3.49 дополнен контекстными ScreenTip/SuperTip, явным feedback диагностик, полной русской справкой, reusable base-point clipboard и контекстно-зависимым ПКМ-меню. `Align X/Y` повторно live-квалифицированы на v3.49.
 
 ## Transaction safety
 
@@ -181,16 +180,36 @@ Merge и Ready for Review — только по явной команде вла
 
 Текущее состояние:
 
-- текущий live Editor: **v3.45** (`EnergoLogic.VisioEditorAddinV345`, API `0.3.45`);
-- текущий managed bridge: **2026.10.04.145**; development-bridge HEAD `946c55441761f6e510bef5d6dc44c9e7373fde93`;
-- focused development-bridge Visio suite: **89/89 PASS**;
+- текущий live Editor: **v3.49** (`EnergoLogic.VisioEditorAddinV349`, API `0.3.49`);
+- development-bridge functional HEAD: `bb342f472bc3760646998c51007e7ee6a066184f`;
+- portable-kit HEAD: `d1f1282d9451c4c6949cb770db502501f294a007`;
+- managed extension/package transport: **2026.10.06.153**;
+- focused development-bridge Visio suite: **113/113 PASS**;
 - P0/R2 и topology-safe Cell Pitch подтверждены live;
 - R3 принят live: Replace/Insert, bus editing `6 → 7 → 6`, Reconnect, diagnostics;
-- R4 принят live: native RibbonX, Visio right-click submenu в contexts `9` и `75`, Ribbon KeyTips/presets, hidden fallback toolbar;
-- реальный pitch шины: **40 мм**;
-- TSN cell anchor `155` корректно раскрывается в 11 top-level members: `[155,158,160,162,166,182,240,242,244,249,250]`;
-- финальная `Visual Diagnostics` на контрольной странице: **structural-проблем не найдено**;
-- полный diagnostic scan в текущем COM path занимает около **31.2 с** — performance debt, не повод менять доказанную topology semantics;
-- исходная `MCP-v2` после финальной acceptance по-прежнему содержит **52 shapes**;
+- R4 принят live и дополнен: native RibbonX, русские labels/icons, ScreenTip/SuperTip, явные diagnostic results, Help, контекстный ПКМ;
+- base-point workflow: отдельные «Копировать с базовой точкой» / «Вставить по базовой точке» / «Переместить по базовой точке», reusable clipboard;
+- selected-object workflow принят live:
+  - один выбранный shape копируется ровно один;
+  - «Копировать выбранное ← / →» использует фактический pitch 40 мм;
+  - внутренние связи выбранной группы сохраняются;
+  - наружные связи ячейки на копию не переносятся;
+  - неполная копия не наследует cell identity;
+- геометрические helpers live-qualified:
+  - Align X/Y;
+  - distribute X/Y;
+  - measure distance;
+  - snap to 5 мм;
+  - nudge 1/5 мм;
+- текущая пользовательская `MCP-v2` содержит **68 shapes**; это пользовательское состояние документа. v3.49 acceptance выполнялась только на disposable page — исторические 52 shapes автоматически не восстанавливать;
+- Visual Diagnostics сохраняет корректность, но полный scan остаётся около **31.2 с** — performance debt;
 - One-user Undo остаётся deferred technical debt;
+- offline portable kit **собран и CompileOnly-квалифицирован**:
+  - ZIP `EnergoLogic-Visio-Editor-Kit-0.3.49.zip`;
+  - size `564814` bytes;
+  - SHA-256 `b455c9f95eaecd6ed67066715bd7d61eb9a2b3412e2b8eb5139b87bda139ff07`;
+  - 10 личных ГОСТ-трафаретов;
+  - third-party VTD files: не включены;
+  - manifest + SHA-256 verification: включены;
+- полная clean-second-PC / Visio-version matrix qualification остаётся отдельным WS-3 gate;
 - PR #12 остаётся **Draft**; Ready/merge только по явной команде владельца.

@@ -131,6 +131,12 @@ EnergoLogic PR #12 reconciliation branch:
 - `PYTHONPATH=src python3 -m unittest discover -s tests -v` — **280 tests OK, 7 skipped**.
 - The seven skips are pandapower integration tests guarded by the optional `solver-pandapower` extra, which is not installed in this documentation/reconciliation worktree.
 
+Post-rebase GitHub CI on `cc2d0cb11bd90d944e65fc36138ca89dc4abe268`:
+
+- run `37688292799` — **SUCCESS**;
+- test matrix Ubuntu 3.11 / Ubuntu 3.12 / Windows 3.11 / Windows 3.12 — **4/4 SUCCESS**;
+- solver Ubuntu 3.11 / Windows 3.11 — **2/2 SUCCESS**.
+
 Development-bridge final focused Visio suite:
 
 - **139 passed**;

@@ -128,7 +128,8 @@ Read-only operational diagnostics useful for support remain.
 
 EnergoLogic PR #12 reconciliation branch:
 
-- `PYTHONPATH=src python3 -m unittest discover -s tests -v` — **120/120 PASS**.
+- `PYTHONPATH=src python3 -m unittest discover -s tests -v` — **280 tests OK, 7 skipped**.
+- The seven skips are pandapower integration tests guarded by the optional `solver-pandapower` extra, which is not installed in this documentation/reconciliation worktree.
 
 Development-bridge final focused Visio suite:
 

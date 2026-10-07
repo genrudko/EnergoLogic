@@ -1,8 +1,15 @@
 # VISIO-CANONICAL-BRIDGE-001
 
-Status: Owner accepted — awaiting explicit merge command  
-Issue: #3  
+Status: **Accepted and merged to `main`**
+Issue: #3
 Draft PR: #4
+
+
+## Final repository reconciliation
+
+Merged via PR #4 as `4105373` on 2026-10-03.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Objective
 
@@ -36,7 +43,7 @@ The native `Шина10` connection point is a child shape of the bus group and i
 
 ## Live source baseline
 
-Document: `KRU-35_normal_scheme_v2_final.vsdx`  
+Document: `KRU-35_normal_scheme_v2_final.vsdx`
 Page: `MCP-v2`
 
 Reference shapes:

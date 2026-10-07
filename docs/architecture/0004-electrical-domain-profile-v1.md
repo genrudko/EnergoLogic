@@ -1,6 +1,6 @@
 # ADR 0004 — Electrical semantic profile v1
 
-Status: Accepted for implementation in ELECTRICAL-DOMAIN-PROFILE-V1-001
+Status: Accepted baseline in `main` via PR #6 / `936a66d`
 
 ## Context
 

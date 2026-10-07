@@ -1,8 +1,8 @@
 # Electrical Solver Adapter Contract
 
-Status: **WS-8 spike-qualified candidate contract**  
-Work item: `ELECTRICAL-SOLVER-SPIKE-001`  
-Issue: #14  
+Status: **Accepted baseline in `main` via PR #15 / `a5252e1`**
+Work item: `ELECTRICAL-SOLVER-SPIKE-001`
+Issue: #14
 Draft PR: #15
 
 This contract defines the boundary required by Gate D (Electrical Calculation

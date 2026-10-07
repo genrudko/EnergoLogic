@@ -1,10 +1,17 @@
 # OPERATIONAL-SIMULATION-FOUNDATION-001
 
-Status: **Implementation candidate — awaiting CI and owner acceptance**
+Status: **Accepted and merged to `main`**
 Workstream: WS-6 — Operational Simulation
 Issue: #19
 Branch: `operational/operational-simulation-foundation-001`
 Draft PR: #20
+
+
+## Final repository reconciliation
+
+Merged via PR #20 as `6dd5e60` on 2026-10-04.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Objective
 

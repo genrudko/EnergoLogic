@@ -1,6 +1,6 @@
 # Operational Simulation Contract — WS-6 foundation
 
-Status: **candidate contract in OPERATIONAL-SIMULATION-FOUNDATION-001**
+Status: **Accepted baseline in `main` via PR #20 / `6dd5e60`**
 Issue: #19
 Draft PR: #20
 

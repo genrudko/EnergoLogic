@@ -1,6 +1,6 @@
 # ADR-0002 — Canonical model 0.1
 
-Status: Proposed  
+Status: Accepted foundation baseline in `main` via PROJECT-FOUNDATION-001 / `8de6b81`
 Work item: PROJECT-FOUNDATION-001
 
 ## Decision

@@ -1,8 +1,15 @@
 # TRANSFORMER-SEMANTICS-001
 
-Status: Awaiting owner acceptance  
-Issue: #9  
+Status: **Accepted and merged to `main`**
+Issue: #9
 Draft PR: #10
+
+
+## Final repository reconciliation
+
+Merged via PR #10 as `9edc59a` on 2026-10-03.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Цель
 

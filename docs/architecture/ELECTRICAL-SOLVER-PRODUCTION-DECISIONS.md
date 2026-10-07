@@ -1,8 +1,8 @@
 # Electrical Solver — Production Architecture Decisions after WS-8
 
-Status: **candidate architecture for owner acceptance in ELECTRICAL-SOLVER-SPIKE-001**  
-Workstream: WS-8 — Electrical Solver  
-Issue: #14  
+Status: **Accepted baseline in `main` via PR #15 / `a5252e1`**
+Workstream: WS-8 — Electrical Solver
+Issue: #14
 Draft PR: #15
 
 This document closes the architectural questions that can be decided from the

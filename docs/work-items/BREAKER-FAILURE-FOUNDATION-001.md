@@ -1,10 +1,17 @@
 # BREAKER-FAILURE-FOUNDATION-001 — Explicit breaker-failure state machine
 
-Status: **Implementation complete in Draft; owner acceptance pending**  
-Workstream: **WS-9B — Generic Protection Engine / breaker-failure logic**  
-Issue: **#29**  
-Branch: `protection/breaker-failure-foundation-001`  
+Status: **Accepted and merged to `main`**
+Workstream: **WS-9B — Generic Protection Engine / breaker-failure logic**
+Issue: **#29**
+Branch: `protection/breaker-failure-foundation-001`
 Stacked base: `protection/protection-engine-foundation-001@6de4d5937ba0aa56fcf25f2c20643aff64ce9147`
+
+
+## Final repository reconciliation
+
+Merged via PR #30 as `734f64a` on 2026-10-04.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Goal
 

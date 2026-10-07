@@ -1,6 +1,6 @@
 # SWITCHING-OPERATIONS-TIMELINE-001
 
-Status: **Implementation candidate — awaiting CI and owner acceptance**
+Status: **Accepted and merged to `main`**
 
 Workstream: WS-6 — Operational Simulation
 
@@ -11,6 +11,13 @@ Draft PR: #24
 Branch: `operational/switching-operations-timeline-001`
 
 Dependency: OPERATIONAL-SIMULATION-FOUNDATION-001 / Draft PR #20
+
+
+## Final repository reconciliation
+
+Merged via PR #24 as `36198a6` on 2026-10-04.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Objective
 

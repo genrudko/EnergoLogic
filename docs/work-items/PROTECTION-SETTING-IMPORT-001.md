@@ -1,10 +1,17 @@
 # PROTECTION-SETTING-IMPORT-001 — Protection setting-card import foundation
 
-Status: **Implementation complete in Draft; owner acceptance pending**  
-Workstream: **WS-9A — Protection & Automation / setting-card importer and data model**  
-Issue: **#21**  
-Branch: `protection/protection-setting-import-001`  
+Status: **Accepted and merged to `main`**
+Workstream: **WS-9A — Protection & Automation / setting-card importer and data model**
+Issue: **#21**
+Branch: `protection/protection-setting-import-001`
 Base: `main@9edc59a0e83f17e94c50ca10f7feac320332b2a1`
+
+
+## Final repository reconciliation
+
+Merged via PR #22 as `92a62d7` on 2026-10-04.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Goal
 

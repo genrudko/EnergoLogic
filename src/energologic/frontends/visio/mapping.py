@@ -18,6 +18,7 @@ from energologic.domain import (
 )
 
 from .contracts import VisioShapeBinding
+from .identity import VisioIdentityError, projection_cell_id
 from .snapshot import VisioPageSnapshot, VisioShapeSnapshot, VisioVtdStateSnapshot
 
 
@@ -130,11 +131,14 @@ def _normalized_text(text: str) -> str:
     return " ".join(unicodedata.normalize("NFKC", text).split())
 
 
-def _element_id(kind: str, text: str) -> str:
+def _element_id(kind: str, text: str, *, cell_id: str | None = None) -> str:
     normalized = _normalized_text(text)
     if not normalized:
         raise VisioMappingError("missing_identity_text", f"{kind} shape has empty text")
-    digest = hashlib.sha256(f"{kind}\0{normalized}".encode("utf-8")).hexdigest()[:16]
+    material = f"{kind}\0{normalized}"
+    if cell_id is not None:
+        material += f"\0cell:{cell_id}"
+    digest = hashlib.sha256(material.encode("utf-8")).hexdigest()[:16]
     return f"{kind}:{digest}"
 
 
@@ -328,7 +332,11 @@ def _shape_rule(shape: VisioShapeSnapshot) -> _MasterRule:
 def _element_for_shape(shape: VisioShapeSnapshot) -> Element:
     rule = _shape_rule(shape)
     name = _normalized_text(shape.text)
-    element_id = _element_id(rule.kind, name)
+    try:
+        cell_id = projection_cell_id(shape.user_cells)
+    except VisioIdentityError as exc:
+        raise VisioMappingError(exc.code, str(exc).split(": ", 1)[-1]) from exc
+    element_id = _element_id(rule.kind, name, cell_id=cell_id)
 
     if rule.kind == TRANSFORMER_2W_KIND:
         return Element(

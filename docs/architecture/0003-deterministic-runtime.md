@@ -1,6 +1,6 @@
 # ADR-0003 — Deterministic runtime baseline
 
-Status: Proposed  
+Status: Accepted foundation baseline in `main` via PROJECT-FOUNDATION-001 / `8de6b81`
 Work item: PROJECT-FOUNDATION-001
 
 ## Decision

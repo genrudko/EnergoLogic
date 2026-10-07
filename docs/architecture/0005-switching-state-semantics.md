@@ -1,6 +1,6 @@
 # ADR 0005 — Switching-state semantics v1
 
-Status: Accepted for implementation in SWITCHING-STATE-SEMANTICS-001
+Status: Accepted baseline in `main` via PR #8 / `182ff26`
 
 ## Context
 

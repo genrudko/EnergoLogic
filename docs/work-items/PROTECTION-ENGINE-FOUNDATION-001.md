@@ -1,10 +1,17 @@
 # PROTECTION-ENGINE-FOUNDATION-001 — Generic protection engine foundation
 
-Status: **Implementation complete in Draft; owner acceptance pending**  
-Workstream: **WS-9B — Protection & Automation / generic protection engine**  
-Issue: **#25**  
-Branch: `protection/protection-engine-foundation-001`  
+Status: **Accepted and merged to `main`**
+Workstream: **WS-9B — Protection & Automation / generic protection engine**
+Issue: **#25**
+Branch: `protection/protection-engine-foundation-001`
 Stacked base: `protection/protection-setting-import-001@2fc665a9be2e73fbeb059650a822c041791df11c`
+
+
+## Final repository reconciliation
+
+Merged via PR #26 as `138f551` on 2026-10-04.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Goal
 

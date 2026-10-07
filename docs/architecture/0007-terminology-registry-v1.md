@@ -1,6 +1,6 @@
 # ADR 0007 — Terminology Registry v1
 
-Status: **Proposed in TERMINOLOGY-REGISTRY-V1-001 / Draft PR #18**
+Status: **Accepted baseline in `main` via PR #18 / `fee3b53`**
 
 ## Context
 

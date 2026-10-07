@@ -1,7 +1,7 @@
 # Breaker-Failure Protection Contract — WS-9B foundation
 
-Status: **candidate contract in BREAKER-FAILURE-FOUNDATION-001**  
-Issue: **#29**  
+Status: **Accepted baseline in `main` via PR #30 / `734f64a`**
+Issue: **#29**
 Draft PR: **#30**
 
 ## 1. Purpose

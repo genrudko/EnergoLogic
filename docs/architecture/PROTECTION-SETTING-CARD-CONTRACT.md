@@ -1,6 +1,6 @@
 # Protection Setting Card Contract v1
 
-Status: **Proposed in PROTECTION-SETTING-IMPORT-001 / Draft PR #22**  
+Status: **Accepted baseline in `main` via PR #22 / `92a62d7`**
 Workstream: **WS-9A — Protection setting-card importer / data model**
 
 ## 1. Purpose

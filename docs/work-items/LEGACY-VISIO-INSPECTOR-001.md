@@ -1,11 +1,18 @@
 # LEGACY-VISIO-INSPECTOR-001
 
-Status: In progress  
-Workstream: WS-4 — Legacy Visio Migration  
-Issue: #13  
-Draft PR: #16  
-Branch: `migration/legacy-visio-inspector-001`  
+Status: **Accepted and merged to `main`**
+Workstream: WS-4 — Legacy Visio Migration
+Issue: #13
+Draft PR: #16
+Branch: `migration/legacy-visio-inspector-001`
 Base: `main` @ `9edc59a0e83f17e94c50ca10f7feac320332b2a1`
+
+
+## Final repository reconciliation
+
+Merged via PR #16 as `3e7043d` on 2026-10-04.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Цель
 

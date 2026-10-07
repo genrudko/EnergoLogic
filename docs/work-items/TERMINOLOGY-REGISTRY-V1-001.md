@@ -1,10 +1,17 @@
 # TERMINOLOGY-REGISTRY-V1-001 — Terminology Registry v1
 
-Status: **Implementation complete in Draft; owner acceptance pending**  
-Workstream: **WS-2 — Terminology & Normative Foundations**  
-Issue: **#17**  
-Draft PR: **#18**  
+Status: **Accepted and merged to `main`**
+Workstream: **WS-2 — Terminology & Normative Foundations**
+Issue: **#17**
+Draft PR: **#18**
 Branch: `terminology/terminology-registry-v1-001`
+
+
+## Final repository reconciliation
+
+Merged via PR #18 as `fee3b53` on 2026-10-04.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Goal
 

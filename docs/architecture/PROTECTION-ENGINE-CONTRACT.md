@@ -1,7 +1,7 @@
 # Protection Engine Contract — WS-9B foundation
 
-Status: candidate contract in PROTECTION-ENGINE-FOUNDATION-001  
-Issue: #25  
+Status: **Accepted baseline in `main` via PR #26 / `138f551`**
+Issue: #25
 Draft PR: #26
 
 ## 1. Purpose

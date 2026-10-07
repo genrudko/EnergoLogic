@@ -1,10 +1,17 @@
 # ELECTRICAL-SOLVER-SPIKE-001
 
-Status: **Implementation and architecture decisions complete — awaiting final CI and owner acceptance**  
-Workstream: WS-8 — Electrical Solver  
-Issue: #14  
-Branch: `solver/electrical-solver-spike-001`  
+Status: **Accepted and merged to `main`**
+Workstream: WS-8 — Electrical Solver
+Issue: #14
+Branch: `solver/electrical-solver-spike-001`
 Draft PR: #15
+
+
+## Final repository reconciliation
+
+Merged via PR #15 as `a5252e1` on 2026-10-04.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Objective
 

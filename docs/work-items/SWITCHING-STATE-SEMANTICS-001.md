@@ -1,8 +1,15 @@
 # SWITCHING-STATE-SEMANTICS-001
 
-Status: Awaiting owner acceptance  
-Issue: #7  
+Status: **Accepted and merged to `main`**
+Issue: #7
 Draft PR: #8
+
+
+## Final repository reconciliation
+
+Merged via PR #8 as `182ff26` on 2026-10-03.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Objective
 

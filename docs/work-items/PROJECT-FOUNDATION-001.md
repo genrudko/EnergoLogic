@@ -1,8 +1,15 @@
 # PROJECT-FOUNDATION-001
 
-Status: Accepted and merged  
-Issue: #1  
+Status: **Accepted and merged to `main`**
+Issue: #1
 PR: #2
+
+
+## Final repository reconciliation
+
+Merged via PR #2 as `8de6b81` on 2026-10-03.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Objective
 

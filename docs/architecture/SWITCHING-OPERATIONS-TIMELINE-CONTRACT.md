@@ -1,5 +1,7 @@
 # Контракт коммутационных операций и последовательности событий
 
+Status: **Accepted baseline in `main` via PR #24 / `36198a6`**
+
 Статус: **кандидат WS-6 / SWITCHING-OPERATIONS-TIMELINE-001**
 
 Issue: #23

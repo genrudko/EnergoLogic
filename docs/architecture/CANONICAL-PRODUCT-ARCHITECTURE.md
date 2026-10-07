@@ -1,8 +1,10 @@
 # EnergoLogic — canonical product architecture and delivery plan
 
-Status: **Canonical target architecture**  
-Language of user interface: **Russian**  
-Language of code and internal identifiers: **English**  
+Status: **Canonical target architecture**
+Implementation status: `docs/PROJECT-STATUS.md`
+Execution order: `docs/roadmap.md`
+Language of user interface: **Russian**
+Language of code and internal identifiers: **English**
 
 This document defines the target product boundary and non-negotiable architectural requirements for EnergoLogic. Individual work items implement this target incrementally and must not silently redefine it.
 
@@ -537,19 +539,18 @@ Normative source cataloging can start before this gate; executable rule integrat
 
 ### 16.2 Parallel workstreams
 
-#### WS-0 — Current Visio Editor Baseline
+#### WS-0 — Visio Editor Baseline
 
 Scope:
 
-- finish topology-safe Cell Pitch;
-- complete practical editor UX/polish;
-- preserve current Glue/topology invariants.
+- topology-safe engineering editing;
+- practical Visio-native UX;
+- Glue/topology invariants;
+- frontend packaging/runtime baseline.
 
-This remains the active VISIO-EDITOR-QOL-001 work item.
+**Current state (2026-10-07):** V364 / API 0.3.64 is live-accepted. PR #12 remains owner-controlled Draft for EnergoLogic reconciliation/merge. Cross-version physical qualification continues in WS-3.
 
-**Does not block:** terminology research, packaging architecture, legacy-Visio inspection, solver-adapter prototyping, normative-source cataloging.
-
-**Blocks/limits:** production-grade generator integration that relies on the final editor/Glue primitives.
+The editor is no longer the primary research blocker for solver/operational/protection integration. Production generator work may consume the accepted Gate-C/editor primitives but remains its own WS-5 work item.
 
 #### WS-1 — Canonical Domain & Contracts
 
@@ -574,7 +575,7 @@ Scope:
 - rule provenance schema;
 - terminology linting/validation.
 
-**Can start immediately and run continuously.**
+**Terminology Registry v1 is accepted; terminology/normative curation continues continuously.**
 
 Executable normative rules later depend on WS-1/WS-6 operational semantics, but source collection and terminology do not.
 
@@ -606,7 +607,7 @@ Scope:
 
 Primary acceptance source: Kochubeevskaya WPP existing Visio.
 
-**Can start immediately** with inspection/classification tooling.
+**Inspector/fingerprinting foundation is accepted.** Classification, mapping and canonical import are the next WS-4 layers.
 
 Full canonical import depends on Gate A; generated replacement documents additionally depend on WS-5.
 
@@ -660,7 +661,7 @@ Scope:
 
 Document/scenario schema can begin early.
 
-Full execution depends on WS-6 plus executable rules from WS-9.
+Full execution depends on WS-6 plus executable rules from WS-10.
 
 #### WS-8 — Electrical Solver
 
@@ -673,7 +674,7 @@ Scope:
 - short-circuit calculation;
 - result normalization.
 
-**Can run headlessly and in parallel with Visio/migration/generator work.**
+**The pandapower adapter spike is accepted and remains headless/Visio-independent. Production calculation-domain and runtime-host follow-ups remain.**
 
 Depends on Gate D, not on Visio.
 
@@ -698,7 +699,7 @@ Substreams may run independently:
 - WS-9C arc-fault protection;
 - WS-9D advanced protection functions.
 
-WS-9A/WS-9B can begin before the solver is complete using synthetic measured quantities.
+WS-9A setting import, WS-9B definite-time current protection foundation and breaker-failure foundation are accepted in `main`. Integrated solver/operational feeds and advanced functions remain separate follow-ups.
 
 Integrated protection simulation depends on Gates D/E and WS-8 result feeds.
 
@@ -734,27 +735,27 @@ Sensitive/site-specific data must remain separated from generic product code as 
 
 ### 16.3 Recommended concurrency after the current checkpoint
 
-Once separate bounded work items/branches exist, work may proceed approximately as:
+Current sequencing is maintained in `docs/roadmap.md`; this architecture document defines dependency topology, not a frozen calendar.
+
+After the V364 reconciliation checkpoint, the principal integration milestone is the **Integrated Protection Loop**:
 
 ```text
-WS-0  Visio Editor baseline ────────────────┐
-WS-1  Canonical contracts ────────┐         │
-WS-2  Terminology/Normative ───────────────────────────────► continuous
-WS-3  Compatibility/Packaging ─────────────────────────────► continuous
-WS-4  Legacy migration ───────────┼─────────► canonical import
-WS-5  Scheme generator ───────────┼─────────► generated Visio
-WS-6  Operational simulation ─────┼─────────► switching runtime
-WS-8  Solver adapter ─────────────┼─────────► power flow / SC
-WS-9A Protection settings import ─┤
-WS-9B Protection core ────────────┼─────────► integrated RZA
-WS-11 Site fixtures ────────────────────────────────────────► continuous
-                                  │
-                                  ├─ WS-7 switching forms/training
-                                  ├─ WS-9C/9D arc + advanced protection
-                                  └─ WS-10 executable RU/site rules
+Canonical/Operational state
+        ↓
+Solver result / qualified measured quantities
+        ↓
+Protection Engine
+        ↓
+ProtectionOutputRequest
+        ↓
+explicit breaker operation
+        ↓
+Operational recalculation/event timeline
+        ↓
+Visio projection
 ```
 
-The drawing above expresses dependencies, not mandatory calendar order.
+In parallel, bounded work may proceed on production electrical-calculation domain, legacy→canonical import, earthing/interlocks, solver runtime host, site fixtures and advanced protection.
 
 ### 16.4 Rules for parallel development
 
@@ -769,33 +770,29 @@ The drawing above expresses dependencies, not mandatory calendar order.
 9. Packaging/compatibility and normative provenance are continuous streams, not “finish at the end” chores.
 10. PR Ready/merge remains owner-controlled.
 
-### 16.5 Near-term parallelization decision
+### 16.5 Near-term execution decision
 
-While VISIO-EDITOR-QOL-001 is still being closed, the following work is safe to start independently:
+As of 2026-10-07 the earlier parallel foundation wave has already produced accepted baselines for terminology, legacy inspection, operational traversal/timeline, solver adapter, protection settings, protection engine and breaker failure.
 
-- Terminology Registry and authoritative RU↔EN vocabulary;
-- Visio version/capability matrix and packaging dependency inventory;
-- Kochubeevskaya legacy-Visio inspection/fingerprinting tooling;
-- solver-adapter spike with synthetic canonical networks;
-- protection-setting-card schema/import spike using sanitized/test fixtures;
-- normative source/provenance catalog;
-- site/golden-fixture inventory.
-
-Do **not** start production generator integration against unstable Glue behavior; generator layout/template research may proceed behind an adapter.
+The next parallel wave is therefore **integration + production-domain expansion**, not repetition of those spikes. See `docs/roadmap.md` for the authoritative ordered list.
 
 ## 17. Current implementation state boundary
 
-The current active work item remains **VISIO-EDITOR-QOL-001**.
+The authoritative current state is `docs/PROJECT-STATUS.md`.
 
-Its purpose is to finish a topology-safe and usable Visio engineering editor. It must not absorb solver, RZA, normative or generator implementation merely because those capabilities are now part of the canonical product target.
+At the 2026-10-07 checkpoint:
 
-As of the latest development checkpoint:
+- canonical/core, electrical-v1, switching-state-v1 and transformer_2w semantics are merged;
+- Terminology Registry v1 is merged;
+- Legacy Visio Inspector foundation is merged;
+- WS-6 energized traversal and switching event timeline are merged;
+- WS-8 pandapower solver spike and production architecture decisions are merged;
+- WS-9A setting-card import, WS-9B deterministic current-protection foundation and breaker-failure state machine are merged;
+- Visio Editor V364 is live-accepted in development-bridge and reconciled by EnergoLogic PR #12, which remains Draft pending explicit owner Ready/Merge command.
 
-- v3.14 live acceptance did not solve the remaining Cell Pitch VTD half-Glue issue;
-- development-bridge contains a v3.15 event-isolated GlueTo implementation;
-- v3.15 has not yet completed live deployment/acceptance after the bridge service restart;
-- the source MCP-v2 page remains immutable during destructive acceptance;
-- PR #12 remains Draft and must not be marked Ready or merged without explicit owner instruction.
+Not yet product-complete: production electrical-calculation domain/runtime host, full legacy canonical importer, Scheme Generator, earthing/interlocks, switching forms/training, executable RU/site Rules Engine, integrated site digital twin, advanced/arc protection and physical historical-Visio qualification.
+
+The nearest cross-layer milestone is the Integrated Protection Loop defined in `docs/roadmap.md`.
 
 ## 18. Architectural invariants
 

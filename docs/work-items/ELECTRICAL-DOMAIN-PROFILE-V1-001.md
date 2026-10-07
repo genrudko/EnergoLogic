@@ -1,8 +1,15 @@
 # ELECTRICAL-DOMAIN-PROFILE-V1-001
 
-Status: Owner accepted — awaiting explicit merge command  
-Issue: #5  
+Status: **Accepted and merged to `main`**
+Issue: #5
 Draft PR: #6
+
+
+## Final repository reconciliation
+
+Merged via PR #6 as `936a66d` on 2026-10-03.
+
+Any unchecked owner/Ready/Merge boxes or pre-merge wording later in this file are **historical candidate-state evidence** and do not override this final repository status.
 
 ## Objective
 

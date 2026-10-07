@@ -1,6 +1,6 @@
 # ADR 0006 — Семантика двухобмоточного трансформатора
 
-Status: Accepted for implementation in TRANSFORMER-SEMANTICS-001
+Status: Accepted baseline in `main` via PR #10 / `9edc59a`
 
 ## Зачем это нужно
 

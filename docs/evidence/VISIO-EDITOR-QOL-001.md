@@ -1,975 +1,179 @@
-# VISIO-EDITOR-QOL-001 — live evidence
+# VISIO-EDITOR-QOL-001 — final V364 evidence
 
-## Контур проверки
+**Evidence date:** 2026-10-07
+**Status:** live runtime baseline accepted; EnergoLogic PR #12 owner merge gate remains.
 
-Проверка выполнена на реальном Microsoft Visio через `visio-workstation` и MCP bridge.
+This document supersedes the previous running probe diary as the current evidence summary. Historical v3.x investigation remains in Git history.
 
-Документ:
+## Source identity
 
-`KRU-35_normal_scheme_v2_energologic_transformer_v1.vsdx`
+### EnergoLogic
 
-Исходная страница:
+- repository: `genrudko/EnergoLogic`;
+- work item: `VISIO-EDITOR-QOL-001`;
+- Issue #11;
+- Draft PR #12;
+- branch: `visio/visio-editor-qol-001`.
 
-`MCP-v2`
+### Live runtime / bridge
 
-Исходная страница не использовалась для разрушительных проб. Для мутаций создавались отдельные `QoL-*` страницы-копии.
+- repository: `genrudko/development-bridge`;
+- branch: `feature/energologic-visio-qol-001`;
+- accepted runtime commit: `5695108cf9602ab93ac8223fe0f90c4e7d658209`;
+- documentation-only portable wording follow-up: `b0fd952`.
 
-## Реальная ячейка В-1-35
+## Accepted runtime versions
 
-Полный копируемый состав квалифицированной ячейки:
+- Editor: **V364**;
+- ProgID: `EnergoLogic.VisioEditorAddinV364`;
+- API: `0.3.64`;
+- managed extension/package transport: `2026.10.06.213`.
 
-- 66 — выкатная тележка выключателя `В-1-35`;
-- 69 — ТТ;
-- 71 — ОПН;
-- 73 — ЗН;
-- 113 — внутренняя ошиновка;
-- 117 — ТТ НП;
-- 119 — связь с объектом;
-- 247 — служебная/проекционная фигура.
+V364 was compiled, registered and connected in the running Visio. The final status check reported the current ProgID connected with native UI available.
 
-Электрическое Glue-ядро этой же ячейки уже полного визуального состава:
+## Functional regression evidence
 
-`66 → 69 → 117 → 119`
-
-ОПН/ЗН связаны с внутренней ошиновкой отдельной Glue-компонентой. Фигура 247 электрического Glue не создаёт.
-
-Вывод: CELL нельзя определять только как connected component. В QoL-модели электрическое ядро и визуальный состав ячейки должны быть разными понятиями.
-
-## Anchor и шаг
-
-Anchor квалифицированной ячейки — верхний коммутационный аппарат, реально glued к дочерней native-точке шины.
-
-Для `В-1-35`:
-
-- X anchor = 110.0 мм;
-- native bus terminal = `Sheet.103`;
-- видимое место шины = `2`;
-- `User.nt = 1`;
-- Glue = `BeginX → Connections.2.X`.
-
-Для исходной соседней `В-2-35` X = 150.0 мм.
-
-Измеренный pitch:
-
-**40.0 мм**.
-
-Важно: физический порядок мест нельзя выводить как `User.nt ± 1`. На этой же `Шина10` видимое место `1` имеет `User.nt=9`, место `2` — `nt=1`, место `3` — `nt=2`.
-
-Поэтому:
-
-- направление Left/Right определяется по явному номеру места шины;
-- `User.nt` используется как native identity точки для Glue;
-- неоднозначность должна приводить к fail-closed.
-
-## Native Duplicate
-
-На реальном Visio подтверждено:
-
-1. `Selection.Duplicate()` через pywin32 может выполнить копирование, но вернуть `None`.
-2. В этом случае новая selection доступна через `ActiveWindow.Selection`.
-3. Visio сам добавляет UI-style paste offset примерно:
-   - X: +12.6 мм;
-   - Y: -12.6 мм.
-4. После измерения и компенсации native offset итоговый сдвиг проверен как:
-   - X: **+40.000 мм**;
-   - Y: **0.000 мм**;
-   - tolerance: 0.01 мм.
-
-## Glue после Duplicate
-
-Native Duplicate сам сохраняет внутренние Glue:
-
-- ТТ → выключатель;
-- ОПН → внутренняя ошиновка;
-- ЗН → внутренняя ошиновка;
-- ТТ НП → ТТ;
-- связь с объектом → ТТ НП.
-
-Внешний Glue к главной шине намеренно/фактически не сохраняется.
-
-После явного Glue дубликата верхнего аппарата к `Sheet.105 / Connections.2.X` post-commit `get_connections` подтвердил:
-
-- новый верхний аппарат → новая точка шины;
-- все внутренние Glue новой ячейки сохранены.
-
-Это желательное поведение для `Duplicate Cell`: внутреннюю структуру сохраняет native Visio, внешний terminal перепривязывается осознанно.
-
-## Визуальная проверка
-
-PNG рендер страницы после успешного прототипа показал новую ячейку в соседнем 40-мм месте без вертикального сдвига.
-
-SHA-256 PNG evidence:
-
-`627a3fc2b3b247ca4a8c012e91aed56dc90498e83804c2bf9c1b35533bff9652`
-
-## Identity reset на копии
-
-Для новой ячейки введён instance-only metadata row:
-
-`User.EnergoLogicCellId`
-
-Правила:
-
-- строка добавляется только экземплярам фигур новой ячейки;
-- VTD master не изменяется;
-- исходная ячейка не получает новый ID;
-- значение ограничено безопасным токеном 1..128 символов;
-- native Duplicate может оставить прежние видимые подписи, но canonical import уже различает исходную и новую ячейку;
-- пользовательский `Renumber Cell` остаётся отдельной операцией и не является источником canonical identity.
-
-Live probe `cell:qol-v2-probe` подтвердил `User.EnergoLogicCellId` на всех 8 новых shape instances. У исходного shape 66 такой строки после операции нет.
-
-Canonical mapping остаётся backward-compatible: старые фигуры без `EnergoLogicCellId` используют прежнюю text-derived identity; новые/управляемые фигуры включают explicit cell identity в material canonical element ID.
-
-## Transaction rollback и пользовательский Undo
-
-Внутренний rollback открытого UndoScope подтверждён: при ошибке внутри compound operation созданные фигуры удаляются целиком.
-
-При этом отдельное требование «один пользовательский Ctrl+Z после успешно завершённой внешней Automation-команды» **не подтверждено и сейчас считается ограничением внешнего bridge path**.
-
-Проверено:
-
-- `Application.UndoEnabled = true`;
-- `Document.UndoEnabled = true`;
-- `CurrentScope = -1` вне операции;
-- `Application.Undo()` после commit не меняет документ;
-- штатная UI-команда `DoCmd(visCmdEditUndo)` после commit также не меняет документ;
-- тот же эффект воспроизводится не только на Duplicate, но и на простом внешнем `move_shape` + 1 мм.
-
-Вывод: проблема не специфична для `Duplicate Cell`. Мутации через текущий внешний Automation bridge не попадают в обычный пользовательский undo stack Visio.
-
-Архитектурное следствие:
-
-- внешний bridge остаётся executor/qualification backend;
-- аварийный rollback compound operation сохраняется;
-- требование «один Ctrl+Z» переносится в in-Visio command host: Ribbon/add-in/VBA host или custom Visio UndoUnit;
-- это не должно блокировать детерминированный QoL planner и остальные P0-функции.
-
-## Реализованный pure planner
-
-EnergoLogic теперь разделяет:
-
-- `VisioCellAnchor` — native привязка ячейки к шине;
-- `VisioCell.electrical_core_shape_ids` — только Glue-топология;
-- `VisioCell.member_shape_ids` — полный копируемый проекционный состав;
-- `DuplicateCellPlan` — transport-neutral план Exact Offset + target bus terminal + identity reset requirement.
-
-Fail-closed условия включают:
-
-- отсутствующий/неоднозначный bus Glue;
-- отсутствующий `User.nt`;
-- отсутствующий/неоднозначный видимый slot;
-- занятый target terminal;
-- неоднозначную геометрическую границу ячейки;
-- несовпадение явно указанного terminal с направлением Left/Right.
-
-Геометрическое попадание фигуры в CELL никогда не создаёт электрическую связь.
-
-
-## Exact Move Cell — live qualification
-
-На отдельной странице `QoL-Move-Probe-32` исходная ячейка `В-1-35` была перенесена с видимого места 2 на место 3.
-
-Итоговые координаты anchor:
-
-- было: X = 110.0 мм;
-- стало: X = 150.0 мм;
-- точный сдвиг: **+40.0 мм**;
-- вертикальный сдвиг: **0.0 мм**.
-
-После операции:
-
-- старый внешний Glue к `Sheet.103` отсутствует;
-- новый внешний Glue: `shape 66 BeginX → Sheet.105 Connections.2.X`;
-- внутренние Glue сохранены:
-  - 69 → 66;
-  - 71 → 113;
-  - 73 → 113;
-  - 117 → 69;
-  - 119 → 117.
-
-То есть Move Cell реализуется как предметная операция:
-
-`detach old bus terminal → exact move whole cell → glue new bus terminal`
-
-а не как ручное перетаскивание отдельных фигур.
-
-## Repair Glue — live qualification
-
-На отдельной странице `QoL-Glue-Repair` был намеренно создан опасный случай:
-
-- endpoint верхнего аппарата оставлен **точно в тех же page coordinates**;
-- native Glue к шине удалён.
-
-Внешне схема при этом выглядит соединённой, но электрического `Connects` нет.
-
-После Repair Glue выбран точный native candidate:
-
-`Sheet.105 / Connections.2.X`
-
-и post-check подтвердил настоящий:
-
-`shape 66 BeginX → Sheet.105 Connections.2.X`.
-
-Это live-доказательство инварианта проекта:
-
-**геометрическое совпадение ≠ электрическая связь**.
-
-## Scheme Doctor — минимальный детерминированный слой
-
-Добавлен pure Scheme Doctor, который уже умеет детерминированно сообщать:
-
-- `visual_touch_without_glue` — endpoint находится у единственной native connection point, но реального Glue нет;
-- `ambiguous_visual_touch_without_glue` — рядом несколько кандидатов, автоисправление запрещено;
-- `bus_pitch_mismatch` — геометрия native bus slots не соответствует заданному pitch;
-- `duplicate_bus_slot`;
-- `duplicate_bus_terminal_nt`;
-- `duplicate_cell_identity` — один `EnergoLogicCellId` используется несколькими независимыми bus anchors;
-- ошибки некорректной explicit identity.
-
-Проверка отделена от исправления: Doctor только диагностирует; Repair Glue остаётся отдельным явным действием.
-
-## Финальная проверка внешнего Ctrl+Z
-
-После перехода Duplicate на штатную UI-команду Visio и отдельной отправки **реального Ctrl+Z** в корневое окно Visio:
-
-- Ctrl+Z был физически отправлен успешно;
-- `UndoEnabled = true`;
-- документ до Ctrl+Z: 52 shapes;
-- документ после одного Ctrl+Z: 52 shapes.
-
-То есть ограничение внешнего Automation path подтверждено уже не только COM/API-командой Undo, но и настоящим клавиатурным Ctrl+Z.
-
-Требование одного пользовательского Undo поэтому остаётся задачей для **in-Visio command host/custom UndoUnit** и не маскируется bridge-эмуляцией.
-
-
-## Остальные P0 planners
-
-После live-квалификации Duplicate/Move/Repair Glue добавлены детерминированные transport-neutral planners.
-
-### Copy with Base Point
-
-Поддерживается инженерный workflow:
-
-`selection + base point + target point → exact dx/dy`.
-
-Защитные правила:
-
-- пустой/дублированный selection запрещён;
-- child shapes нельзя случайно использовать вместо top-level engineering object;
-- selection с внешним native Glue generic Copy не копирует молча — требуется предметный Duplicate Cell / Auto Glue;
-- managed selection с `User.EnergoLogicCellId` требует явный новый `cell_id`;
-- selection с несколькими managed cell identities блокируется.
-
-Исполнение транслируется в уже квалифицированный `duplicate_shapes_exact`.
-
-### Move with Base Point / Exact Offset
-
-Для свободного selection поддержаны:
-
-- base point → target point;
-- прямой `dx_mm/dy_mm` Exact Offset.
-
-Если selection имеет внешний electrical Glue, generic move блокируется и требует cell-aware detach/move/re-glue.
-
-Для подключённых ячеек отдельный `MoveCellPlan` уже квалифицирован live.
-
-### Electrical Align
-
-Добавлен exact alignment по Visio reference point:
-
-- axis X → `PinX`;
-- axis Y → `PinY`;
-- reference shape либо явная engineering coordinate.
-
-Generic Align намеренно отказывается двигать shape, участвующий в native Glue. Для electrical equipment выравнивание должно выполняться через cell/bus-aware операцию, а не косметическим сдвигом.
-
-### Cell Pitch distribute
-
-Добавлен planner распределения выбранных ячеек по native bus slots.
-
-Он:
-
-- использует реальный slot order, а не `User.nt ± 1`;
-- требует существующие native connection points;
-- проверяет, что геометрия bus slots действительно поддерживает заданный pitch;
-- блокирует занятые target slots;
-- строит explicit MoveCell detach/move/re-glue requests;
-- не создаёт фиктивные электрические точки ради красивой геометрии.
-
-Live measure 40 мм уже подтверждён. Live apply/distribute ещё не квалифицирован.
-
-## In-Visio host qualification
-
-На рабочем Microsoft Visio подтверждено:
-
-- `VBAEnabled = true`;
-- macros target document enabled;
-- VBE project доступен;
-- COM Add-ins collection доступна.
-
-Создана отдельная qualification copy:
-
-`KRU-35_normal_scheme_v2_energologic_qol_host_v1.vsdm`.
-
-В неё без изменения VTD stencil projects успешно установлен фиксированный модуль:
-
-`EnergoLogicQolHost`.
-
-Probe `UndoProbeDuplicate40` выполняет native Duplicate + exact Move внутри одного `BeginUndoScope/EndUndoScope`.
-
-### Внешний ExecuteLine всё ещё не является user-context
-
-При запуске VBA через внешний:
-
-`Document.ExecuteLine("EnergoLogicQolHost.UndoProbeDuplicate40")`
-
-операция реально выполнилась:
-
-- shapes before: 44;
-- after VBA duplicate: 52.
-
-Но один физический `Ctrl+Z`, отправленный в корневое окно Visio, оставил:
-
-- before Undo: 52;
-- after Undo: 52.
-
-Следовательно, перенос кода в VBA сам по себе проблему не решает. Критичен именно контекст запуска команды.
-
-### Реальный Visio Macros UI
-
-Добавлен bounded qualification path:
-
-`Alt+F8 → fixed UndoProbeDuplicate40 → Run`.
-
-Инструмент не принимает произвольное имя макроса или произвольные клавиши.
-
-Версии `.36/.37` не дошли до запуска VBA из-за ошибок автоматизированного ввода фиксированного имени макроса. `.38` исправляет ввод прямыми ASCII virtual-key events с учётом Caps Lock и проходит bridge unit/contract tests.
-
-Live qualification `.38` сейчас не завершена: после managed update running Visio add-in перестал публиковать `OpenAI Visio Live Application v4` в ROT. Windows node/agent остаётся online и tool catalog доступен, но любой Visio document call fail-closed с сообщением о missing live publication. Для продолжения требуется восстановить local Visio agent/add-in binding; Visio document restart не является частью planned recovery.
-
-## Текущий CI
-
-EnergoLogic head `742848bd355f39bef57986f92a73a527ebb1ed23`:
-
-- CI run `37124461821`;
-- conclusion: **success**.
-
-
-## Продолжение квалификации user-context Undo
-
-После VBA/Alt+F8 исследований были проверены дополнительные штатные механизмы Visio и Office.
-
-### Explicit IVBUndoUnit
-
-В отдельной qualification page был создан custom `IVBUndoUnit`, затем выполнен Duplicate:
-
-- до операции: 44 shapes;
-- после операции: 52 shapes;
-- описание Undo unit: `EnergoLogic: Duplicate Cell`.
-
-Однако:
-
-- один физический `Ctrl+Z`: 52 → 52;
-- прямой `Application.Undo()`: 52 → 52.
-
-То есть само наличие external `AddUndoUnit` не делает transaction обычной пользовательской записью Undo для текущего bridge invocation context.
-
-### Classic COM add-in + Ribbon
-
-Был собран минимальный managed classic COM add-in.
-
-Первая версия с самодельными COM interface declarations приводила к падению Visio. После ремонта add-in был переведён на реальные Microsoft interop assemblies:
-
-- `Extensibility.IDTExtensibility2`;
-- `Microsoft.Office.Core.IRibbonExtensibility`.
-
-Manual `Connect=true` после старта Visio стал стабильным. Но startup-load с Ribbon customization в qualification contour оставался небезопасным: Visio завершался/терял live binding, и add-in был полностью удалён из HKCU перед дальнейшей работой.
-
-Вывод: Ribbon startup probe не используется как production direction до отдельной полноценной packaging/runtime qualification.
-
-### CommandBar-only add-in
-
-Создан отдельный add-in:
-
-`EnergoLogic.VisioQolCommandBarAddin`
-
-Отличия:
-
-- отдельный ProgID/CLSID;
-- `LoadBehavior=0`;
-- без `IRibbonExtensibility`;
-- без Ribbon XML;
-- только `IDTExtensibility2`;
-- временная Office CommandBar `EnergoLogic QoL Probe`;
-- кнопка `EnergoLogic Duplicate 40`.
-
-Этот вариант стабильно зарегистрировался и подключился в работающий Visio:
-
-- listed in `COMAddIns`: true;
-- connected: true;
-- command bar present/visible: true;
-- button present/visible: true;
-- Visio не падал.
-
-Вызов штатного `CommandBarButton.Execute()` действительно зашёл в add-in callback и выполнил compound Duplicate:
-
-- 44 → 52 shapes.
-
-Но один физический `Ctrl+Z` после этого снова дал:
-
-- 52 → 52.
-
-Следовательно, программный `Execute()`, хотя callback выполняется внутри add-in, всё ещё инициирован внешним Automation call и не является достаточным user-context доказательством.
-
-### Physical click и reentrancy
-
-Следующая попытка физически кликнуть видимую CommandBar-кнопку мышью была сделана внутри того же synchronous bridge tool.
-
-Результат:
-
-- операция осталась в состоянии `claimed`;
-- Windows node продолжил heartbeat;
-- новый Visio command не может быть обработан;
-- серверный `visio_call` истёк по timeout.
-
-Это квалифицировано как reentrancy-deadlock pattern: нельзя держать активный Automation/COM вызов к Visio и одновременно пытаться породить физическое UI-событие, которое должно войти обратно в тот же Visio.
-
-Такой synchronous physical-click path больше не использовать.
-
-### Async physical UI probe
-
-Bridge managed extension `.73` добавляет bounded detached helpers:
-
-1. bridge выбирает фиксированный source selection и вычисляет координаты только нашей CommandBar-кнопки;
-2. запускает локальный helper с фиксированной задержкой 1 сек;
-3. bridge tool возвращается;
-4. helper физически кликает кнопку после завершения внешнего COM-вызова;
-5. отдельным read-only вызовом проверяется `44 → 52`;
-6. второй detached helper аналогично отправляет один физический `Ctrl+Z` уже после возврата своего COM-вызова;
-7. отдельным чтением проверяется ожидаемое `52 → 44`.
-
-Helpers не принимают произвольные клавиши, команды или координаты от caller; координаты берутся только из фиксированной `EnergoLogic.Duplicate40.UndoProbe` CommandBarButton.
-
-На момент фиксации evidence live async qualification ещё не выполнена: локальный `windows_visio_agent.py` остаётся заблокирован предыдущей synchronous physical-click операцией и требует один restart.
-
-Bridge branch:
-
-- managed extension `2026.10.03.73`;
-- focused unit/contract suite: **39/39 PASS**.
-
-
-## Editor v3.13 — end-of-session live topology checkpoint (2026-10-04)
-
-Этот checkpoint является текущей точкой продолжения и supersede'ит старые operational notes про bridge `.73` / Undo blocker.
-
-### Текущий runtime
-
-- live add-in: `EnergoLogic.VisioEditorAddinV313`;
-- API: `0.3.13`;
-- managed Visio extension: `2026.10.03.111`;
-- development-bridge branch HEAD: `05a877e` (`fix: complete editor topology in explicit second phase`);
-- `visio-workstation` online;
-- исходная `MCP-v2` сохранена неизменной.
-
-К v3.13 live-приёмку уже прошли пользовательские команды:
+The final stabilization regression exercised live production APIs on disposable pages:
 
 - Coordinates;
-- Copy with Base Point;
-- Move with Base Point;
-- Exact Offset;
-- Smart Nudge;
-- Align X/Y;
-- Select Cell;
-- Renumber Cell;
-- Duplicate Cell Left/Right;
-- Move Cell Left/Right;
-- Repair Glue;
-- Scheme Doctor;
-- Measure Pitch.
+- Nudge Right/Left;
+- Exact Offset forward/reverse;
+- Snap to 5 mm grid;
+- Align X;
+- Align Y;
+- Distribute Selection X;
+- Measure Selection Distance;
+- Duplicate Selected;
+- Base Move;
+- Base Copy.
 
-TSN cell с anchor `155` корректно определяется как 11 top-level members:
+Representative exact checks included snap to 60 × 40 mm and reversible offsets returning to the original coordinates.
 
-`[155,158,160,162,166,182,240,242,244,249,250]`.
+The previously accepted cell/equipment operations from the same work item remain part of the V364 baseline: Select/Renumber/Duplicate/Move Cell, Cell Pitch, Replace/Insert Equipment, bus editing, reconnect, Repair Glue and Scheme Doctor.
 
-### Cell Pitch distribute: точная незакрытая проблема
+## Native topology transaction evidence
 
-v3.13 выполняет распределение в две фазы:
+### Root cause established
 
-1. geometry phase перемещает ячейки и сохраняет pending topology plan;
-2. `ApiCompletePendingTopology` отдельно восстанавливает и проверяет electrical Glue.
+A real moved double-ended 1-D connector may lose one endpoint Glue implicitly during `Selection.Move`; normal Undo then cannot always reconstruct the original endpoint formula.
 
-На disposable page `UI-V313-Pitch-Delay-Probe`:
+Explicit selective pre-detach of qualified managed double-ended endpoints, performed inside the same helper-owned native UndoScope, produces symmetric forward/Undo/Redo behavior.
 
-- slot 3 был полностью освобождён;
-- page shape count: **44**;
-- `SelectCell(155)` подтвердил 11-member TSN cell;
-- `MeasurePitch([66,155])` вернул **80 мм**;
-- `DistributePitch(40)` успешно завершил geometry phase;
-- pending token: `topology:106a58e76ead48a0b1053237e282eaff`.
+Blanket detach was rejected because VTD elements may use non-standard endpoint formulas that generic Glue repair cannot safely recreate.
 
-Для проверки timing-гипотезы между phase 1 и phase 2 намеренно выдержано **10 секунд**.
+### Extra Undo-unit root cause
 
-Результат: phase 2 всё равно упал на том же внутреннем edge:
+The editor wrapper previously reassigned `ActiveWindow.Page` even when the target page was already active. That same-page assignment could create a separate native Undo unit through Visio/VTD UI events.
 
-`shape 244 End → shape 166 / Connections.1`.
+Production wrapper now activates only when target document/page differs. Repeated `COMAddIns.Update()` was also removed from the hot path.
 
-Диагностика после попытки восстановления:
+### Single real-cell Move
 
-- native target: none;
-- formula target: none;
-- `244.EndX FormulaU = 190 mm`.
+Accepted production path on an 11-member cell:
 
-Компенсация вернула геометрию назад, но также не смогла восстановить тот же edge; после compensation `EndX` оставался numeric `150 mm`.
+- forward movement: +40 mm;
+- expected external/internal Glue restored;
+- one native `Application.Undo()` restored exact baseline geometry/Glue;
+- one native `Application.Redo()` restored exact forward state.
 
-**Вывод:** гипотеза «350 ms мало, VTD просто нужно дольше подождать» отвергнута. Проблема структурная в add-in Glue restoration path.
+### Multi-step DistributePitch
 
-### Half-Glue — ключевое новое evidence
+Accepted production transaction with two MoveSteps:
 
-Сразу после failure на той же странице endpoint `244.End` оказался в несогласованном состоянии:
+- forward: two cells changed target slots in one helper scope;
+- one native Undo compared 26 shapes × `PinX/BeginX/BeginY/EndX/EndY/Width` against the clean baseline;
+- mismatch count: **0**;
+- one Redo restored expected slot positions and Glue.
 
-- `EndX FormulaU = "190 mm"`;
-- `EndY FormulaU = "PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))"`.
+This is the accepted production transaction architecture documented in `docs/visio/TOPOLOGY-UNDO.md`.
 
-То есть Y уже содержит VTD reference, а X остаётся обычной координатой — реального `Connects` для End endpoint нет.
+## Final V364 smoke
 
-После этого **без дополнительного ожидания** low-level bridge вызов:
+Acceptance document:
 
-`batch_glue_endpoints([{shape_id:244, endpoint:"end", target_shape_id:166, target_connection_row:1}])`
+`KRU-35_normal_scheme_v2_energologic_qol_host_v1.vsdm`
 
-на той же странице успешно восстановил connection.
-
-Authoritative `get_connections` после вызова подтвердил:
-
-`244.EndX → 166/Connections.1.X`.
-
-Одновременно существующий внутренний edge:
-
-`244.BeginX → 242/Connections.2.X`
-
-остался корректным.
-
-Это разделяет гипотезы:
-
-- native `GlueTo` работает;
-- `ТСН2 / Connections.1` валиден;
-- дополнительный settle delay не нужен для самого Glue;
-- remaining defect находится именно в C# add-in path — `DetachEndpoint / GlueEndpointWithRetry / endpoint X/Y normalization`.
-
-Особенно подозрительно, что `DetachEndpoint` записывает numeric значения и в X, и в Y, а `GlueEndpoint` вызывает `GlueTo` только на X cell. Следующая сессия должна сравнивать формулы X/Y до/после detach и каждой GlueTo-попытки, а не добавлять blind sleeps.
-
-### Следующая точка продолжения
-
-1. Не возвращаться к Undo research — это deferred technical debt.
-2. Создать свежую disposable copy от `MCP-v2`.
-3. Инструментировать `244.EndX/EndY` до detach, после detach и после каждого GlueTo.
-4. Сравнить C# path с уже доказанным Python `batch_glue_endpoints`.
-5. Исправить endpoint normalization / restore semantics.
-6. Принимать Cell Pitch distribute только после реального post-check:
-   - `244.EndX → 166/Connections.1.X`;
-   - полный внутренний TSN topology сохранён;
-   - внешний bus Glue корректен;
-   - geometry = 40 мм.
-7. После этого вернуться к общему UI/product polish.
-
-PR #12 остаётся Draft; Ready/merge без явной команды владельца запрещены.
-
-
-## Editor v3.18 — topology-safe Cell Pitch accepted live (2026-10-04)
-
-### Почему v3.15–v3.17 были важны
-
-После v3.13 были последовательно закрыты ложные гипотезы:
-
-- v3.14: атомарная нормализация пары X/Y непосредственно перед in-process `GlueTo` — **не помогла**;
-- v3.15: временное `Application.EventsEnabled=0` вокруг in-process `GlueTo` — **не помогло**;
-- v3.16: topology restoration вынесен в отдельный COM process. Process boundary/ROT подтвердились рабочими, helper запускался и входил в Visio COM;
-- v3.16 одновременно показал, что нельзя без необходимости повторно выполнять Glue уже корректных VTD edges;
-- v3.17 отправлял helper'у только отсутствующие/изменённые edges. Helper завершался успешно, bus anchor восстанавливался, но последующий порядок операций снова оставлял `244.EndX` numeric;
-- контрольный low-level `batch_glue_endpoints` после уже восстановленного bus anchor немедленно и устойчиво восстановил `244.End → 166/Connections.1`.
-
-Из этого получено точное правило порядка:
-
-> внешний Glue ячейки к шине должен восстанавливаться **до** зависимых внутренних VTD Glue; внутренний `244.End → TSN2` должен быть последней авторитетной Glue-операцией.
-
-### Реализация v3.18
-
-Live runtime:
-
-- Editor: `EnergoLogic.VisioEditorAddinV318`;
-- API: `0.3.18`;
-- managed extension: `2026.10.04.116`;
-- development-bridge commit: `5c4e28b6e7c6ab702d383feab820189ffff9a379`;
-- focused Visio suite: **41/41 PASS**.
-
-Pending topology phase теперь:
-
-1. сравнивает captured topology с текущим состоянием;
-2. передаёт во внешний helper только реально отсутствующие/изменённые Glue;
-3. сначала восстанавливает bus anchor;
-4. затем восстанавливает missing internal Glue;
-5. возвращается в add-in и выполняет read/verify по native Connects/ShapeSheet.
-
-### Fresh live acceptance
-
-Disposable page:
+Canonical reusable acceptance page:
 
 `UI-V318-Pitch-Acceptance`
 
-подготовлена заново из неизменённой `MCP-v2`.
+Disposable final page:
 
-Удалены slot-3 shapes:
+`UI-FINAL-V364-SMOKE` (deleted after acceptance)
 
-`[138,141,143,145,147,151,153,248]`
+Observed result:
 
-Baseline:
+- shape 155 moved slot 3 → 4;
+- dx: +40.00 mm;
+- operation result: success;
+- Glue restored: 3;
+- connections checked: 8;
+- shape count: 44 → 44;
+- shape 155 Begin/End position consistent at target;
+- shape 244 retained both Glue endpoints and zero-width vertical geometry.
 
-- page shapes: **44**;
-- selected cells: `[66,155]`;
-- measured pitch: **80 мм**;
-- `66.PinX = 110 мм`;
-- `155.PinX = 190 мм`;
-- исходный `244.End → 166/Connections.1` присутствовал.
+## Cleanup / production-code evidence
 
-После `DistributePitch(40)` и external topology completion:
+Intermediate research paths were removed from production source:
 
-- operation state: **success**;
-- page shapes: **44**;
-- `66.PinX = 110 мм`;
-- `155.PinX = 150 мм`;
-- фактический шаг: **40 мм**;
-- verified internal Glue count: **7**.
+- IVBUndo custom mutation classes/probes;
+- cross-call UndoScope probes;
+- bare Undo/Redo acceptance probes;
+- OS Ctrl+Z acceptance worker/tools;
+- helper probe-only Undo modes.
 
-Final authoritative topology содержит:
+Read-only operational diagnostics useful for support remain.
 
-- `155.BeginX → Sheet.105 / Connections.2.X` — новый bus slot;
-- `158.BeginX → 155 / Connections.2.X`;
-- `160.BeginX → 162 / Connections.1.X`;
-- `182.BeginX → 169 / Connections.2.X`;
-- `240.BeginX → 162 / Connections.2.X`;
-- `242.BeginX → 158 / Connections.2.X`;
-- `244.BeginX → 242 / Connections.2.X`;
-- `244.EndX → 166 / Connections.1.X`.
+## Tests
 
-Формулы shape 244 после success:
+EnergoLogic PR #12 reconciliation branch:
 
-- `BeginX/BeginY = PAR(PNT(ТТ.242!Connections.2.X,ТТ.242!Connections.2.Y))`;
-- `EndX/EndY = PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))`.
+- `PYTHONPATH=src python3 -m unittest discover -s tests -v` — **120/120 PASS**.
 
-То есть прежний half-Glue устранён.
+Development-bridge final focused Visio suite:
 
-Source safety:
+- **139 passed**;
+- `python -W error -m py_compile managed/visio/visio_managed_extension.py` — PASS;
+- `git diff --check` — PASS.
 
-- исходная `MCP-v2` после acceptance: **52 shapes**, без destructive mutation.
+Full development-bridge repository run:
 
-### Вывод
+- 2507 passed, 1 failed;
+- the only failure was proven pre-existing and unrelated: Coordinator UI test expected `poll-leader-v1` while its parent HEAD HTML already used `poll-leader-v2`;
+- rerun with exactly that pre-existing test deselected: **2507 passed, 1 deselected in 110.30 s**.
 
-Topology-safe Cell Pitch distribute больше не является blocker'ом VISIO-EDITOR-QOL-001.
+The unrelated Coordinator file/test was not modified by the V364 baseline commit.
 
-Следующий продуктовый фокус: R3/R4 — недостающие пользовательские команды, интеграция интерфейса и polish.
+## Portable package evidence
 
-One-user-Undo остаётся deferred technical debt и не возвращается в critical path без нового основания.
+`EnergoLogic-Visio-Editor-Kit-0.3.64.zip`
 
-## Editor v3.45 — R3/R4 final live acceptance (2026-10-04)
+- size: 689,913 bytes;
+- SHA-256: `3a584ee4bc1178809b1fe47bca42904446a2901d53c7eeb611bb2d4dcc820aff`;
+- 23 manifest files;
+- 10 project-owned/personal ГОСТ stencils;
+- VTD third-party assets excluded.
 
-Этот checkpoint является текущим authoritative состоянием VISIO-EDITOR-QOL-001 и supersede'ит более ранние operational checkpoints v3.13/v3.18 для текущего Editor runtime.
+The target installer validates prebuilt binaries and manifest; it does not compile.
 
-### Финальный runtime baseline
+Release dependency validation confirms no runtime assembly dependency on Office/Extensibility/Visual Studio Interop PIA.
 
-- Editor: `EnergoLogic.VisioEditorAddinV345`;
-- API: `0.3.45`;
-- managed Visio extension: `2026.10.04.145`;
-- development-bridge branch HEAD: `946c55441761f6e510bef5d6dc44c9e7373fde93`;
-- focused development-bridge Visio suite: **89/89 PASS**;
-- embedded C# source verification: **PASS**;
-- `git diff --check`: **PASS**;
-- `LoadBehavior=0` сохранён: add-in не возвращён к crash-prone startup-load модели.
+## Compatibility boundary
 
-Live `version` на исходной `MCP-v2` подтвердил:
+Architectural/package target:
 
-- API `0.3.45`;
-- ProgID `EnergoLogic.VisioEditorAddinV345`;
-- shape count `52 → 52`.
+- Windows 10/11;
+- Visio 2010+;
+- x86/x64 where applicable.
 
-### R3 — P1 принят live
+Physical live evidence currently exists for the installed Visio 16.x host only. Historical SKU/bitness combinations remain WS-3 qualification tasks.
 
-#### Bus editing
+## Final conclusion
 
-На disposable page `UI-V337-Bus-Acceptance` шина shape `101` квалифицирована через штатные VTD Shape Data:
+The Visio editor QoL/topology/packaging implementation is no longer an open research blocker. V364 is the accepted implementation baseline. Future Visio work should be either:
 
-Baseline:
+- compatibility/maintenance;
+- rendering/integration for new EnergoLogic capabilities;
+- a separately bounded new frontend feature.
 
-- `Prop.tp = 6`;
-- `Prop.rt = 40 мм`;
-- `Width = 210 мм`;
-- заняты slots 1..6.
-
-`Extend Bus Right`:
-
-- `6 → 7` точек;
-- pitch остаётся `40 мм`;
-- width `210 → 250 мм`;
-- новый slot 7 реально свободен.
-
-`Trim Bus Right`:
-
-- `7 → 6`;
-- удаляется именно свободный крайний slot 7;
-- pitch остаётся `40 мм`;
-- width возвращается к `210 мм`;
-- исходная occupancy slots 1..6 сохраняется.
-
-#### Reconnect
-
-На disposable page `UI-V337-Reconnect-Acceptance` shape `244` был намеренно оставлен с broken End endpoint:
-
-- `EndX = 190 mm`;
-- `EndY = 152.5 mm`;
-- native End Glue отсутствовал.
-
-`Reconnect End` выбрал фактическую ближайшую connection point:
-
-`244.End → 166 / Connections.1`
-
-и восстановил:
-
-- native `244.EndX → ТСН2 / Connections.1.X`;
-- `EndX/EndY = PAR(PNT(ТСН2!Connections.1.X,ТСН2!Connections.1.Y))`;
-- существующий `244.Begin → 242 / Connections.2` сохранён.
-
-Тем самым пользовательские `Extend/Trim Bus` и `Reconnect Begin/End` приняты на реальном VTD-документе.
-
-### R4 — native Visio UX принят live
-
-Нормальный пользовательский UI больше не основан на отдельном постоянно открытом WinForms-окне.
-
-Реализовано и live-подтверждено:
-
-- native Office RibbonX tab **EnergoLogic** через `IRibbonExtensibility`;
-- группы команд: Ячейка, Оборудование, Соединения и шина, Геометрия, Проверка;
-- Ribbon KeyTips для клавиатурного доступа к основным командам;
-- preset-команды, включая сдвиги 5 мм и Cell Pitch 40 мм;
-- native right-click submenu **EnergoLogic** в штатных Visio popup menus:
-  - `Drawing Object Selected`, Context `9`;
-  - `Drawing Page Selected`, Context `75`;
-- modeless parameter panel доступна по явной команде, но по умолчанию скрыта;
-- legacy CommandBar toolbar сохранён только как recovery path и скрыт.
-
-Финальный live `ui_status` v3.45:
-
-`Ribbon=loaded; ContextMenu=installed; ContextHosts=Drawing Page Selected,Drawing Object Selected; Panel=hidden; FallbackToolbar=hidden`
-
-### Visual Diagnostics — корректность принята, performance вынесен в debt
-
-На контрольной странице `UI-V337-Reconnect-Acceptance` финальный v3.45 вернул:
-
-`✓ Visual Diagnostics: structural-проблем не найдено. Проверено cell_id: 0.`
-
-Shape count остался `52 → 52`.
-
-Фактическое время этой полной диагностики в текущем in-process COM path:
-
-- claimed: `1791135340.1406274`;
-- completed: `1791135371.3528893`;
-- около **31.2 с**.
-
-Это признано неблокирующим performance debt: диагностика корректна, но для интерактивной команды медленна.
-
-Проверены и **отвергнуты** три ускорения, потому что нарушали topology semantics:
-
-- v3.42 / `f19872c...`: `Page.Connects` snapshot + direct `CellsSRC` — быстро, но **69 ложных** `касание без Glue`;
-- v3.43 / `999c159...`: one-pass direct `Shape.Connects` — осталась ложная проблема `shape 166 end`;
-- v3.44 / `1b48d77...`: native-only one-pass + VTD aliases — снова **69 ложных** проблем.
-
-v3.45 / `946c554...` поэтому осознанно восстановил доказанный алгоритм v3.41:
-
-`TryGetGlueTarget(source, endpoint) → native Shape.Connects → FormulaU fallback`
-
-с VTD-qualified connection-point aliases.
-
-Правило для дальнейшей оптимизации: **не жертвовать topology correctness ради COM latency**. Следующее ускорение должно быть отдельным work item / instrumented helper, а не очередной заменой proven connectivity semantics.
-
-### Source safety
-
-Во всех финальных R3/R4 acceptance:
-
-- destructive проверки выполнялись на disposable pages;
-- исходная `MCP-v2` оставалась **52 shapes**;
-- VTD masters массово не переписывались.
-
-### Незакрытые технические хвосты
-
-Они не блокируют принятую пользовательскую функциональность Editor:
-
-1. **One-user Undo** — deferred technical debt. В текущем внешнем Automation invocation context один Ctrl+Z после успешной compound operation не является надёжно квалифицированным.
-2. **Visual Diagnostics performance** — около 31 с на текущем реальном документе; semantics v3.45 корректна и должна сохраняться.
-
-### Итог R3/R4
-
-Пользовательский функциональный контур VISIO-EDITOR-QOL-001 завершён и live-квалифицирован:
-
-- P0 geometry/cell operations;
-- topology-safe Cell Pitch;
-- identity / replace / insert;
-- bus editing;
-- reconnect;
-- Scheme Doctor / Visual Diagnostics;
-- native RibbonX;
-- native Visio context menu;
-- keyboard access through Ribbon KeyTips;
-- presets.
-
-PR #12 остаётся **Draft**. Ready for Review / merge — только по явной команде владельца.
-
-## Editor v3.49 — selected-object UX and portable kit (2026-10-06)
-
-Этот checkpoint supersede'ит v3.45 как текущий runtime baseline, не отменяя более раннее topology evidence.
-
-### Runtime / implementation
-
-- Editor: `EnergoLogic.VisioEditorAddinV349`;
-- API: `0.3.49`;
-- development-bridge functional commit: `bb342f472bc3760646998c51007e7ee6a066184f`;
-- portable-kit commit: `d1f1282d9451c4c6949cb770db502501f294a007`;
-- managed extension transport/package: `2026.10.06.153`;
-- focused Visio suite after portable work: **113/113 PASS**;
-- `py_compile`: PASS;
-- `git diff --check`: PASS.
-
-### Selected-object copy — live acceptance
-
-На disposable page `UI-V349-Final-Acceptance` проверен сценарий «копировать только то, что выделено», без автоматического расширения до всей ячейки.
-
-Один выбранный аппарат:
-
-- source shape `155`: `PinX = 190 мм`;
-- `duplicate_selected_right([155])`;
-- page `68 → 69` shapes;
-- создана ровно одна новая фигура `288`;
-- `288.PinX = 230 мм` — ровно **+40 мм**;
-- `PinY` сохранён;
-- `User.EnergoLogicCellId` не унаследован;
-- исходник имел одну внешнюю электрическую связь;
-- у копии `288` — **0 native external Connections**.
-
-Два выбранных связанных элемента:
-
-- source selection `[155,158]`;
-- page `69 → 71`;
-- новые IDs `[291,294]`;
-- сохранена ровно внутренняя связь:
-  `294 → 291 / Connections.2.X`;
-- наружные связи исходной ячейки на копию не перенесены.
-
-Итоговый пользовательский контракт:
-
-> команды **«Копировать выбранное ← / →»** и **«Дублировать выбранное»** работают ровно с текущим выделением. Команды со словом **«ячейка»** остаются отдельными предметными операциями всей ячейки.
-
-Base-point copy использует тот же принцип: внешние связи исходника не блокируют копирование, но не наследуются новой копией. Base-point move остаётся fail-closed для внешне подключённого selection.
-
-### Геометрические helper-команды — live acceptance
-
-На независимых копиях `288/296/299`:
-
-- **Измерить расстояние**:
-  - ΔX = `12,6 мм`;
-  - ΔY = `-12,6 мм`;
-  - L = `17,819 мм`;
-- **Align X** повторно квалифицирован на v3.49:
-  - `[288,296]` → X = `230 мм`;
-- **Align Y** повторно квалифицирован на v3.49:
-  - `[288,296]` → Y = `239,625 мм`;
-- **Распределить X** по трём элементам — PASS, шаг `6,3 мм`;
-- **Распределить Y** — PASS, шаг `6,3 мм`;
-- **На сетку 5 мм** для shape `299`:
-  - final `PinX = 245 мм`;
-  - final `PinY = 225 мм`;
-- добавлены пресеты точного сдвига **1 мм** наряду с 5 мм.
-
-### UX v3.47–v3.49
-
-Перед v3.49 выполнен финальный UX-проход:
-
-- ScreenTip + SuperTip у Ribbon-команд;
-- явные dialog-results для:
-  - «Проверка связей»;
-  - «Диагностика шины»;
-  - «Визуальная диагностика»;
-  - «Координаты»;
-- transient status-toast для обычных команд;
-- полноценная русская **«Справка EnergoLogic»**;
-- reusable base-point clipboard:
-  - «Копировать с базовой точкой»;
-  - «Вставить по базовой точке»;
-  - многократная вставка из одного буфера;
-  - ПКМ по объекту и ПКМ по пустой странице показывают разные предметные действия.
-
-### Managed-extension transport
-
-Старый способ доставки упёрся в Fusion argument limit из-за роста Editor C#.
-
-Текущий transport:
-
-- Python managed extension доставляется как self-extracting **LZMA loader**;
-- Editor C# передаётся отдельными bounded chunks;
-- каждый chunk позиционируется по offset;
-- final payload проверяется по size + SHA-256;
-- live staged source:
-  - size `269766` bytes;
-  - SHA-256 `73233b850fe9f9da96f224144abe3030deac72fe187bc689807246afd8221bb0`;
-  - `ready=true`.
-
-Таким образом размер Ribbon/help больше не привязан к Fusion argument limit.
-
-### Offline portable kit — built and CompileOnly-qualified
-
-Реально собран на Windows-хосте:
-
-`EnergoLogic-Visio-Editor-Kit-0.3.49.zip`
-
-Результат:
-
-- размер ZIP: **564814 bytes**;
-- SHA-256:
-  `b455c9f95eaecd6ed67066715bd7d61eb9a2b3412e2b8eb5139b87bda139ff07`;
-- personal GOST stencils included: **10**;
-- manifest payload files: **21**;
-- third-party VTD files included: **false**;
-- exact package installer `-CompileOnly`: **PASS**.
-
-Пакет включает:
-
-- Editor C# payload;
-- topology helper C# payload;
-- installer / launcher / uninstaller;
-- manifest с size + SHA-256 каждого файла;
-- 10 пользовательских ГОСТ-трафаретов из `Мои фигуры/ГОСТ`.
-
-Target install:
-
-- per-user HKCU;
-- `%LOCALAPPDATA%\EnergoLogic\VisioEditor\0.3.49`;
-- stencils: `%LOCALAPPDATA%\EnergoLogic\Stencils`;
-- `LoadBehavior=0`;
-- launcher явно подключает add-in и открывает bundled stencils read-only/docked.
-
-Для обычной работы пакета не нужны ChatGPT, MCP, Python, Visual Studio или Интернет.
-
-В пакет намеренно **не копируются** сторонние файлы `C:\ProgramData\VTD`.
-
-### Ограничение qualification
-
-Portable kit скомпилирован и CompileOnly-проверен на текущем Windows/Visio host. Это **не является полной квалификацией** матрицы Visio 2010/2013/2016/2019/2021/M365 и не заменяет WS-3 compatibility gate. На втором чистом рабочем ПК полный install/start acceptance ещё не выполнен.
-
-### Source page note
-
-На 2026-10-06 текущая пользовательская `MCP-v2` содержит **68 shapes**. Это уже изменённое пользователем состояние документа между сессиями. v3.49 acceptance выполнялась только на disposable page; текущую `MCP-v2` обратно к историческим 52 shapes не изменять.
-
-### Remaining debt / governance
-
-- One-user Undo — deferred technical debt;
-- полный Visual Diagnostics остаётся медленным (~31 с) при сохранённой корректности;
-- cross-version / clean-second-PC portable qualification — отдельный WS-3 gate;
-- PR #12 остаётся **Draft**;
-- Ready for Review / merge — только по явной команде владельца.
-
+Do not reopen rejected Undo/interop experiments without new contradictory evidence.

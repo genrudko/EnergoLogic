@@ -1,0 +1,185 @@
+{
+  "schema_version": "0.1",
+  "model_id": "calculation-v1:synthetic-hv-lv-feeder",
+  "metadata": {
+    "purpose": "SYNTHETIC calculation profile fixture, not actual site data"
+  },
+  "elements": [
+    {
+      "id": "bus:grid-35kv",
+      "kind": "bus",
+      "name": "Grid 35 kV",
+      "terminals": [
+        {
+          "id": "node"
+        }
+      ],
+      "attributes": {
+        "nominal_voltage_v": 35000
+      }
+    },
+    {
+      "id": "bus:lv-400v",
+      "kind": "bus",
+      "name": "0.4 kV bus",
+      "terminals": [
+        {
+          "id": "node"
+        }
+      ],
+      "attributes": {
+        "nominal_voltage_v": 400
+      }
+    },
+    {
+      "id": "source:grid",
+      "kind": "external_grid",
+      "name": "External grid",
+      "terminals": [
+        {
+          "id": "node"
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "id": "line:feed-a",
+      "kind": "line",
+      "name": "35 kV cable A",
+      "terminals": [
+        {
+          "id": "from"
+        },
+        {
+          "id": "to"
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "id": "transformer:t1",
+      "kind": "transformer_2w",
+      "name": "T1 35/0.4 kV",
+      "terminals": [
+        {
+          "id": "hv",
+          "attributes": {
+            "nominal_voltage_v": 35000,
+            "winding_connection": "delta"
+          }
+        },
+        {
+          "id": "lv",
+          "attributes": {
+            "nominal_voltage_v": 400,
+            "winding_connection": "star_grounded_neutral"
+          }
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "id": "load:lv",
+      "kind": "load",
+      "name": "LV load",
+      "terminals": [
+        {
+          "id": "node"
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "id": "bus:remote-400v",
+      "kind": "bus",
+      "terminals": [
+        {
+          "id": "node"
+        }
+      ],
+      "attributes": {
+        "nominal_voltage_v": 400
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection:calc-1",
+      "endpoints": [
+        {
+          "element_id": "source:grid",
+          "terminal_id": "node"
+        },
+        {
+          "element_id": "bus:grid-35kv",
+          "terminal_id": "node"
+        }
+      ]
+    },
+    {
+      "id": "connection:calc-2",
+      "endpoints": [
+        {
+          "element_id": "transformer:t1",
+          "terminal_id": "hv"
+        },
+        {
+          "element_id": "bus:grid-35kv",
+          "terminal_id": "node"
+        }
+      ]
+    },
+    {
+      "id": "connection:calc-3",
+      "endpoints": [
+        {
+          "element_id": "transformer:t1",
+          "terminal_id": "lv"
+        },
+        {
+          "element_id": "bus:lv-400v",
+          "terminal_id": "node"
+        }
+      ]
+    },
+    {
+      "id": "connection:calc-4",
+      "endpoints": [
+        {
+          "element_id": "line:feed-a",
+          "terminal_id": "from"
+        },
+        {
+          "element_id": "bus:lv-400v",
+          "terminal_id": "node"
+        }
+      ]
+    },
+    {
+      "id": "connection:calc-5",
+      "endpoints": [
+        {
+          "element_id": "line:feed-a",
+          "terminal_id": "to"
+        },
+        {
+          "element_id": "bus:remote-400v",
+          "terminal_id": "node"
+        }
+      ]
+    },
+    {
+      "id": "connection:calc-6",
+      "endpoints": [
+        {
+          "element_id": "load:lv",
+          "terminal_id": "node"
+        },
+        {
+          "element_id": "bus:remote-400v",
+          "terminal_id": "node"
+        }
+      ]
+    }
+  ]
+}

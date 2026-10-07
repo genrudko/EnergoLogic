@@ -1,37 +1,62 @@
 # ELECTRICAL-CALCULATION-DOMAIN-001
 
-Status: **IN PROGRESS — Draft candidate, not accepted**
+Status: **IMPLEMENTED CANDIDATE — Draft PR, NOT ACCEPTED**
 Workstreams: WS-1 / WS-8
 Issue: [#31](https://github.com/genrudko/EnergoLogic/issues/31)
 Branch: `domain/electrical-calculation-domain-001`
+Draft PR: [#32](https://github.com/genrudko/EnergoLogic/pull/32)
 
-## Objective
+## Goal
 
-Qualify the separate `electrical-calculation-v1` engineering-facts profile and materialize it to the **existing** Gate-D `SolverStudyInput`. Canonical model owns identity, topology and switching state; profile owns explicit SI calculation values, state and provenance; solver-neutral DTO is ephemeral.
+Promote the accepted WS-8 solver-neutral DTO boundary to a separately
+versioned engineering-parameter source. `CanonicalModel` owns topology,
+switching and identity; `electrical-calculation-v1` owns attributable
+calculation facts; existing `SolverStudyInput` stays an ephemeral projection.
 
-## Bounded scope
+## Implemented
 
-- Production semantics for external grid/source, bus, line/cable, load, two-winding transformer and switch/breaker conduction.
-- Exact voltages, rated values, positive- and explicitly known zero-sequence quantities.
-- Parameter states known/unknown/not_applicable; absent means missing.
-- Deterministic, validation-gated materialization with canonical-ID linkage and golden fixture.
-- Provenance-preserving normalized export, tests and evidence.
+- JSON Schema + runtime domain parser/serializer; known/unknown/not_applicable
+  facts, missing distinct, provenance/source locator.
+- Bound kinds: external_grid, line (overhead/cable), load, existing bus/
+  transformer_2w/circuit_breaker/disconnector.
+- SI positive-sequence values; separately sourced zero-sequence values and
+  explicit study limitations. No phase/neutral/grounding topology invented.
+- Exact voltage and terminal compatibility rules, switching validation,
+  duplicate/orphan and rating/impedance checks, fail-closed required facts.
+- Canonical-ID preserving normalized Gate-D DTO/manifest + SHA-256.
+- Synthetic 35 kV external grid / 35/0.4 kV transformer / 0.4 kV
+  cable / load fixture; static golden JSON; optional adapter integration test.
+- Architecture contract and evidence in dedicated files.
 
-## Exclusions
+## Acceptance
 
-No `electrical-v1` silent mutation, pandapower schema leakage, phase-neutral topology, generator/motor/3W transformer/tap changer, runtime host, site data, Visio, or protection integration.
+- [x] A. Identical normalized JSON/fingerprint for input order permutations
+- [x] B. No backend library import in domain; existing Gate-D DTO unchanged
+- [x] C. Explicit voltage/rating/impedance/SC/sequence diagnostics
+- [x] D. Source ID/locator/revision preserved in normalized output
+- [x] E. End-to-end synthetic golden checked
+- [x] F. Existing pure-Python regression tests pass on available VPS
+- [ ] GitHub Linux/Windows base + optional pandapower solver CI acceptance
+- [ ] Owner acceptance
+- [ ] Ready for Review (owner command required)
+- [ ] Merge (owner command required)
 
-## Acceptance gates
+## Out of scope
 
-- [ ] Determinism across canonical/profile ordering and normalized fingerprint
-- [ ] Independent domain and solver-neutral Gate-D materializer
-- [ ] Fail-closed electrical and sequence validation
-- [ ] Source locator / provenance round trip
-- [ ] End-to-end synthetic topology and golden
-- [ ] Existing regression test suite green
-- [ ] CI status recorded in evidence
-- [ ] Owner review/acceptance
-- [ ] Ready for Review — owner command only
-- [ ] Merge — owner command only
+- `electrical-v1` changes, pandapower schema in canonical public concepts;
+- complete negative/zero-sequence/ground-return qualifications;
+- phase/neutral topology; solver worker/IPC/packaging;
+- Visio, protection, real site parameter import and numerical reference
+  qualification of Kochubeevskaya data.
 
-**Historical/current note:** this file is an active Draft record, not an accepted/merged baseline.
+## Follow-ups
+
+`PHASE-NEUTRAL-TOPOLOGY-001`, fault/negative-sequence capability
+qualification, `SOLVER-RUNTIME-HOST-001`, `SITE-SOLVER-ACCEPTANCE-001`,
+`SWITCH-FLOW-RESULTS-001` (when needed) and `OPENDSS-ADAPTER-001` after
+phase/neutral qualification.
+
+See [calculation contract](../architecture/ELECTRICAL-CALCULATION-V1-CONTRACT.md)
+and [acceptance evidence](../evidence/ELECTRICAL-CALCULATION-DOMAIN-001.md).
+
+**Do not merge or mark Ready without explicit owner authorization.**

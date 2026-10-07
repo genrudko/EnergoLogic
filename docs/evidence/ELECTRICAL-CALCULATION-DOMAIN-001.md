@@ -46,7 +46,7 @@ Synthetic topology:
 
 Input fingerprint on this fixture:
 
-`b40429a3afca64840f842dd7bdb38dc1f1c2867267bc0e5a23e38f483205cc4e`
+`8152f32ef377c5ae55635a1997cc6d670f0ee73f9a4af3e60f7e20e03e0c7480`
 
 The test compares the **entire** normalized manifest byte-for-byte to the
 golden, and checks invariance to canonical element, connection, connection
@@ -83,6 +83,23 @@ No implicit solver DTO defaults are accepted as engineering data.
   from the deterministic domain golden in this work item.
 - Solver runtime host, offline bundle and site-level reference analysis
   remain separately bounded.
+
+## Numerical CI feedback and synthetic fixture correction
+
+First published candidate `66e4733580f831b4850d1cebdd101b8cae3225bf`
+passed all four base tests but **failed both optional-solver jobs**:
+GitHub Actions [run #37692907900](https://github.com/genrudko/EnergoLogic/actions/runs/37692907900).
+The added synthetic pandapower integration test returned
+`NON_CONVERGED` (Newton-Raphson 10 iterations). Examination of the
+synthetic parameters found a physically inappropriate combination copied
+from the WS-8 35 kV example: **1 MW + 0.3 Mvar** load downstream of
+a **2,000 m** cable operating at **400 V**. This was a **test-data defect**,
+not evidence of a solver-mapping defect. The synthetic sample has been
+corrected to a **100 m** cable and **20 kW + 6 kvar** load for the LV
+contour, using the same explicitly attributed synthetic source locators.
+Normalized golden/fingerprint were regenerated; numeric confirmation is
+delegated to the next pinned-pandapower CI solver jobs. The failed original
+run is preserved as evidence, not hidden.
 
 ## CI / governance
 

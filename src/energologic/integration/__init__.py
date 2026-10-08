@@ -1,5 +1,6 @@
 """Composition boundary for solver, protection, operational and frontend plans."""
 
+from .visio_mcp_gateway import McpVtdVisioGateway, VisioToolCallError
 from .visio_live_projection import (
     LiveProjectionOutcome,
     LiveProjectionStatus,
@@ -31,4 +32,6 @@ __all__ = [
     "LiveVisioBinding",
     "VtdVisioGateway",
     "apply_live_visio_projection",
+    "McpVtdVisioGateway",
+    "VisioToolCallError",
 ]

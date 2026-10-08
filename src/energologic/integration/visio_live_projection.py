@@ -13,7 +13,7 @@ from typing import Any, Mapping, Protocol, Sequence
 
 from energologic.core import fingerprint
 from energologic.domain import read_switching_state
-from energologic.operational import SwitchingOperationStatus
+from energologic.operational import OperationalEventKind, SwitchingOperationStatus
 
 from .protection_loop import IntegratedLoopResult, IntegratedLoopStatus
 
@@ -145,11 +145,27 @@ def _preflight(result: IntegratedLoopResult, binding: LiveVisioBinding) -> None:
     ):
         raise _ProjectionRejected("visio_binding_mismatch")
     expected_fingerprint = fingerprint(result.model_after)
+    switching = result.switching_result
     if (
         intent.canonical_model_fingerprint != expected_fingerprint
-        or result.switching_result.model_after_fingerprint != expected_fingerprint
+        or switching.model_after_fingerprint != expected_fingerprint
+        or switching.model_after is None
+        or fingerprint(switching.model_after) != expected_fingerprint
+        or switching.model_before_fingerprint != result.model_before_fingerprint
     ):
         raise _ProjectionRejected("stale_visio_projection")
+    if (
+        not switching.operation_id.startswith("protection:")
+        or len([
+            event for event in switching.events
+            if event.kind is OperationalEventKind.SWITCH_STATE_CHANGED
+            and event.element_id == binding.element_id
+            and event.before_value == "closed"
+            and event.after_value == "open"
+            and event.operation_id == switching.operation_id
+        ]) != 1
+    ):
+        raise _ProjectionRejected("unqualified_switch_transition")
     breaker = next((e for e in result.model_after.elements if e.id == binding.element_id), None)
     if breaker is None or breaker.kind != "circuit_breaker":
         raise _ProjectionRejected("invalid_projected_breaker")

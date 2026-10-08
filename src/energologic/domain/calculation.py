@@ -383,4 +383,3 @@ def validate_calculation(
         issues.append(_issue("unsupported_phase_neutral_topology", "/study_type",
                              "earth-fault path/neutral grounding requires later qualification"))
     return tuple(sorted(set(issues)))
-

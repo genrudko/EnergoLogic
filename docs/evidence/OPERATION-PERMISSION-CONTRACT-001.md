@@ -8,7 +8,7 @@
 - Full repo after final two adversarial additions: `PYTHONPATH=src python3 -m unittest discover -s tests -q` → **295 tests, 7 skipped, 0 failures**.
 - `python3 -m compileall -q src/energologic/operational tests/test_operation_permission.py` → PASS.
 - `git diff --check` → PASS.
-- CI on GitHub and separate OS/solver matrix: **not yet observed**. No false green claim.
+- GitHub CI [run #37743162289](https://github.com/genrudko/EnergoLogic/actions/runs/37743162289) on implementation commit `872f68fdce3a6dadbf80e2f26c583466b7330faa`: **SUCCESS 6/6 jobs**, including Ubuntu/Windows Python 3.11/3.12 test matrix and Ubuntu/Windows Python 3.11 solver jobs. This is the accepted code-head CI evidence; subsequent documentation-only commits require their own status check before concluding the final PR branch is green.
 
 ## Functional evidence
 

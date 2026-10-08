@@ -1,27 +1,28 @@
 # EnergoLogic roadmap
 
-**Актуальность:** 2026-10-07.
+**Актуальность архитектурных приоритетов:** 2026-10-08. Исторические статусы work items далее приведены по первоначальному срезу; актуальность Draft PR проверять в GitHub.
 Фактическое состояние: `docs/PROJECT-STATUS.md`.
 Целевая архитектура: `docs/architecture/CANONICAL-PRODUCT-ARCHITECTURE.md`.
 
 Roadmap организован по зависимостям, а не как одна последовательная очередь. Несвязанные bounded work items должны идти параллельно.
 
-## 0. Текущий repository checkpoint — закрыть Visio reconciliation
+## 0A. Новая обязательная продуктовая граница и путь к первой демонстрации (2026-10-08)
 
-### VISIO-EDITOR-QOL-001 / PR #12
+По прямому решению владельца EnergoLogic — **локальный офлайн-инструмент для чертежей, режимных расчётов, РЗА, бланков переключений и разбора сценариев**, не промышленная SCADA. Базовая пользовательская приёмка должна показывать индикацию питания, маркировку origin/качества вычисленных величин, состояния выключателя, историю и воспроизведение событий **без загрязнения исходного Visio-файла**.
 
-Runtime implementation доведён до **V364 / API 0.3.64** и live-принят. Текущая задача PR #12 — привести EnergoLogic documentation/evidence к этому baseline и убрать старые v3.49/v3.18/Undo-ограничения из текущего статуса.
+Зависимости и P0/P1 распараллеливание детально зафиксированы в [LOCAL-WORKBENCH-IMPLEMENTATION-PROGRAM](architecture/LOCAL-WORKBENCH-IMPLEMENTATION-PROGRAM.md). Контракты: [PRODUCT-BOUNDARY](architecture/PRODUCT-BOUNDARY-AND-WORKSPACE-MODES.md), [OPERATIONAL-PRESENTATION](architecture/OPERATIONAL-STATE-AND-PRESENTATION-CONTRACT.md), [RUSSIAN-SCADA-BENCHMARK](architecture/RUSSIAN-SCADA-DESIGN-BENCHMARK.md).
 
-После этой reconciliation:
+**Независимые P0-волны:** (B) Visio non-destructive overlay/Undo compatibility spike; (C) headless PresentationSnapshot/Delta & quality; (D) deterministic scenario/event store/replay. Только после них — (E) пользовательская индикация [Issue #39](https://github.com/genrudko/EnergoLogic/issues/39), (F) solver/RZA-to-UI integration. **АПВ** — отдельная headless state machine [Issue #40](https://github.com/genrudko/EnergoLogic/issues/40), UI не должен притворяться её наличием. Бланки WS-7 могут развиваться параллельно при наличии permission/earthing provenance.
 
-- PR остаётся Draft;
-- Ready/Merge — только по явной команде владельца;
-- Visio Editor перестаёт быть critical-path research item;
-- дальнейшая работа с Visio идёт как compatibility/maintenance либо как frontend integration для новых product capabilities.
+В `main` теперь **merged PR #32** (расчётная модель), **#34** (permission evidence), **#36** (headless КЗ→РЗА→отключение). **PR #38** (Visio gateway) остаётся **Draft, unmerged**, с незавершёнными постоянными тестами и live integration. Визуальный end-to-end, АПВ и бланки **ещё не готовы**. Не делаем промышленную SCADA, телеуправление или обязательный server historian.
+
+## 0. Visio Editor V364 — принятый checkpoint
+
+**VISIO-EDITOR-QOL-001 / PR #12 merged** в `main@f92f89b` (GitHub проверен 2026-10-08). Runtime V364 / API 0.3.64 принят на текущем Visio 16.x. Редактор — baseline, дальнейшая работа с Visio идёт как compatibility/maintenance и frontend integration. Live acceptance Visio 2010–latest, offline упаковка всей программы и безопасная непостоянная раскраска остаются отдельными тестами.
 
 ## 1. Ближайший главный milestone — Integrated Protection Loop
 
-Следующий новый bounded integration work item должен замкнуть уже существующие foundation-слои без их переопределения.
+**PR #36 merged**: headless solver→РЗА→simulated breaker→Visio intent; это проверенный фундамент. **Draft PR #38** развивает Visio projection gateway, но ещё не прошёл собственный live сквозной тест. Нижеследующая цепочка остаётся **целевым пользовательским acceptance**, а не готовым оперативным интерфейсом.
 
 Целевая цепочка:
 

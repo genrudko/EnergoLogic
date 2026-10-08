@@ -27,6 +27,22 @@ The target product combines:
 
 Visio is a frontend and renderer, not the computational or normative source of truth.
 
+### 1.1. Owner-approved product boundary / 2026-10-08
+
+**EnergoLogic is a small-group, local/offline engineering-and-operational workbench — not an industrial SCADA/EMS/DMS deployment.** Target users: shift supervisors, dispatchers, operational engineers, ДЭМ. The first-order product workflows are Visio diagram editing/import/generation, electrical calculations, switching-form drafting/checking, protection/scenario modeling, fault analysis and local training/replay.
+
+Russian SCADA systems (NPT Expert, REDKIT SCADA, СК-11) are design references for object-centric navigation, dynamic diagrams, switching-workflow checks, event history and source-quality handling. They do **not** authorize copying industrial control backends, protocols, vendor assets, proprietary binaries, or actual field commands. Site-specific values and safety permissions require governed source evidence.
+
+Canonical electrical topology and engineering parameters remain the source of truth. `WorkspaceMode` (edit, operational view, simulation, replay) and `DataSourceKind` (model, computed, simulated, imported observation, archive) are orthogonal. A dynamically colored diagram is a **presentation** of qualified operational topology, not confirmation of actual voltage or electrical safety. Visio runtime overlays must not persistently mutate the user's engineering document.
+
+This decision constrains interpretation of later sections that mention *live*, *SCADA*, *remote*, *automation* or *digital twin*: in basic EnergoLogic these refer to **local user-selected model/scenario state**, not to telemetry/industrial dispatch. Remote/real control is excluded unless a separately scoped, explicitly authorized future product exists.
+
+Normative detailed target:
+- [Product boundary and workspace modes](PRODUCT-BOUNDARY-AND-WORKSPACE-MODES.md)
+- [Operational state and presentation contract](OPERATIONAL-STATE-AND-PRESENTATION-CONTRACT.md)
+- [Russian SCADA source benchmark](RUSSIAN-SCADA-DESIGN-BENCHMARK.md)
+- [Delivery dependencies and milestones](LOCAL-WORKBENCH-IMPLEMENTATION-PROGRAM.md)
+
 ## 2. Non-negotiable platform requirements
 
 ### 2.1 Supported operating systems

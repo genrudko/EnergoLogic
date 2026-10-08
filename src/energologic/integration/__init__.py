@@ -1,5 +1,13 @@
 """Composition boundary for solver, protection, operational and frontend plans."""
 
+from .visio_live_projection import (
+    LiveProjectionOutcome,
+    LiveProjectionStatus,
+    LiveVisioBinding,
+    VtdVisioGateway,
+    apply_live_visio_projection,
+)
+
 from .protection_loop import (
     BranchCurrentBinding,
     IntegratedLoopEvent,
@@ -18,4 +26,9 @@ __all__ = [
     "ShortCircuitSolver",
     "VisioStateUpdate",
     "run_integrated_protection_loop",
+    "LiveProjectionOutcome",
+    "LiveProjectionStatus",
+    "LiveVisioBinding",
+    "VtdVisioGateway",
+    "apply_live_visio_projection",
 ]

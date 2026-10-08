@@ -20,6 +20,10 @@ No trip on undercurrent or before delay; explicit validator blocks mutation; abs
 
 Numerical/phase/current-transformer mapping is not independently site-validated. The synthetic setting card has only synthetic evidentiary significance. No real safety interlock, SCADA command, physical switching permission, or live Visio update. PR must remain Draft until owner acceptance.
 
-## Final GitHub status
+## GitHub production CI qualification (2026-10-08)
 
-Awaiting PR/CI verification; fill in from actual workflow results.
+- First integration head `0cf585f`, [run #37745073884](https://github.com/genrudko/EnergoLogic/actions/runs/37745073884): **FAILURE** in Linux and Windows solver-extra tests; exposed the true incompatible element-kind boundary between WS-8 and WS-6. All four base tests succeeded.
+- Corrective explicit opt-in profile head `c24e7cc`, [run #37745720908](https://github.com/genrudko/EnergoLogic/actions/runs/37745720908): **SUCCESS 6/6**, including real pinned pandapower solver jobs on Ubuntu and Windows.
+- Final code head `b99a5f5c2633e96a77d4fd89745a2b2e6ebe0ad6`, [run #37745892511](https://github.com/genrudko/EnergoLogic/actions/runs/37745892511): **SUCCESS 6/6**; four OS/Python base test jobs and both real solver-extra jobs passed. The real 3φ pandapower→phase-current→overcurrent→simulated breaker→energization/Visio update-intent test is included in solver-extra suite.
+
+**Status:** headless bounded integration **qualified as Draft candidate**, NOT a live Visio acceptance and NOT a production/safety approval for real switching. Documentation-only evidence updates made after this head require their own CI confirmation before declaring the then-current PR head green.

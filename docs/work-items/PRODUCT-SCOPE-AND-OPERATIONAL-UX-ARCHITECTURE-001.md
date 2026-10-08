@@ -31,7 +31,8 @@ EnergoLogic — standalone/offline инженерно-оперативная п�
 - [x] UI/Visio non-destructive compatibility spike установлен как gate, не подразумеваемый existing feature.
 - [x] Существующие Draft PR #32/#34/#36/#38 правильно обозначены, merge не выполняется.
 - [x] Headless independent work packages, изолированные fixture, cleanup/Undo, конкретная пользовательская приёмка.
-- [ ] CI и owner acceptance новой документации — зафиксировать из реального run.
+- [x] GitHub CI на начальном head `0f1d95f`: run #37760718835 — 6/6 SUCCESS; после evidence-only commit проверить latest head отдельно.
+- [ ] Owner acceptance архитектуры и продуктовых приоритетов — ожидается.
 - [ ] Owner-approved Ready/Merge — **только отдельной явной командой**.
 
 ## Next implementation action after owner acceptance

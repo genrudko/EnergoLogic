@@ -31,7 +31,7 @@
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -q`: **280 tests, 7 skipped, 0 failures** (код `main` не менялся).
 - Проверены **57 Markdown-файлов** `README.md` и `docs/**`: **0 отсутствующих относительных ссылок**.
 - `git diff --check`: PASS; изменения ограничены Markdown, runtime/Visio/solvers не затронуты.
-- GitHub PR/CI результаты и конечный commit будут зафиксированы в PR после публикации; до того **CI не заявлен**.
+ - GitHub **Draft PR #42**, первый implementation/doc head `0f1d95f499077bf254ed327c244748905c462a6a`: [CI run #37760718835](https://github.com/genrudko/EnergoLogic/actions/runs/37760718835) **SUCCESS 6/6** (Ubuntu/Windows tests + solver jobs). Этот результат относится к проверенному первому head; последующий docs-only evidence commit требует проверки своего нового head.
 
 ## Известные границы
 

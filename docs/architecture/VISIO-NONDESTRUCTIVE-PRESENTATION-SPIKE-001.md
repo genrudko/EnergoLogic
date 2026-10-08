@@ -43,6 +43,12 @@ The transformation reverses Visio page Y (bottom-up) to Windows client pixel Y (
 
 Fail closed on invalid/nonfinite geometry, unknown units, stale generation, mismatched document/page/window or missing identity. A `Windows.ViewChanged`, page/active-document switch, mode exit, resize, monitor change, or lost window must invalidate the host snapshot and hide the overlay until a valid sample arrives.
 
+## Actual geometry caveat exposed by user's 2026-10-08 log
+
+A screen overlay cannot independently derive `scaleX = clientWidth/viewWidth` and `scaleY = clientHeight/viewHeight` from `WindowHandle32.GetClientRect` and `Visio.GetViewRect`. The latter spans **page-coordinate visible drawing space**, the former may include Visio UI chrome. Real 1471×903 host with either 20.205×12.050 or 14.888×8.879 page view implied **877.277 drawable height, 25.723 excess pixels** at both zoom levels. Independent X/Y scales introduce **2.932% vertical distortion**.
+
+The new desktop probe first surveys native child HWND geometry (read-only) for an unambiguous canvas-like child; otherwise it exposes a clearly labelled **estimated** equal-split inset, not an accepted production transform. All overlay coordinates use the **same page-unit→pixel scale**, and the journal includes the actual drawing-screen candidate, source, insets and child rectangles. The production choice must require measured canvas origin, not a hard-coded ruler/tab offset or a guessed 50/50 distribution.
+
 ## Next strictly bounded Windows live experiment
 
 1. Use the **separate** `EnergoLogic_Protection_Live_Test_20261008.vsdm`, never the single-page working CLEAN file; verify document/page identity and unchanged original file.

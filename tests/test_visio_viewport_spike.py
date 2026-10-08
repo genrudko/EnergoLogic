@@ -11,6 +11,7 @@ import unittest
 from energologic.frontends.visio.viewport_spike import (
     ClientPoint,
     VisioDrawingViewport,
+    estimate_centered_client_region,
     VisioPageAnchor,
     VisioViewportError,
     project_point,
@@ -102,6 +103,44 @@ class VisioViewportSpikeTests(unittest.TestCase):
         ]:
             with self.subTest(field=field), self.assertRaises(VisioViewportError):
                 project_point(self.view, replace(self.anchor(6, 6), **{field: value}))
+
+    def test_user_log_finds_same_2572_pixel_chrome_at_two_zoom_levels(self):
+        # 2026-10-08 user-provided read-only GetViewRect/ClientScreen.
+        # A drawing view must have the same physical X/Y scale.
+        cases = (
+            (20.20528660071778, 12.05005610077602),
+            (14.888106609805067, 8.878989119417499),
+        )
+        for width, height in cases:
+            with self.subTest(width=width):
+                view = replace(
+                    self.view,
+                    width_page=width, height_page=height,
+                    client_width_px=1471, client_height_px=903,
+                )
+                estimate = estimate_centered_client_region(view)
+                self.assertAlmostEqual(estimate.height_px, 877.2769659, places=5)
+                self.assertAlmostEqual(estimate.excluded_height_px, 25.7230341, places=5)
+                self.assertAlmostEqual(estimate.top_px, 12.86151705, places=5)
+                self.assertAlmostEqual(
+                    estimate.width_px / width,
+                    estimate.height_px / height,
+                    places=8,
+                )
+
+    def test_centered_fit_rejects_impossible_client_aspect(self):
+        too_short = replace(
+            self.view, width_page=10, height_page=10,
+            client_width_px=1471, client_height_px=903,
+        )
+        with self.assertRaises(VisioViewportError):
+            estimate_centered_client_region(too_short)
+        too_much_chrome = replace(
+            self.view, width_page=10, height_page=10,
+            client_width_px=1471, client_height_px=1800,
+        )
+        with self.assertRaises(VisioViewportError):
+            estimate_centered_client_region(too_much_chrome)
 
     def test_invalid_viewport_geometry_fails_closed(self):
         for field, value in [

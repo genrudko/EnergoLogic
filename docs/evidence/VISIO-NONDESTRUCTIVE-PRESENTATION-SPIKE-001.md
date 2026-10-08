@@ -45,6 +45,28 @@ Yellow overlay text was incorrectly painted at its local screen `(18,10)` locati
 
 Windows CI static validator guards `LocPinX` use and absence of former width/2 and yellow C# label; current state must be checked against updated head and latest CI before any success assertion.
 
+## Live geometry journal follow-up (2026-10-08, supplied by owner)
+
+The user supplied **23** read-only JSONL entries from the second desktop overlay run, including scroll/zoom variations. The doc/page identity stayed `EnergoLogic_Protection_Live_Test_20261008.vsdm` / `MCP-v2`. Representative samples:
+
+| State | Visio `GetViewRect` [page IU] | Windows host client [px] | Page units→pixel X/Y |
+|---|---|---|---|
+| Initial viewport | `[-1.040495,12.570304,20.205287,12.050056]` | `1471 × 903` | `72.803` vs `74.937` |
+| Zoomed viewport | `[1.616245,11.728140,14.888107,8.878989]` | `1471 × 903` | `98.804` vs `101.701` |
+
+In **both** zoom states, the drawing height implied by uniform X/Y scale is `1471 × view_height / view_width = 877.276966 px`. The host HWND client contains **25.723034 px more vertical extent**. The old probe incorrectly scaled drawing Y across all `903` client pixels; the distortion is a systematic **+2.932145%**, not pixel noise or Visio shape geometry. Horizontal/vertical scroll values in the source log update consistently at the same zoom. `client_screen=(489,1619,...)` is **not enough** to diagnose monitor placement as an error: multi-monitor virtual desktop origins may differ from a cropped screenshot.
+
+Microsoft explicitly documents that `GetViewRect` is affected by rulers/page tabs; `GetWindowRect` and `WindowHandle32` are different host/window contracts. We therefore **must not hardcode a 26 px correction**, nor assume that all 25.723 px are at the top or bottom.
+
+**Candidate fix in this PR (unqualified live):**
+
+- Enumerate child HWNDs **read-only** under the selected Visio drawing window and consider a single large, fully contained candidate whose aspect ratio is substantially closer to `GetViewRect` than the host. Use the child's actual client screen rectangle when unique.
+- When no unique candidate qualifies, the isolated demo uses a **marked diagnostic fallback**: uniform X/Y scale based on view width, with excess height distributed equally above/below the estimated drawing region. This assumption is *not* a Visio specification and may still be wrong for a particular ruler/scrollbar layout.
+- Journal fields `viewport_source`, `drawing_screen`, `candidate_count`, `child_rects`, `scale_x_y`, `excluded_client_height` distinguish native-candidate vs estimated fallback and allow the next test to identify actual chrome offsets.
+- The pure `estimate_centered_client_region` is explicitly experimental and unit tested on both logged zoom states (plus impossible aspect/unsupported chrome rejection). No baseline colors or ShapeSheet mutations.
+
+**Gate remains OPEN:** alignment requires a new interactive screenshot and journal confirming exact native child-viewport or testing an estimated fallback. Fewer render artifacts/CI successes do not substitute for native Visio acceptance.
+
 ## Explicit NOT YET PROVEN
 
 - Whether the geometry formula matches desktop Visio16.x exactly once page tabs, rulers, DPI scaling, display scaling and owner-relative window rectangles are considered.

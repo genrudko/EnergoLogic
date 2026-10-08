@@ -23,11 +23,22 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using System.Text;
 
 namespace EnergoLogicP0B
 {
     public struct P { public int X; public int Y; }
     public struct R { public int Left; public int Top; public int Right; public int Bottom; }
+
+    public sealed class ChildRect
+    {
+        public string WindowClass { get; set; }
+        public int Left { get; set; }
+        public int Top { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
 
     public static class Native
     {
@@ -43,6 +54,42 @@ namespace EnergoLogicP0B
         public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
         [DllImport("user32.dll")]
         public static extern uint GetDpiForWindow(IntPtr hwnd);
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        public delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr lParam);
+        [DllImport("user32.dll")]
+        private static extern bool EnumChildWindows(IntPtr parent, EnumWindowsProc callback, IntPtr lParam);
+        [DllImport("user32.dll", CharSet=CharSet.Unicode)]
+        private static extern int GetClassName(IntPtr hwnd, StringBuilder builder, int capacity);
+        [DllImport("user32.dll")]
+        private static extern bool IsWindowVisible(IntPtr hwnd);
+
+        // Read-only HWND geometry survey; no foreground changes or Visio mutation.
+        public static ChildRect[] InspectChildWindows(IntPtr parent)
+        {
+            List<ChildRect> children = new List<ChildRect>();
+            EnumWindowsProc callback = (hwnd, param) => {
+                if (!IsWindowVisible(hwnd)) return true;
+                R bounds;
+                if (!GetClientRect(hwnd, out bounds)) return true;
+                int width = bounds.Right - bounds.Left;
+                int height = bounds.Bottom - bounds.Top;
+                if (width < 200 || height < 200) return true;
+                P origin = new P();
+                if (!ClientToScreen(hwnd, ref origin)) return true;
+                StringBuilder buffer = new StringBuilder(128);
+                GetClassName(hwnd, buffer, buffer.Capacity);
+                children.Add(new ChildRect {
+                    WindowClass = buffer.ToString(),
+                    Left = origin.X,
+                    Top = origin.Y,
+                    Width = width,
+                    Height = height
+                });
+                return true;
+            };
+            EnumChildWindows(parent, callback, IntPtr.Zero);
+            return children.ToArray();
+        }
         public static IntPtr FromVisioHandle(int handle32) {
             return new IntPtr((long)unchecked((uint)handle32));
         }
@@ -220,20 +267,66 @@ $timer.Add_Tick({
         $busEndX = $busStartX + $busW
         $busCenterY = $cy - $busLocY
 
-        # Provisional page-to-client transform. Check drift visually with user.
-        $br = [System.Drawing.PointF]::new(
-            [single](($bx - $pageL) * $clientW / $pageW),
-            [single](($pageT - $by) * $clientH / $pageH)
+        # GetViewRect spans a page-space drawing region, whereas the
+        # WindowHandle32 client includes Visio chrome. The user's actual
+        # telemetry showed 25.72 px excess client height at both zooms:
+        # 1471/20.205 != 903/12.050. Never use unequal X/Y page scales.
+        # Prefer a unique large child HWND whose aspect matches GetViewRect.
+        $viewAspect = $pageW / $pageH
+        $hostAspectError = [math]::Abs(($clientW / $clientH) / $viewAspect - 1.0)
+        $childRects = [EnergoLogicP0B.Native]::InspectChildWindows($handle)
+        $candidates = New-Object 'System.Collections.Generic.List[object]'
+        foreach ($child in $childRects) {
+            $ratioError = [math]::Abs(($child.Width / $child.Height) / $viewAspect - 1.0)
+            $inside = $child.Left -ge ($origin.X - 2) -and
+                $child.Top -ge ($origin.Y - 2) -and
+                ($child.Left + $child.Width) -le ($origin.X + $clientW + 2) -and
+                ($child.Top + $child.Height) -le ($origin.Y + $clientH + 2)
+            if ($inside -and $child.Width -ge ($clientW * 0.70) -and
+                $child.Height -ge ($clientH * 0.70) -and
+                $ratioError -lt 0.012 -and $ratioError -lt ($hostAspectError * 0.5)) {
+                [void]$candidates.Add([pscustomobject]@{
+                    left=$child.Left; top=$child.Top; width=$child.Width
+                    height=$child.Height; class_name=$child.WindowClass; error=$ratioError
+                })
+            }
+        }
+        if ($candidates.Count -eq 1) {
+            $candidate = $candidates[0]
+            $drawL = [double]$candidate.left
+            $drawT = [double]$candidate.top
+            $drawW = [double]$candidate.width
+            $drawH = [double]$candidate.height
+            $viewportSource = 'unique-child-hwnd:' + $candidate.class_name
+        } else {
+            # Diagnostic fallback only: choose a centered aspect-correct
+            # region. Its exact top origin still needs a visual/live check.
+            $drawL = [double]$origin.X
+            $drawW = [double]$clientW
+            $drawH = $drawW / $viewAspect
+            if ($drawH -gt ($clientH + 1.0)) {
+                throw 'Cannot fit a uniform page scale in the Visio client'
+            }
+            $drawT = [double]$origin.Y + ($clientH - $drawH) / 2.0
+            $viewportSource = 'centered-aspect-estimate'
+        }
+        # Scale in X is the only source of physical page-to-pixel scale.
+        # This avoids the prior 2.932% artificial vertical stretching.
+        $screenScale = $drawW / $pageW
+        $actualH = $drawW / $viewAspect
+        if ([math]::Abs($actualH - $drawH) -gt 0.001) {
+            $drawT += ($drawH - $actualH) / 2.0
+            $drawH = $actualH
+        }
+        $toX = { param([double]$x) [single](($x - $pageL) * $screenScale) }
+        $toY = { param([double]$y) [single](($pageT - $y) * $screenScale) }
+        $br = [System.Drawing.PointF]::new((& $toX $bx), (& $toY $by))
+        $bl = [System.Drawing.PointF]::new((& $toX $busStartX), (& $toY $busCenterY))
+        $brr = [System.Drawing.PointF]::new((& $toX $busEndX), (& $toY $busCenterY))
+        $bounds = [System.Drawing.Rectangle]::new(
+            [int][math]::Round($drawL), [int][math]::Round($drawT),
+            [int][math]::Round($drawW), [int][math]::Round($drawH)
         )
-        $bl = [System.Drawing.PointF]::new(
-            [single](($busStartX - $pageL) * $clientW / $pageW),
-            [single](($pageT - $busCenterY) * $clientH / $pageH)
-        )
-        $brr = [System.Drawing.PointF]::new(
-            [single](($busEndX - $pageL) * $clientW / $pageW),
-            [single](($pageT - $busCenterY) * $clientH / $pageH)
-        )
-        $bounds = [System.Drawing.Rectangle]::new($origin.X, $origin.Y, $clientW, $clientH)
         $script:overlay.UpdateVisual($bounds, $br, $bl, $brr)
         $script:tickCount++
         $lbl.Text = "ТЕСТОВЫЙ СЛОЙ — только геометрия, не напряжение`r`n" +
@@ -250,6 +343,13 @@ $timer.Add_Tick({
                 visio_window_rect = @($visioL, $visioT, $visioW, $visioH)
                 client_screen = @($origin.X, $origin.Y, $clientW, $clientH)
                 dpi = $dpi
+                viewport_source = $viewportSource
+                drawing_screen = @($bounds.X, $bounds.Y, $bounds.Width, $bounds.Height)
+                host_aspect_error = $hostAspectError
+                excluded_client_height = [math]::Round($clientH - ($clientW / $viewAspect), 3)
+                scale_x_y = @($screenScale, $screenScale)
+                candidate_count = $candidates.Count
+                child_rects = @($childRects | Select-Object -First 30)
                 breaker_pixel = @($br.X, $br.Y)
                 bus_pixels = @(@($bl.X,$bl.Y),@($brr.X,$brr.Y))
             }

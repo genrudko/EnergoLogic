@@ -70,6 +70,50 @@ class VisioDrawingViewport:
 
 
 @dataclass(frozen=True, slots=True)
+class ExperimentalClientRegion:
+    """Aspect-correct *estimated* drawing rectangle inside the host client.
+
+    This is NOT evidence that Visio splits extra vertical space equally;
+    native child-HWND measurement must supersede this fallback.
+    """
+
+    left_px: float
+    top_px: float
+    width_px: float
+    height_px: float
+    excluded_height_px: float
+
+
+def estimate_centered_client_region(
+    viewport: VisioDrawingViewport,
+    *, maximum_excluded_height_fraction: float = 0.10,
+) -> ExperimentalClientRegion:
+    """Provisional uniform X/Y scale when a drawing child HWND is unavailable.
+
+    Visio client sizes can include scrollbars/tabs and therefore cannot be
+    used as independently scaled X/Y drawing dimensions. An impossible or
+    highly chrome-dominated host is rejected rather than distorted.
+    """
+    if not isinstance(viewport, VisioDrawingViewport):
+        raise VisioViewportError("expected Visio drawing viewport")
+    limit = _number(maximum_excluded_height_fraction)
+    if not 0 < limit < 1:
+        raise VisioViewportError("invalid extra-chrome threshold")
+    fitted_height = viewport.client_width_px * viewport.height_page / viewport.width_page
+    excess = viewport.client_height_px - fitted_height
+    if excess < -0.5 or excess > viewport.client_height_px * limit:
+        raise VisioViewportError("host aspect does not qualify for centered fit")
+    excess = max(excess, 0.0)
+    return ExperimentalClientRegion(
+        left_px=0,
+        top_px=excess / 2,
+        width_px=viewport.client_width_px,
+        height_px=fitted_height,
+        excluded_height_px=excess,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class VisioPageAnchor:
     document_ref: str
     page_ref: str

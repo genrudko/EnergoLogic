@@ -1,0 +1,294 @@
+"""P0-B experimental *read-only* page-to-client viewport coordinates.
+
+This module is NOT a Visio renderer. It accepts a host-qualified view
+rectangle and matched page coordinates and creates ephemeral screen-local
+coordinates without touching document/ShapeSheet/COM.
+
+Current units/coordinate orientation are candidates for desktop Visio COM:
+the actual viewport/pixel alignment MUST be qualified on each host before
+any graphical overlay can be marked supported.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from math import isfinite
+
+
+class VisioViewportError(ValueError):
+    """Invalid, stale or ambiguously bound viewport sample."""
+
+
+def _number(value: object, *, positive: bool = False) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise VisioViewportError("viewport values must be numeric")
+    val = float(value)
+    if not isfinite(val) or (positive and val <= 0):
+        raise VisioViewportError("viewport values must be finite and valid")
+    return val
+
+
+def _identity(value: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise VisioViewportError("missing stable document/page/window identity")
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class VisioDrawingViewport:
+    """One view token; dimensions in same page units as anchors, client px.
+
+    Pixel coordinates are relative to the *drawing viewport*, NOT monitor
+    coordinates; owner-window positioning/DPI transforms belong to the host.
+    """
+
+    document_ref: str
+    page_ref: str
+    window_ref: str
+    generation: int
+    left_page: float
+    top_page: float
+    width_page: float
+    height_page: float
+    client_width_px: float
+    client_height_px: float
+    page_unit: str = "visio_internal"
+
+    def __post_init__(self) -> None:
+        for val in (self.document_ref, self.page_ref, self.window_ref):
+            _identity(val)
+        if not isinstance(self.generation, int) or isinstance(self.generation, bool) or self.generation < 1:
+            raise VisioViewportError("invalid viewport generation")
+        if self.page_unit != "visio_internal":
+            raise VisioViewportError("unknown Visio page unit")
+        for val in (self.left_page, self.top_page):
+            _number(val)
+        for val in (
+            self.width_page, self.height_page, self.client_width_px,
+            self.client_height_px,
+        ):
+            _number(val, positive=True)
+
+
+@dataclass(frozen=True, slots=True)
+class ExperimentalClientRegion:
+    """Aspect-correct *estimated* drawing rectangle inside the host client.
+
+    This is NOT evidence that Visio splits extra vertical space equally;
+    native child-HWND measurement must supersede this fallback.
+    """
+
+    left_px: float
+    top_px: float
+    width_px: float
+    height_px: float
+    excluded_height_px: float
+
+
+def estimate_centered_client_region(
+    viewport: VisioDrawingViewport,
+    *, maximum_excluded_height_fraction: float = 0.10,
+) -> ExperimentalClientRegion:
+    """Provisional uniform X/Y scale when a drawing child HWND is unavailable.
+
+    Visio client sizes can include scrollbars/tabs and therefore cannot be
+    used as independently scaled X/Y drawing dimensions. An impossible or
+    highly chrome-dominated host is rejected rather than distorted.
+    """
+    if not isinstance(viewport, VisioDrawingViewport):
+        raise VisioViewportError("expected Visio drawing viewport")
+    limit = _number(maximum_excluded_height_fraction)
+    if not 0 < limit < 1:
+        raise VisioViewportError("invalid extra-chrome threshold")
+    fitted_height = viewport.client_width_px * viewport.height_page / viewport.width_page
+    excess = viewport.client_height_px - fitted_height
+    if excess < -0.5 or excess > viewport.client_height_px * limit:
+        raise VisioViewportError("host aspect does not qualify for centered fit")
+    excess = max(excess, 0.0)
+    return ExperimentalClientRegion(
+        left_px=0,
+        top_px=excess / 2,
+        width_px=viewport.client_width_px,
+        height_px=fitted_height,
+        excluded_height_px=excess,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class CursorCalibratedRegion:
+    """User-confirmed two-point ruler-free calibration, client-local in px.
+
+    Fitting two known endpoints of one horizontal bus determines one
+    isotropic page-to-pixel scale and both viewport origin offsets.
+    Reuse at another zoom is provisional unless the window size is unchanged.
+    """
+
+    document_ref: str
+    page_ref: str
+    window_ref: str
+    sample_width_page: float
+    sample_client_width_px: float
+    sample_client_height_px: float
+    sample_scale_px_per_page_unit: float
+    offset_x_px: float
+    offset_y_px: float
+
+
+def calibrate_horizontal_bus(
+    viewport: VisioDrawingViewport,
+    *,
+    bus_start_page: float,
+    bus_y_page: float,
+    bus_width_page: float,
+    pointer_left: ClientPoint,
+    pointer_right: ClientPoint,
+) -> CursorCalibratedRegion:
+    """Compute exact affine origin/scale from two explicitly selected points.
+
+    Both cursor positions are in the same host-client coordinates and must
+    be sampled at one unchanged view; this is validated by the Windows
+    controller (document/window/view/focus at each cursor sample).
+    """
+    if not isinstance(viewport, VisioDrawingViewport):
+        raise VisioViewportError("invalid calibration viewport")
+    bus_start = _number(bus_start_page)
+    bus_y = _number(bus_y_page)
+    bus_width = _number(bus_width_page, positive=True)
+    if not isinstance(pointer_left, ClientPoint) or not isinstance(pointer_right, ClientPoint):
+        raise VisioViewportError("calibration requires two pointer samples")
+    for v in (pointer_left.x_px, pointer_left.y_px, pointer_right.x_px, pointer_right.y_px):
+        _number(v)
+    if abs(pointer_right.y_px - pointer_left.y_px) > 14:
+        raise VisioViewportError("bus endpoints are not horizontal")
+    scale = (pointer_right.x_px - pointer_left.x_px) / bus_width
+    original_scale = viewport.client_width_px / viewport.width_page
+    if not 0.6 * original_scale <= scale <= 1.5 * original_scale:
+        raise VisioViewportError("cursor calibration scale is implausible")
+    return CursorCalibratedRegion(
+        document_ref=viewport.document_ref,
+        page_ref=viewport.page_ref,
+        window_ref=viewport.window_ref,
+        sample_width_page=viewport.width_page,
+        sample_client_width_px=viewport.client_width_px,
+        sample_client_height_px=viewport.client_height_px,
+        sample_scale_px_per_page_unit=scale,
+        offset_x_px=pointer_left.x_px - (bus_start - viewport.left_page) * scale,
+        offset_y_px=(pointer_left.y_px + pointer_right.y_px) / 2
+        - (viewport.top_page - bus_y) * scale,
+    )
+
+
+def project_calibrated_point(
+    viewport: VisioDrawingViewport,
+    calibration: CursorCalibratedRegion,
+    anchor: VisioPageAnchor,
+) -> ClientPoint:
+    """Calibrated projection across pan/zoom, never across window resize."""
+    if not isinstance(viewport, VisioDrawingViewport) or not isinstance(calibration, CursorCalibratedRegion):
+        raise VisioViewportError("invalid calibration input")
+    if (
+        (viewport.document_ref, viewport.page_ref, viewport.window_ref)
+        != (calibration.document_ref, calibration.page_ref, calibration.window_ref)
+        or viewport.client_width_px != calibration.sample_client_width_px
+        or viewport.client_height_px != calibration.sample_client_height_px
+    ):
+        raise VisioViewportError("calibration no longer applies to host window")
+    if not isinstance(anchor, VisioPageAnchor) or (
+        anchor.document_ref != viewport.document_ref or anchor.page_ref != viewport.page_ref
+        or anchor.window_ref != viewport.window_ref or anchor.generation != viewport.generation
+        or anchor.page_unit != viewport.page_unit
+    ):
+        raise VisioViewportError("stale calibration anchor")
+    k = calibration.sample_scale_px_per_page_unit * calibration.sample_width_page / viewport.width_page
+    return ClientPoint(
+        calibration.offset_x_px + (_number(anchor.x_page) - viewport.left_page) * k,
+        calibration.offset_y_px + (viewport.top_page - _number(anchor.y_page)) * k,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class VisioPageAnchor:
+    document_ref: str
+    page_ref: str
+    window_ref: str
+    generation: int
+    x_page: float
+    y_page: float
+    page_unit: str = "visio_internal"
+
+
+@dataclass(frozen=True, slots=True)
+class ClientPoint:
+    x_px: float
+    y_px: float
+
+
+@dataclass(frozen=True, slots=True)
+class ClientSegment:
+    start: ClientPoint
+    end: ClientPoint
+
+
+def _bind_and_project(
+    viewport: VisioDrawingViewport,
+    anchor: VisioPageAnchor,
+) -> ClientPoint:
+    if (
+        not isinstance(viewport, VisioDrawingViewport)
+        or not isinstance(anchor, VisioPageAnchor)
+        or anchor.document_ref != viewport.document_ref
+        or anchor.page_ref != viewport.page_ref
+        or anchor.window_ref != viewport.window_ref
+        or anchor.generation != viewport.generation
+        or anchor.page_unit != viewport.page_unit
+    ):
+        raise VisioViewportError("stale or incompatible viewport and anchor")
+    x = _number(anchor.x_page)
+    y = _number(anchor.y_page)
+    return ClientPoint(
+        (x - viewport.left_page) * viewport.client_width_px / viewport.width_page,
+        (viewport.top_page - y) * viewport.client_height_px / viewport.height_page,
+    )
+
+
+def project_point(
+    viewport: VisioDrawingViewport, anchor: VisioPageAnchor
+) -> ClientPoint | None:
+    """Screen-local point or None outside the visible client rectangle."""
+
+    p = _bind_and_project(viewport, anchor)
+    if 0 <= p.x_px <= viewport.client_width_px and 0 <= p.y_px <= viewport.client_height_px:
+        return p
+    return None
+
+
+def project_segment(
+    viewport: VisioDrawingViewport, start: VisioPageAnchor, end: VisioPageAnchor
+) -> ClientSegment | None:
+    """Clipped line segment for an explicit, qualified canonical conductor.
+
+    Neither line topology nor Visio Glue is inferred here. The caller must
+    pass already-qualified segment endpoints and their canonical bindings.
+    """
+
+    a, b = _bind_and_project(viewport, start), _bind_and_project(viewport, end)
+    dx, dy = b.x_px - a.x_px, b.y_px - a.y_px
+    lo, hi = 0.0, 1.0
+    for p, q in (
+        (-dx, a.x_px), (dx, viewport.client_width_px - a.x_px),
+        (-dy, a.y_px), (dy, viewport.client_height_px - a.y_px),
+    ):
+        if p == 0:
+            if q < 0:
+                return None
+        else:
+            factor = q / p
+            if p < 0:
+                lo = max(lo, factor)
+            else:
+                hi = min(hi, factor)
+            if lo > hi:
+                return None
+    return ClientSegment(
+        ClientPoint(a.x_px + lo * dx, a.y_px + lo * dy),
+        ClientPoint(a.x_px + hi * dx, a.y_px + hi * dy),
+    )

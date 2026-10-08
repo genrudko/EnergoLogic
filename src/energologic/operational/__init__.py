@@ -20,12 +20,26 @@ from .operations import (
     WithdrawablePositionOperation,
     execute_switching_operation,
 )
+from .permission import (
+    OperationPermissionEvidence,
+    OperationPermissionResult,
+    PermissionAssertion,
+    PermissionAssertionOutcome,
+    PermissionDecision,
+    evaluate_operation_permission,
+    permission_evidence_validator,
+)
 from .runtime import compare_operational_results, simulate_operational_state
 
 __all__ = [
     "ElementOperationalState",
     "OperationBlock",
     "OperationValidator",
+    "OperationPermissionEvidence",
+    "OperationPermissionResult",
+    "PermissionAssertion",
+    "PermissionAssertionOutcome",
+    "PermissionDecision",
     "OperationalDelta",
     "OperationalEvent",
     "OperationalEventKind",
@@ -41,6 +55,8 @@ __all__ = [
     "TerminalOperationalState",
     "WithdrawablePositionOperation",
     "compare_operational_results",
+    "evaluate_operation_permission",
     "execute_switching_operation",
+    "permission_evidence_validator",
     "simulate_operational_state",
 ]

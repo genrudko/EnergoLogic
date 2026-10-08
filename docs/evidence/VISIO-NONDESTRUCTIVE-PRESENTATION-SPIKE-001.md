@@ -35,6 +35,16 @@ A standalone local diagnostic prototype is supplied in `tools/p0b_live_overlay_p
 - `tools/p0b_probe_static_validate.ps1` checks PowerShell syntax and compiles the embedded C# **without starting Visio**. A Windows-only unittest exercises this validator in GitHub Windows CI. This is a static compilation gate, **not live visual/zoom/scroll acceptance**.
 - **No change** to existing development-bridge V364 add-in or the user's saved documents. User must run the probe in their interactive Windows session; it is not yet installed or exercised there.
 
+## Screenshot-driven live findings and repair candidate (2026-10-08)
+
+Owner ran initial Windows probe on the isolated `MCP-v2` test Visio copy and provided a screenshot: visible cyan breaker marker approximately aligned with V-1-35, magenta conductor badly shifted to the left and slightly above the real brown bus, yellow `ТЕСТОВЫЙ СЛОЙ — НЕ ТЕЛЕМЕТРИЯ` drawn over Visio upper ruler; overlay visibly flickered. This **fails** full P0-B live visual acceptance (though it confirms the temporary WinForms overlay actually appears over desktop Visio).
+
+Independent **read-only** Visio Bridge shape 101 `Шина10` ShapeSheet: `PinX=65 mm`, `PinY=255 mm`, `Width=290 mm`, `LocPinX=0 mm`, `LocPinY=0 mm`, `Angle=0 deg`. Initial probe erroneously assumed `PinX` equals conductor **center** and applied `PinX ± Width/2`, displacing the projected bus by 145 mm. Visio's shape pin references local `LocPin`, hence proper unrotated line endpoints `(PinX-LocPinX, PinY-LocPinY)` and `(PinX-LocPinX+Width, PinY-LocPinY)` (provided `LocPinY=0`). Source fixed accordingly; unsupported non-zero angle now rejected. This is independent of actual topology/energized coloring.
+
+Yellow overlay text was incorrectly painted at its local screen `(18,10)` location, coinciding with the drawing's ruler. It is removed from the transient overlay; explanatory label remains in external controller only. Timer previously invalidated a full transparent window every 400ms even with no geometry changes; now redraw only if bounds/points changed beyond tolerance. These changes are **candidates pending user's repeat screenshot and log**, not proof flicker is completely resolved.
+
+Windows CI static validator guards `LocPinX` use and absence of former width/2 and yellow C# label; current state must be checked against updated head and latest CI before any success assertion.
+
 ## Explicit NOT YET PROVEN
 
 - Whether the geometry formula matches desktop Visio16.x exactly once page tabs, rulers, DPI scaling, display scaling and owner-relative window rectangles are considered.

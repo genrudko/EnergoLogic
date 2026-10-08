@@ -53,7 +53,6 @@ namespace EnergoLogicP0B
         public PointF BreakerPoint { get; private set; }
         public PointF BusLeft { get; private set; }
         public PointF BusRight { get; private set; }
-        public string CaptionText { get; private set; }
         public ProbeOverlay()
         {
             FormBorderStyle = FormBorderStyle.None;
@@ -63,7 +62,6 @@ namespace EnergoLogicP0B
             BackColor = Color.FromArgb(1, 2, 3);
             TransparencyKey = BackColor;
             DoubleBuffered = true;
-            CaptionText = "ТЕСТОВЫЙ СЛОЙ - НЕ ТЕЛЕМЕТРИЯ";
         }
         protected override CreateParams CreateParams
         {
@@ -80,12 +78,23 @@ namespace EnergoLogicP0B
                 Hide();
                 return;
             }
+            // Avoid periodic full-screen layered repaints while the
+            // viewport remains stationary (previously blinked at 400 ms).
+            if (Visible && Bounds.Equals(screenBounds) &&
+                Math.Abs(BreakerPoint.X - breaker.X) < 0.35f &&
+                Math.Abs(BreakerPoint.Y - breaker.Y) < 0.35f &&
+                Math.Abs(BusLeft.X - busL.X) < 0.35f &&
+                Math.Abs(BusLeft.Y - busL.Y) < 0.35f &&
+                Math.Abs(BusRight.X - busR.X) < 0.35f &&
+                Math.Abs(BusRight.Y - busR.Y) < 0.35f) {
+                return;
+            }
             Bounds = screenBounds;
             BreakerPoint = breaker;
             BusLeft = busL;
             BusRight = busR;
-            Invalidate();
             if (!Visible) Show();
+            Invalidate();
         }
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -104,11 +113,6 @@ namespace EnergoLogicP0B
                 g.DrawEllipse(p, BreakerPoint.X - 18f, BreakerPoint.Y - 18f, 36f, 36f);
                 g.DrawLine(p, BreakerPoint.X - 25f, BreakerPoint.Y, BreakerPoint.X + 25f, BreakerPoint.Y);
                 g.DrawLine(p, BreakerPoint.X, BreakerPoint.Y - 25f, BreakerPoint.X, BreakerPoint.Y + 25f);
-            }
-            using (Brush b = new SolidBrush(Color.Yellow))
-            using (Font f = new Font("Arial", 10f, FontStyle.Bold))
-            {
-                g.DrawString(CaptionText, f, b, new PointF(18f, 10f));
             }
         }
     }
@@ -203,7 +207,18 @@ $timer.Add_Tick({
         $by = [double]$breaker.CellsU('PinY').ResultIU
         $cx = [double]$bus.CellsU('PinX').ResultIU
         $cy = [double]$bus.CellsU('PinY').ResultIU
-        $halfW = [double]$bus.CellsU('Width').ResultIU / 2.0
+        $busW = [double]$bus.CellsU('Width').ResultIU
+        $busLocX = [double]$bus.CellsU('LocPinX').ResultIU
+        $busLocY = [double]$bus.CellsU('LocPinY').ResultIU
+        $busAngle = [double]$bus.CellsU('Angle').ResultIU
+        if ($busW -le 0 -or [math]::Abs($busAngle) -gt 0.00001) {
+            throw 'Test bus shape requires positive width and zero rotation'
+        }
+        # Visio PinX/PinY point to LocPinX/LocPinY, NOT to the
+        # geometric center. Bus 101 has LocPinX=0 (left endpoint).
+        $busStartX = $cx - $busLocX
+        $busEndX = $busStartX + $busW
+        $busCenterY = $cy - $busLocY
 
         # Provisional page-to-client transform. Check drift visually with user.
         $br = [System.Drawing.PointF]::new(
@@ -211,12 +226,12 @@ $timer.Add_Tick({
             [single](($pageT - $by) * $clientH / $pageH)
         )
         $bl = [System.Drawing.PointF]::new(
-            [single](($cx - $halfW - $pageL) * $clientW / $pageW),
-            [single](($pageT - $cy) * $clientH / $pageH)
+            [single](($busStartX - $pageL) * $clientW / $pageW),
+            [single](($pageT - $busCenterY) * $clientH / $pageH)
         )
         $brr = [System.Drawing.PointF]::new(
-            [single](($cx + $halfW - $pageL) * $clientW / $pageW),
-            [single](($pageT - $cy) * $clientH / $pageH)
+            [single](($busEndX - $pageL) * $clientW / $pageW),
+            [single](($pageT - $busCenterY) * $clientH / $pageH)
         )
         $bounds = [System.Drawing.Rectangle]::new($origin.X, $origin.Y, $clientW, $clientH)
         $script:overlay.UpdateVisual($bounds, $br, $bl, $brr)

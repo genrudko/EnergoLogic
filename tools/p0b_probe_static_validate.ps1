@@ -15,6 +15,12 @@ $match = [regex]::Match($source, '(?s)\$source\s*=\s*@''\r?\n(.*?)\r?\n''@')
 if (-not $match.Success) {
     throw 'Embedded C# source here-string was not found'
 }
+if ($source -notmatch 'CellsU\(''LocPinX''\)' -or
+    $source -notmatch 'busStartX\s*=\s*\$cx\s*-\s*\$busLocX' -or
+    $source -match 'halfW' -or
+    $match.Groups[1].Value -match 'CaptionText') {
+    throw 'P0-B bus anchor or diagnostic label regression'
+}
 Add-Type -TypeDefinition $match.Groups[1].Value -Language CSharp -ReferencedAssemblies @(
     'System.Windows.Forms.dll', 'System.Drawing.dll'
 )

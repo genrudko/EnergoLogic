@@ -1,13 +1,21 @@
 # EnergoLogic — фактическое состояние проекта
 
 **Срез:** 2026-10-07
-**Source of truth:** `genrudko/EnergoLogic@734f64a` (`main` на момент reconciliation) + live-принятый Visio V364 runtime baseline `genrudko/development-bridge@5695108`.
+**Исторический срез:** `genrudko/EnergoLogic@734f64a` (2026-10-07). **Текущий проверенный main:** `f92f89b` (2026-10-08; PR #12 merged). Runtime Visio V364 baseline — `genrudko/development-bridge@5695108`. Перечень Draft и архитектурных изменений ниже обновлён отдельно.
+
+## Актуализация архитектурного направления от 2026-10-08 (без фиктивного изменения статусов)
+
+По решению владельца продукт окончательно определён как **локальный, автономный инженерно-оперативный помощник**, а **не промышленная SCADA**. Цель — схемы в Visio, расчёты, моделирование РЗА/оперативных переключений, бланки, разбор сценариев. Новый target UX: редактирование, оперативный просмотр, моделирование, ретроспектива; provenance/quality данных, динамическая мнемосхема и event replay. Это **план**, а не реализованные функции.
+
+На момент проверки GitHub (2026-10-08): **Draft/unmerged** PR #32 `ELECTRICAL-CALCULATION-DOMAIN-001`, PR #34 `OPERATION-PERMISSION-CONTRACT-001`, PR #36 `INTEGRATED-PROTECTION-LOOP-001` (headless tested, без live Visio), **stacked Draft PR #38** `VISIO-PROTECTION-PROJECTION-LIVE-001` (MCP gateway contract, без законченного автоматического live Python→Visio теста). **Issue #39** индикация и event replay и **Issue #40** АПВ пока не implemented. Их результаты нельзя приписывать `main` до owner-controlled merge. Строки исходной статусной таблицы ниже сохраняют исторический срез 2026-10-07.
+
+Стандарт: [Product Boundary](architecture/PRODUCT-BOUNDARY-AND-WORKSPACE-MODES.md), [Operational Presentation](architecture/OPERATIONAL-STATE-AND-PRESENTATION-CONTRACT.md), [Delivery Program](architecture/LOCAL-WORKBENCH-IMPLEMENTATION-PROGRAM.md).
 
 Этот документ отвечает только на вопрос **«что реально готово сейчас»**. Целевой замысел находится в `docs/architecture/CANONICAL-PRODUCT-ARCHITECTURE.md`, а порядок дальнейшей работы — в `docs/roadmap.md`.
 
 ## Статусы
 
-- **DONE / BASELINE** — bounded scope принят и merged либо, для V364, live-принят и находится в текущем reconciliation PR.
+- **DONE / BASELINE** — bounded scope принят и merged либо, для V364, live-принят и документально reconciled в merged PR #12.
 - **PARTIAL** — foundation/контракт существует, но продуктовая возможность ещё не замкнута end-to-end.
 - **NOT IMPLEMENTED** — целевая возможность предусмотрена canonical plan, но production work item ещё не дал реализованный baseline.
 - **CONTINUOUS** — поток не имеет одной конечной точки и развивается вместе с продуктом.
@@ -16,7 +24,7 @@
 
 | Поток | Статус | Уже есть | Ещё требуется |
 |---|---|---|---|
-| WS-0 Visio Editor | **DONE implementation / PR reconciliation** | V364, QoL, topology-safe operations, native Undo/Redo architecture, Ribbon/context/panel, standalone package | merge PR #12 по команде владельца; live matrix старых Visio ведётся в WS-3 |
+| WS-0 Visio Editor | **DONE / merged PR #12** | V364, QoL, topology-safe operations, native Undo/Redo architecture, Ribbon/context/panel, standalone package | live matrix Visio 2010+ ведётся в WS-3; динамический оперативный слой — отдельный этап |
 | WS-1 Canonical Domain & Contracts | **PARTIAL** | schema 0.1, stable canonical runtime, electrical-v1, switching-state-v1, transformer_2w | `electrical-calculation-v1`, phase/neutral/earthing domain, richer equipment/parameter model, Site Profile persistence |
 | WS-2 Terminology & Normative Foundations | **PARTIAL / CONTINUOUS** | Terminology Registry v1 + provenance | расширение словаря; Normative Source Registry; executable rule provenance contract |
 | WS-3 Compatibility & Packaging | **PARTIAL / CONTINUOUS** | Visio V364 offline prebuilt AnyCPU package; dual registry views; current Visio 16.x live pass | physical Visio 2010/2013/2016/2019/2021 x86/x64 qualification; bundled solver runtime host; product-wide installer/update strategy |
@@ -50,9 +58,9 @@
 | PROTECTION-ENGINE-FOUNDATION-001 | `138f551` — 2026-10-04 |
 | BREAKER-FAILURE-FOUNDATION-001 | `734f64a` — 2026-10-04 |
 
-## Visio baseline вне `main`
+## Visio baseline / accepted into `main`
 
-`VISIO-EDITOR-QOL-001` остаётся PR #12 Draft, но runtime work завершён до V364:
+`VISIO-EDITOR-QOL-001` **merged PR #12**, runtime доведён до V364:
 
 - development-bridge commit `5695108cf9602ab93ac8223fe0f90c4e7d658209`;
 - Editor V364 / API 0.3.64;
@@ -61,7 +69,7 @@
 - prebuilt AnyCPU offline kit;
 - target-side runtime PIA dependency отсутствует.
 
-Это означает: **Visio implementation baseline готов, но его EnergoLogic documentation/evidence/PR reconciliation и owner-controlled merge являются отдельным repository state.**
+Это означает: **Visio Editor V364 baseline принят в `main` через PR #12**. Это не означает, что приняты все версии Visio либо готов оперативный presentation runtime.
 
 ## Что сейчас НЕ следует считать готовым
 
@@ -98,4 +106,4 @@ WS-6 new state/timeline
 Visio renderer/state update
 ```
 
-Закрытие этого разрыва является ближайшим общепроектным milestone после reconciliation V364.
+Headless-кандидат этого разрыва реализован в Draft PR #36, а Visio gateway-кандидат — в stacked Draft PR #38. Полное live-представление, event replay и пользовательская приёмка ещё не завершены; см. roadmap/Issue #39.

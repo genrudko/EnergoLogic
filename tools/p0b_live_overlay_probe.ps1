@@ -47,6 +47,8 @@ namespace EnergoLogicP0B
         [DllImport("user32.dll", SetLastError=true)]
         public static extern bool GetClientRect(IntPtr hwnd, out R rect);
         [DllImport("user32.dll", SetLastError=true)]
+        public static extern bool GetCursorPos(out P point);
+        [DllImport("user32.dll", SetLastError=true)]
         public static extern bool IsWindow(IntPtr hwnd);
         [DllImport("user32.dll")]
         public static extern IntPtr GetForegroundWindow();
@@ -175,26 +177,64 @@ $script:lastLog = [DateTime]::MinValue
 $script:lastError = ''
 $script:done = $false
 $script:tickCount = 0
+$script:calibrationTarget = ''
+$script:calibrationDeadline = [DateTime]::MinValue
+$script:calibrationLeft = $null
+$script:calibration = $null
+$script:calibrationStatus = 'Без калибровки — диагностическая оценка'
+$script:calibrationExpired = $false
 
 $controller = New-Object System.Windows.Forms.Form
 $controller.Text = 'EnergoLogic P0-B — проверка наложения'
 $controller.StartPosition = 'CenterScreen'
-$controller.Size = New-Object System.Drawing.Size(520, 190)
+$controller.Size = New-Object System.Drawing.Size(670, 245)
 $controller.TopMost = $true
 $controller.FormBorderStyle = 'FixedDialog'
 $controller.MaximizeBox = $false
 $controller.MinimizeBox = $false
 $lbl = New-Object System.Windows.Forms.Label
 $lbl.Location = New-Object System.Drawing.Point(14, 15)
-$lbl.Size = New-Object System.Drawing.Size(485, 90)
+$lbl.Size = New-Object System.Drawing.Size(640, 102)
 $lbl.Text = 'Подключение к Visio...'
 $controller.Controls.Add($lbl)
 $stop = New-Object System.Windows.Forms.Button
 $stop.Text = 'Завершить проверку'
-$stop.Location = New-Object System.Drawing.Point(14, 115)
-$stop.Size = New-Object System.Drawing.Size(170, 30)
+$stop.Location = New-Object System.Drawing.Point(460, 130)
+$stop.Size = New-Object System.Drawing.Size(176, 32)
 $controller.Controls.Add($stop)
 $stop.Add_Click({ $script:controller.Close() })
+$startCal = New-Object System.Windows.Forms.Button
+$startCal.Text = '1. Левый конец шины'
+$startCal.Location = New-Object System.Drawing.Point(14, 130)
+$startCal.Size = New-Object System.Drawing.Size(204, 32)
+$controller.Controls.Add($startCal)
+$startCal.Add_Click({
+    $script:calibration = $null
+    $script:calibrationLeft = $null
+    $script:calibrationExpired = $false
+    $script:calibrationTarget = 'left'
+    $script:calibrationDeadline = (Get-Date).AddSeconds(4)
+    $script:overlay.Hide()
+})
+$endCal = New-Object System.Windows.Forms.Button
+$endCal.Text = '2. Правый конец шины'
+$endCal.Location = New-Object System.Drawing.Point(238, 130)
+$endCal.Size = New-Object System.Drawing.Size(204, 32)
+$controller.Controls.Add($endCal)
+$endCal.Add_Click({
+    if ($null -eq $script:calibrationLeft) {
+        $script:calibrationStatus = 'Сначала левый конец шины'
+        return
+    }
+    $script:calibrationTarget = 'right'
+    $script:calibrationDeadline = (Get-Date).AddSeconds(4)
+    $script:overlay.Hide()
+})
+$hint = New-Object System.Windows.Forms.Label
+$hint.Location = New-Object System.Drawing.Point(14, 174)
+$hint.Size = New-Object System.Drawing.Size(630, 38)
+$hint.Text = 'Нажми кнопку, затем за 4 секунды наведи курсор ТОЧНО на конец шины и удерживай. Ничего нажимать на схеме не нужно.'
+$controller.Controls.Add($hint)
 $script:controller = $controller
 
 $timer = New-Object System.Windows.Forms.Timer
@@ -267,6 +307,80 @@ $timer.Add_Tick({
         $busEndX = $busStartX + $busW
         $busCenterY = $cy - $busLocY
 
+        # Read-only 2-anchor pointer calibration: the cursor never clicks
+        # inside the Visio document and the overlay hides during capture.
+        if ($script:calibrationTarget -ne '') {
+            $remaining = ($script:calibrationDeadline - (Get-Date)).TotalSeconds
+            if ($remaining -gt 0) {
+                $lbl.Text = 'КАЛИБРОВКА ' + $script:calibrationTarget +
+                    ': наведи курсор на конец коричневой шины; осталось ' +
+                    [math]::Ceiling($remaining) + ' с'
+                $script:overlay.Hide()
+                return
+            }
+            $cursor = New-Object EnergoLogicP0B.P
+            if (-not [EnergoLogicP0B.Native]::GetCursorPos([ref]$cursor)) {
+                throw 'GetCursorPos failed'
+            }
+            $inCanvas = $cursor.X -ge $origin.X -and $cursor.X -le ($origin.X + $clientW) -and
+                $cursor.Y -ge $origin.Y -and $cursor.Y -le ($origin.Y + $clientH)
+            if (-not $inCanvas) {
+                $script:calibrationTarget = ''
+                $script:calibrationStatus = 'Не удалось: курсор вне окна рисования Visio. Повтори.'
+                $script:overlay.Hide()
+                return
+            }
+            $point = [pscustomobject]@{
+                x=[double]$cursor.X; y=[double]$cursor.Y
+                page_l=$pageL; page_t=$pageT; page_w=$pageW; page_h=$pageH
+                host_w=$clientW; host_h=$clientH; handle=[long]$handle.ToInt64()
+                origin_x=$origin.X; origin_y=$origin.Y
+                bus_start=$busStartX; bus_y=$busCenterY; bus_w=$busW
+            }
+            if ($script:calibrationTarget -eq 'left') {
+                $script:calibrationLeft = $point
+                $script:calibrationStatus = 'Левый конец запомнен. Теперь нажми кнопку 2.'
+            } else {
+                $left = $script:calibrationLeft
+                if ($left.handle -ne $point.handle -or
+                    $left.host_w -ne $point.host_w -or $left.host_h -ne $point.host_h -or
+                    $left.origin_x -ne $point.origin_x -or $left.origin_y -ne $point.origin_y -or
+                    [math]::Abs($left.page_l - $point.page_l) -gt 0.00001 -or
+                    [math]::Abs($left.page_t - $point.page_t) -gt 0.00001 -or
+                    [math]::Abs($left.page_w - $point.page_w) -gt 0.00001 -or
+                    [math]::Abs($left.page_h - $point.page_h) -gt 0.00001) {
+                    $script:calibrationLeft = $null
+                    $script:calibrationStatus = 'Вид Visio изменился: начни калибровку заново.'
+                } else {
+                    $scaleCal = ($point.x - $left.x) / $busW
+                    $uniformGuess = $clientW / $pageW
+                    if ($scaleCal -le 0 -or
+                        $scaleCal -lt ($uniformGuess * 0.6) -or
+                        $scaleCal -gt ($uniformGuess * 1.5) -or
+                        [math]::Abs($left.y - $point.y) -gt 14) {
+                        $script:calibrationLeft = $null
+                        $script:calibrationStatus = 'Точки неточны или порядок неверный. Повтори.'
+                    } else {
+                        $script:calibration = [pscustomobject]@{
+                            handle=$left.handle; host_w=$left.host_w
+                            host_h=$left.host_h; page_w=$left.page_w
+                            scale=$scaleCal
+                            offset_x=($left.x - $origin.X -
+                                      ($busStartX - $pageL) * $scaleCal)
+                            offset_y=((($left.y + $point.y) / 2.0) - $origin.Y -
+                                      ($pageT - $busCenterY) * $scaleCal)
+                        }
+                        $script:calibrationStatus = 'Калибровка по концам шины принята.'
+                        $script:calibrationExpired = $false
+                    }
+                }
+            }
+            $script:calibrationTarget = ''
+            [System.Media.SystemSounds]::Asterisk.Play()
+            $script:overlay.Hide()
+            return
+        }
+
         # GetViewRect spans a page-space drawing region, whereas the
         # WindowHandle32 client includes Visio chrome. The user's actual
         # telemetry showed 25.72 px excess client height at both zooms:
@@ -313,6 +427,30 @@ $timer.Add_Tick({
         # Scale in X is the only source of physical page-to-pixel scale.
         # This avoids the prior 2.932% artificial vertical stretching.
         $screenScale = $drawW / $pageW
+        if ($null -ne $script:calibration) {
+            $cal = $script:calibration
+            if ($cal.handle -ne [long]$handle.ToInt64() -or
+                $cal.host_w -ne $clientW -or $cal.host_h -ne $clientH) {
+                $script:calibration = $null
+                $script:calibrationStatus = 'Размер/окно Visio изменились. Требуется новая калибровка.'
+                $script:calibrationExpired = $true
+                $script:overlay.Hide()
+                return
+            }
+            # Calibrated scale changes with GetViewRect width at the same
+            # window size; pan is accounted for by pageL/pageT below.
+            $screenScale = $cal.scale * $cal.page_w / $pageW
+            $drawW = $screenScale * $pageW
+            $drawH = $screenScale * $pageH
+            $drawL = [double]$origin.X + $cal.offset_x
+            $drawT = [double]$origin.Y + $cal.offset_y
+            $viewportSource = 'two-cursor-points-calibrated'
+        }
+        if ($script:calibrationExpired -and $null -eq $script:calibration) {
+            $script:overlay.Hide()
+            $lbl.Text = $script:calibrationStatus
+            return
+        }
         $actualH = $drawW / $viewAspect
         if ([math]::Abs($actualH - $drawH) -gt 0.001) {
             $drawT += ($drawH - $actualH) / 2.0
@@ -330,8 +468,8 @@ $timer.Add_Tick({
         $script:overlay.UpdateVisual($bounds, $br, $bl, $brr)
         $script:tickCount++
         $lbl.Text = "ТЕСТОВЫЙ СЛОЙ — только геометрия, не напряжение`r`n" +
-                    "В-1-35 (ID=$BreakerId) + шина (ID=$BusId), 400 мс`r`n" +
-                    "Прокрути схему и измени масштаб; проверь совпадение меток."
+                    "В-1-35 (ID=$BreakerId), шина (ID=$BusId). Привязка: $viewportSource`r`n" +
+                    $script:calibrationStatus
 
         if (((Get-Date) - $script:lastLog).TotalSeconds -ge 1.0) {
             $dpi = 'unsupported'
@@ -344,6 +482,7 @@ $timer.Add_Tick({
                 client_screen = @($origin.X, $origin.Y, $clientW, $clientH)
                 dpi = $dpi
                 viewport_source = $viewportSource
+                calibration_status = $script:calibrationStatus
                 drawing_screen = @($bounds.X, $bounds.Y, $bounds.Width, $bounds.Height)
                 host_aspect_error = $hostAspectError
                 excluded_client_height = [math]::Round($clientH - ($clientW / $viewAspect), 3)

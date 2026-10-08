@@ -114,6 +114,98 @@ def estimate_centered_client_region(
 
 
 @dataclass(frozen=True, slots=True)
+class CursorCalibratedRegion:
+    """User-confirmed two-point ruler-free calibration, client-local in px.
+
+    Fitting two known endpoints of one horizontal bus determines one
+    isotropic page-to-pixel scale and both viewport origin offsets.
+    Reuse at another zoom is provisional unless the window size is unchanged.
+    """
+
+    document_ref: str
+    page_ref: str
+    window_ref: str
+    sample_width_page: float
+    sample_client_width_px: float
+    sample_client_height_px: float
+    sample_scale_px_per_page_unit: float
+    offset_x_px: float
+    offset_y_px: float
+
+
+def calibrate_horizontal_bus(
+    viewport: VisioDrawingViewport,
+    *,
+    bus_start_page: float,
+    bus_y_page: float,
+    bus_width_page: float,
+    pointer_left: ClientPoint,
+    pointer_right: ClientPoint,
+) -> CursorCalibratedRegion:
+    """Compute exact affine origin/scale from two explicitly selected points.
+
+    Both cursor positions are in the same host-client coordinates and must
+    be sampled at one unchanged view; this is validated by the Windows
+    controller (document/window/view/focus at each cursor sample).
+    """
+    if not isinstance(viewport, VisioDrawingViewport):
+        raise VisioViewportError("invalid calibration viewport")
+    bus_start = _number(bus_start_page)
+    bus_y = _number(bus_y_page)
+    bus_width = _number(bus_width_page, positive=True)
+    if not isinstance(pointer_left, ClientPoint) or not isinstance(pointer_right, ClientPoint):
+        raise VisioViewportError("calibration requires two pointer samples")
+    for v in (pointer_left.x_px, pointer_left.y_px, pointer_right.x_px, pointer_right.y_px):
+        _number(v)
+    if abs(pointer_right.y_px - pointer_left.y_px) > 14:
+        raise VisioViewportError("bus endpoints are not horizontal")
+    scale = (pointer_right.x_px - pointer_left.x_px) / bus_width
+    original_scale = viewport.client_width_px / viewport.width_page
+    if not 0.6 * original_scale <= scale <= 1.5 * original_scale:
+        raise VisioViewportError("cursor calibration scale is implausible")
+    return CursorCalibratedRegion(
+        document_ref=viewport.document_ref,
+        page_ref=viewport.page_ref,
+        window_ref=viewport.window_ref,
+        sample_width_page=viewport.width_page,
+        sample_client_width_px=viewport.client_width_px,
+        sample_client_height_px=viewport.client_height_px,
+        sample_scale_px_per_page_unit=scale,
+        offset_x_px=pointer_left.x_px - (bus_start - viewport.left_page) * scale,
+        offset_y_px=(pointer_left.y_px + pointer_right.y_px) / 2
+        - (viewport.top_page - bus_y) * scale,
+    )
+
+
+def project_calibrated_point(
+    viewport: VisioDrawingViewport,
+    calibration: CursorCalibratedRegion,
+    anchor: VisioPageAnchor,
+) -> ClientPoint:
+    """Calibrated projection across pan/zoom, never across window resize."""
+    if not isinstance(viewport, VisioDrawingViewport) or not isinstance(calibration, CursorCalibratedRegion):
+        raise VisioViewportError("invalid calibration input")
+    if (
+        (viewport.document_ref, viewport.page_ref, viewport.window_ref)
+        != (calibration.document_ref, calibration.page_ref, calibration.window_ref)
+        or viewport.client_width_px != calibration.sample_client_width_px
+        or viewport.client_height_px != calibration.sample_client_height_px
+    ):
+        raise VisioViewportError("calibration no longer applies to host window")
+    if not isinstance(anchor, VisioPageAnchor) or (
+        anchor.document_ref != viewport.document_ref or anchor.page_ref != viewport.page_ref
+        or anchor.window_ref != viewport.window_ref or anchor.generation != viewport.generation
+        or anchor.page_unit != viewport.page_unit
+    ):
+        raise VisioViewportError("stale calibration anchor")
+    k = calibration.sample_scale_px_per_page_unit * calibration.sample_width_page / viewport.width_page
+    return ClientPoint(
+        calibration.offset_x_px + (_number(anchor.x_page) - viewport.left_page) * k,
+        calibration.offset_y_px + (viewport.top_page - _number(anchor.y_page)) * k,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class VisioPageAnchor:
     document_ref: str
     page_ref: str

@@ -12,6 +12,8 @@ from energologic.frontends.visio.viewport_spike import (
     ClientPoint,
     VisioDrawingViewport,
     estimate_centered_client_region,
+    calibrate_horizontal_bus,
+    project_calibrated_point,
     VisioPageAnchor,
     VisioViewportError,
     project_point,
@@ -127,6 +129,68 @@ class VisioViewportSpikeTests(unittest.TestCase):
                     estimate.height_px / height,
                     places=8,
                 )
+
+    def test_two_manual_bus_anchors_calibrate_scale_and_both_offsets(self):
+        view = replace(
+            self.view, left_page=0.64, top_page=11.925,
+            width_page=14.888106609805071, height_page=8.878989119417497,
+            client_width_px=1471, client_height_px=903,
+        )
+        bus_left = 65.0 / 25.4
+        bus_width = 290.0 / 25.4
+        bus_y = 255.0 / 25.4
+        k = 98.8
+        offset_x, offset_y = 15.0, 2.5
+        left_px = offset_x + (bus_left - view.left_page) * k
+        right_px = left_px + bus_width * k
+        y_px = offset_y + (view.top_page - bus_y) * k
+        fitted = calibrate_horizontal_bus(
+            view, bus_start_page=bus_left, bus_y_page=bus_y,
+            bus_width_page=bus_width,
+            pointer_left=ClientPoint(left_px, y_px),
+            pointer_right=ClientPoint(right_px, y_px),
+        )
+        def point(x, y, vp=view):
+            return VisioPageAnchor(
+                vp.document_ref, vp.page_ref, vp.window_ref,
+                vp.generation, x, y,
+            )
+        self.assertAlmostEqual(fitted.offset_x_px, offset_x)
+        self.assertAlmostEqual(fitted.offset_y_px, offset_y)
+        p = project_calibrated_point(view, fitted, point(bus_left, bus_y))
+        self.assertAlmostEqual(p.x_px, left_px)
+        self.assertAlmostEqual(p.y_px, y_px)
+        scrolled = replace(view, left_page=0.74, top_page=12.225, generation=8)
+        p = project_calibrated_point(scrolled, fitted, point(bus_left, bus_y, scrolled))
+        self.assertAlmostEqual(p.x_px, left_px - 0.10 * k, places=5)
+        self.assertAlmostEqual(p.y_px, y_px + 0.30 * k, places=5)
+        zoomed = replace(view, width_page=view.width_page / 1.2, generation=9)
+        p = project_calibrated_point(zoomed, fitted, point(bus_left, bus_y, zoomed))
+        self.assertAlmostEqual(p.x_px, offset_x + (bus_left - view.left_page) * k * 1.2, places=5)
+
+    def test_two_point_calibration_fails_closed_on_unqualified_sample(self):
+        params = dict(
+            bus_start_page=2.5, bus_y_page=6, bus_width_page=2,
+            pointer_left=ClientPoint(250, 300),
+            pointer_right=ClientPoint(450, 300),
+        )
+        cal = calibrate_horizontal_bus(self.view, **params)
+        invalid = [
+            dict(pointer_left=ClientPoint(450, 300), pointer_right=ClientPoint(250, 300)),
+            dict(pointer_right=ClientPoint(450, 330)),
+            dict(bus_width_page=0),
+            dict(pointer_right=ClientPoint(nan, 300)),
+        ]
+        for change in invalid:
+            with self.subTest(change=change), self.assertRaises(VisioViewportError):
+                calibrate_horizontal_bus(self.view, **dict(params, **change))
+        with self.assertRaises(VisioViewportError):
+            project_calibrated_point(replace(self.view, client_width_px=1500), cal, self.anchor(5, 6))
+        with self.assertRaises(VisioViewportError):
+            project_calibrated_point(
+                replace(self.view, generation=9), cal,
+                self.anchor(5, 6),
+            )
 
     def test_centered_fit_rejects_impossible_client_aspect(self):
         too_short = replace(

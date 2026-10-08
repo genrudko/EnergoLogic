@@ -67,6 +67,17 @@ Microsoft explicitly documents that `GetViewRect` is affected by rulers/page tab
 
 **Gate remains OPEN:** alignment requires a new interactive screenshot and journal confirming exact native child-viewport or testing an estimated fallback. Fewer render artifacts/CI successes do not substitute for native Visio acceptance.
 
+## Third live screenshot and viewport-source log (owner, 2026-10-08 14:19 local)
+
+The attached third screenshot shows near alignment but slight horizontal overshoot of the magenta conductor and breaker marker offset. The owner's accompanying **7-record** JSONL establishes unambiguously:
+- `viewport_source="centered-aspect-estimate"` for every record; `candidate_count=0`, `child_rects=[]`. **No native child canvas window was discovered**; prior assumption of an exact DOM/canvas window cannot be accepted.
+- The view is stable at `[0.6423539386,11.9249900542,14.8881066098,8.8789891194]`, host client `1471×903`, fallback drawing rect `[489,1632,1471,877]`, scale `98.80369872` in both axes. `excluded_client_height=25.723`; the equal-split guess causes ~12.86 px unknown origin offset.
+- The screenshot is not a rigorous screen-pixel origin measurement, because cropping, scaling, virtual-desktop monitor origin and capture instant are not demonstrated to match the JSONL coordinates.
+
+**Decision:** do not add hardcoded horizontal/vertical corrections and do not claim live acceptance. Extend the isolated Windows probe with optional, read-only **two-pointer calibration**. The user clicks controller button 1 and hovers over the existing bus's left endpoint for a four-second countdown; repeats for button 2/right endpoint, without clicking or changing the Visio drawing. `GetCursorPos` captures both points in screen pixels. The known Visio endpoints (`PinX-LocPinX`, `+Width`, same Y) determine an isotropic pixel/page-unit scale and X/Y offsets. Calibration rejects wrong order, excessive vertical separation, nonfinite/implausible scale, changed page/view/window during capture, and invalidates if host window dimensions change. Subsequent pan/zoom reuses the qualified reference scale/view-width ratio only on the same window size; actual live zoom/pan behavior must still be confirmed. JSONL now records `viewport_source="two-cursor-points-calibrated"` and `calibration_status` when successfully calibrated.
+
+Added independent Python calibration contract+negative tests. Added Windows static parser/embedded C# gate for hover input and calibration expiration. This remains a **user-assisted temporary geometry proof**, not permanent calibration architecture.
+
 ## Explicit NOT YET PROVEN
 
 - Whether the geometry formula matches desktop Visio16.x exactly once page tabs, rulers, DPI scaling, display scaling and owner-relative window rectangles are considered.

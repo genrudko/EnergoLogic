@@ -1,4 +1,4 @@
-# CI-only validation: parse the P0-B PowerShell script and compile embedded
+﻿# CI-only validation: parse the P0-B PowerShell script and compile embedded
 # C# using Windows PowerShell/.NET Framework. Does NOT connect to Visio.
 param([string]$ProbePath = (Join-Path $PSScriptRoot 'p0b_live_overlay_probe.ps1'))
 $ErrorActionPreference = 'Stop'
@@ -18,7 +18,10 @@ if (-not $match.Success) {
 if ($source -notmatch 'CellsU\(''LocPinX''\)' -or
     $source -notmatch 'busStartX\s*=\s*\$cx\s*-\s*\$busLocX' -or
     $source -match 'halfW' -or
-    $match.Groups[1].Value -match 'CaptionText') {
+    $match.Groups[1].Value -match 'CaptionText' -or
+    $source -notmatch 'GetCursorPos' -or
+    $source -notmatch 'two-cursor-points-calibrated' -or
+    $source -notmatch 'calibrationExpired') {
     throw 'P0-B bus anchor or diagnostic label regression'
 }
 Add-Type -TypeDefinition $match.Groups[1].Value -Language CSharp -ReferencedAssemblies @(

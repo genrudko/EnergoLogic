@@ -49,6 +49,10 @@ A screen overlay cannot independently derive `scaleX = clientWidth/viewWidth` an
 
 The new desktop probe first surveys native child HWND geometry (read-only) for an unambiguous canvas-like child; otherwise it exposes a clearly labelled **estimated** equal-split inset, not an accepted production transform. All overlay coordinates use the **same page-unit→pixel scale**, and the journal includes the actual drawing-screen candidate, source, insets and child rectangles. The production choice must require measured canvas origin, not a hard-coded ruler/tab offset or a guessed 50/50 distribution.
 
+### Escalation when child HWND collection is empty
+
+The 2026-10-08 14:19 desktop JSONL records **no eligible child HWNDs**, and the only available geometry source is `centered-aspect-estimate`. Production-quality overlays must not assume this estimate is pixel-correct. For a bounded read-only diagnostic, the user may calibrate **two known endpoints on one horizontal Visio bus using cursor hover**, while our program obtains screen coordinates with `GetCursorPos` and keeps the Visio drawing untouched. Two anchors recover one scale and both pixel offsets. Calibration is scoped to the same document/page/window and drawing-window dimensions, rejects changed view between anchor captures, and expires on resize; zoom/pan are evaluated as a *hypothesis* during live tests, not production-accepted behavior. A future permanent renderer must have a robust coordinate source or independently qualified per-window calibration and user-visible validity indicator.
+
 ## Next strictly bounded Windows live experiment
 
 1. Use the **separate** `EnergoLogic_Protection_Live_Test_20261008.vsdm`, never the single-page working CLEAN file; verify document/page identity and unchanged original file.

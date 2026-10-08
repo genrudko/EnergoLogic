@@ -1,4 +1,4 @@
-# EnergoLogic P0-B - standalone TEST overlay for an already-open desktop Visio.
+﻿# EnergoLogic P0-B - standalone TEST overlay for an already-open desktop Visio.
 # Usage (Windows PowerShell 5.1, same user/integrity as Visio):
 # powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File .\p0b_live_overlay_probe.ps1
 # Experimental ONLY. Never saves, edits, or closes a Visio document.

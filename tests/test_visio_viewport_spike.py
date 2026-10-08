@@ -3,6 +3,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 from math import inf, nan
+import os
+from pathlib import Path
+import subprocess
 import unittest
 
 from energologic.frontends.visio.viewport_spike import (
@@ -122,6 +125,23 @@ class VisioViewportSpikeTests(unittest.TestCase):
         for p in [self.anchor(nan, 6), self.anchor(6, inf), self.anchor("6", 6)]:
             with self.subTest(point=p), self.assertRaises(VisioViewportError):
                 project_point(self.view, p)
+
+    @unittest.skipUnless(os.name == "nt", "requires Windows PowerShell/.NET Framework")
+    def test_native_probe_powershell_parses_and_embedded_csharp_compiles(self):
+        validator = Path(__file__).resolve().parents[1] / "tools" / "p0b_probe_static_validate.ps1"
+        completed = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-STA", "-ExecutionPolicy",
+             "Bypass", "-File", str(validator)],
+            capture_output=True,
+            text=True,
+            timeout=45,
+            check=False,
+        )
+        self.assertEqual(
+            completed.returncode, 0,
+            f"PowerShell/C# probe validation failed:\n{completed.stdout}\n{completed.stderr}",
+        )
+        self.assertIn("P0B_EMBEDDED_CSHARP_COMPILE_PASS", completed.stdout)
 
 
 if __name__ == "__main__":

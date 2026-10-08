@@ -22,6 +22,19 @@ Production Master visio-bridge node `visio-workstation`:
 - `tests/test_visio_viewport_spike.py`: **14 unit tests PASS** on VPS, covering orientation assumption, pixel bounds, segment clipping, offscreen, zoom, scrolling with revision bump, stale/wrong doc/page/window, invalid dimensions/units, NaN/Inf and bool.
 - Full existing+new test suite: **352 tests, 9 skipped, 0 failures**; compileall PASS. This is **headless**, not a Visio live overlay test.
 
+## User-run isolated Windows overlay canary (2026-10-08 extension)
+
+The current production Visio Bridge has **no allowed read-only tool for GetViewRect/GetWindowRect or native HWND geometry**, while Desktop Commander shows **no online Windows desktop device**. We therefore cannot directly execute local WinForms graphics from the cloud through an authorized connector; we did **not** attempt to use blocked managed-extension update operations.
+
+A standalone local diagnostic prototype is supplied in `tools/p0b_live_overlay_probe.ps1`:
+
+- Windows PowerShell 5.1 / STA; connects to existing `Visio.Application` via COM ROT, never starts or saves a Visio document.
+- Restricts itself to *exact* user-saved test document name `EnergoLogic_Protection_Live_Test_20261008.vsdm`, page `MCP-v2`, breaker shape 66 and bus shape 101. If another page/window/document is selected, overlay hides.
+- Reads `GetViewRect`, `GetWindowRect`, `WindowHandle32`, Win32 `GetClientRect`/`ClientToScreen` and optional window DPI, projects just a **magenta bus segment + cyan breaker marker**, with clearly labeled **TEST ONLY / NOT TELEMETRY**. Existing Visio symbols and colors remain unchanged. Hides if another application is foreground.
+- Renders in a borderless click-through/no-activate transient WinForms overlay and supplies a separate Stop controller; closes/removes overlay when the controller exits; writes bounded read-only geometry samples to local `%TEMP%` JSONL.
+- `tools/p0b_probe_static_validate.ps1` checks PowerShell syntax and compiles the embedded C# **without starting Visio**. A Windows-only unittest exercises this validator in GitHub Windows CI. This is a static compilation gate, **not live visual/zoom/scroll acceptance**.
+- **No change** to existing development-bridge V364 add-in or the user's saved documents. User must run the probe in their interactive Windows session; it is not yet installed or exercised there.
+
 ## Explicit NOT YET PROVEN
 
 - Whether the geometry formula matches desktop Visio16.x exactly once page tabs, rulers, DPI scaling, display scaling and owner-relative window rectangles are considered.

@@ -10,6 +10,8 @@ Russian-facing terms: **трёхфазное короткое замыкание
 
 ### Gate A: source + topology
 
+The accepted WS-8 synthetic network includes `line`, `load` and `external_grid`, which are outside the original strict `electrical-v1` topology. The integration explicitly selects the new additive `ELECTRICAL_OPERATIONAL_SOLVER_V1` profile described in [Electrical Operational Solver v1](ELECTRICAL-OPERATIONAL-SOLVER-V1-CONTRACT.md). It validates direct bus voltage for those elements and makes `line.from↔to` conductive in WS-6, while keeping `load` passive. The accepted strict base profile is preserved and remains the default for all other callers.
+
 Callers supply `CanonicalModel`, a `SolverStudyInput` whose embedded canonical model has the **same fingerprint**, and nonempty explicit `SourceRef` set. WS-6 initial operational simulation must succeed; fault target must be a canonical `bus`. A circuit breaker for the one supported trip action must be present and initially **closed**.
 
 ### Gate D: three-phase short circuit

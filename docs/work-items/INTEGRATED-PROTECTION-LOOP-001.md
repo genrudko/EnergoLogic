@@ -10,6 +10,7 @@ Build a real headless integration between existing Gate-D short-circuit output, 
 
 - `src/energologic/integration/protection_loop.py` composition layer, `run_integrated_protection_loop`, explicit `BranchCurrentBinding`.
 - Validate study fingerprint, fault kind, branch measurement semantics/units, action/target, protection program scope and unique Visio binding.
+- Add separate opt-in `electrical-operational-solver-v1` profile so the previously incompatible WS-8 `line/load/external_grid` model is valid in WS-6 without mutating or silently widening strict `ELECTRICAL_V1`; line conductivity and direct connected-bus voltage checks have deterministic regressions.
 - Operate only a breaker whose protection trip output passed the engine, with the existing WS-6 switching API.
 - Return an ordered trace and dry-run `VisioStateUpdate` only after actual simulated topology recalculation.
 - Synthetic adversarial tests and an optional pinned pandapower real-solver integration test; architecture and evidence.

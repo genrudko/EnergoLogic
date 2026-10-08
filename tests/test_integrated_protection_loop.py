@@ -197,6 +197,11 @@ class IntegratedProtectionLoopTests(unittest.TestCase):
         self.assertEqual(self.run_loop(sources=()).code, "missing_explicit_sources")
         self.assertEqual(self.solver.calls, 0)
 
+    def test_bus_cannot_be_claimed_as_source(self):
+        r = self.run_loop(sources=(SourceRef("bus:b", "node"),))
+        self.assertEqual(r.code, "unqualified_source_kind")
+        self.assertEqual(self.solver.calls, 0)
+
     def test_residual_current_cannot_be_fed_from_three_phase_branch(self):
         altered_spec = replace(self.program.measurement_specs[0], semantic_key="residual_current")
         specs = tuple(

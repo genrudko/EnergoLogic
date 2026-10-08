@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from energologic.core.model import CanonicalModel, Element
 from energologic.core.validation import ValidationIssue
 
-from .electrical import validate_electrical_model
+from .electrical import ELECTRICAL_V1, ElectricalProfile, validate_electrical_model
 
 
 SWITCHING_STATE_V1_NAME = "switching-state-v1"
@@ -110,10 +110,14 @@ def switch_allows_primary_conduction(element: Element) -> bool:
 
 def validate_switching_state_model(
     model: CanonicalModel,
+    *,
+    electrical_profile: ElectricalProfile = ELECTRICAL_V1,
 ) -> tuple[ValidationIssue, ...]:
     """Validate switching-state-v1 on top of electrical-v1."""
 
-    issues: list[ValidationIssue] = list(validate_electrical_model(model))
+    issues: list[ValidationIssue] = list(
+        validate_electrical_model(model, profile=electrical_profile)
+    )
     switching_keys = {
         "switch_state",
         "mounting_type",

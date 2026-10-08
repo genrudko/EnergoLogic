@@ -5,7 +5,9 @@
 ## Headless qualification observed
 
 - Initial 16 targeted tests: PASS after correctly selecting the used phase-current measurement specification from the compiled program.
-- After added negative tests (fault-node evidence, residual/phase distinction, explicit sources), local full suite: `PYTHONPATH=src python3 -m unittest discover -s tests -q` — **301 tests, 8 skipped, zero failures**.
+- After added negative tests (fault-node evidence, residual/phase distinction, explicit sources), local full suite initially: **301 tests, 8 skipped, zero failures**.
+- First GitHub CI [run #37745073884](https://github.com/genrudko/EnergoLogic/actions/runs/37745073884) exposed **solver-job failure** (Ubuntu and Windows) while base tests passed. A deterministic preflight reproduction found that strict `electrical-v1` rejected the solver fixture `line/load/external_grid` kinds.
+- Corrective opt-in profile `electrical-operational-solver-v1` added with direct qualified bus-voltage resolution, explicit line conduction, passive loads and default profile preservation; six new cross-domain tests and source-classification adversarial test added. Full VPS suite re-run: **308 tests, 8 skipped, zero failures**. Solver-extra CI remains pending this corrective commit and must be observed before acceptance.
 - `python3 -m compileall -q src/energologic/integration ...` — PASS after adjusting new-directory ownership to normal project user.
 - `git diff --check` — PASS.
 - Real `PandapowerAdapter` 3φ→overcurrent→breaker scenario test is included and intended to run in pinned solver jobs; it skips where solver-extra is not installed. Record actual CI results, not assumptions.

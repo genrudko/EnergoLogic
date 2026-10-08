@@ -12,7 +12,7 @@ from math import isfinite
 from typing import Iterable, Protocol
 
 from energologic.core import CanonicalModel, fingerprint
-from energologic.domain import read_switching_state
+from energologic.domain import ELECTRICAL_OPERATIONAL_SOLVER_V1, read_switching_state
 from energologic.frontends.visio.contracts import VisioShapeBinding
 from energologic.operational import (
     OperationValidator,
@@ -127,9 +127,18 @@ def _preflight(
     logical_times = _time_pair(times)
     if not sources:
         raise _GateError("missing_explicit_sources")
+    elements_by_id = {element.id: element for element in model.elements}
+    if any(
+        source.element_id not in elements_by_id
+        or elements_by_id[source.element_id].kind not in {"external_grid", "external_link"}
+        for source in sources
+    ):
+        raise _GateError("unqualified_source_kind")
     if not isinstance(study, SolverStudyInput) or fingerprint(study.model) != fingerprint(model):
         raise _GateError("study_model_mismatch")
-    operational = simulate_operational_state(model, sources)
+    operational = simulate_operational_state(
+        model, sources, electrical_profile=ELECTRICAL_OPERATIONAL_SOLVER_V1,
+    )
     if operational.status is not OperationalStatus.SUCCESS:
         raise _GateError("invalid_operational_initial_state")
     if request.fault_type is not FaultType.THREE_PHASE or not request.branch_results:
@@ -306,6 +315,7 @@ def run_integrated_protection_loop(
     try:
         switched = execute_switching_operation(
             model, source_refs, operation, validators=tuple(validators),
+            electrical_profile=ELECTRICAL_OPERATIONAL_SOLVER_V1,
         )
     except Exception:
         return denied("switching_adapter_failed", solver_result=sc_result, steps=(first, second), trace=trace)

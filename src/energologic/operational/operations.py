@@ -6,6 +6,8 @@ from typing import Callable, Iterable, TypeAlias
 
 from energologic.core import CanonicalModel, Element, fingerprint
 from energologic.domain import (
+    ELECTRICAL_V1,
+    ElectricalProfile,
     SWITCHING_KINDS,
     SWITCH_STATES,
     WITHDRAWABLE_POSITIONS,
@@ -386,6 +388,7 @@ def execute_switching_operation(
     operation: SwitchingOperation,
     *,
     validators: Iterable[OperationValidator] = (),
+    electrical_profile: ElectricalProfile = ELECTRICAL_V1,
 ) -> SwitchingOperationResult:
     """Apply one deterministic commutation operation.
 
@@ -393,7 +396,9 @@ def execute_switching_operation(
     site-specific, normative or equipment-blocking rules in this work item.
     """
 
-    before = simulate_operational_state(model, sources)
+    before = simulate_operational_state(
+        model, sources, electrical_profile=electrical_profile,
+    )
     if before.status is not OperationalStatus.SUCCESS:
         status = (
             SwitchingOperationStatus.INVALID_SOURCE
@@ -449,7 +454,9 @@ def execute_switching_operation(
         element,
         operation,
     )
-    after = simulate_operational_state(changed_model, sources)
+    after = simulate_operational_state(
+        changed_model, sources, electrical_profile=electrical_profile,
+    )
     if after.status is not OperationalStatus.SUCCESS:
         return SwitchingOperationResult(
             status=SwitchingOperationStatus.INVALID_MODEL,

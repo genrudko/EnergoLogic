@@ -37,3 +37,7 @@ __all__ = [
     "SolverStudyInput",
     "Transformer2WParameters",
 ]
+
+from .materialization import MaterializedStudy, materialize_study
+
+__all__.extend(["MaterializedStudy", "materialize_study"])

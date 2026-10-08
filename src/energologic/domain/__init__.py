@@ -1,6 +1,8 @@
 from .electrical import (
     ELECTRICAL_V1,
     ELECTRICAL_V1_NAME,
+    ELECTRICAL_OPERATIONAL_SOLVER_V1,
+    ELECTRICAL_OPERATIONAL_SOLVER_V1_NAME,
     TRANSFORMER_2W_KIND,
     TRANSFORMER_WINDING_CONNECTIONS,
     VOLTAGE_CLASS_BELOW_3000_V,
@@ -28,6 +30,8 @@ from .switching import (
 __all__ = [
     "ELECTRICAL_V1",
     "ELECTRICAL_V1_NAME",
+    "ELECTRICAL_OPERATIONAL_SOLVER_V1",
+    "ELECTRICAL_OPERATIONAL_SOLVER_V1_NAME",
     "MOUNTING_TYPES",
     "SWITCHING_KINDS",
     "SWITCHING_STATE_V1_NAME",
@@ -49,3 +53,17 @@ __all__ = [
     "voltage_spec_for_terminal",
     "voltage_specs_compatible",
 ]
+
+from .calculation import (
+    PROFILE_VERSION, CalculationDecodeError, CalculationValidationError,
+    ElectricalCalculationProfile, EquipmentCalculation, ParameterFact, SourceLocator,
+    decode_calculation_profile, load_calculation_profile, calculation_profile_to_data,
+    validate_calculation,
+)
+
+__all__.extend([
+    "PROFILE_VERSION", "CalculationDecodeError", "CalculationValidationError",
+    "ElectricalCalculationProfile", "EquipmentCalculation", "ParameterFact",
+    "SourceLocator", "decode_calculation_profile", "load_calculation_profile",
+    "calculation_profile_to_data", "validate_calculation",
+])

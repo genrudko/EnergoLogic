@@ -26,7 +26,7 @@ A provenance reference is a source locator, **not independent evidence of instru
 
 ### Protection runtime
 
-A compiled, selected `ProtectionProgram` must carry `full_configuration` and `approved` or `implemented` lifecycle, with **exactly one active selected stage and one equipment trip action**. Its origin remains governed by the upstream settings model; the synthetic fixture is not an approved real site setting card. Two explicit monotonic logical timestamps are evaluated with the same qualified fault current. The engine controls pickup, delay and operate; it may return **NO_TRIP** if threshold/delay are not met.
+A compiled, selected `ProtectionProgram` must carry `full_configuration` and `approved` or `implemented` lifecycle, with **exactly one active selected stage and one equipment trip action**. Its origin remains governed by the upstream settings model; the synthetic fixture is not an approved real site setting card. Two **caller-supplied** explicit monotonic logical timestamps are required (no hard-coded default delay); both are evaluated with the same qualified fault current. The engine controls pickup, delay and operate; it may return **NO_TRIP** if threshold/delay are not met.
 
 ### Trip request != breaker opened
 

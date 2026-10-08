@@ -141,7 +141,11 @@ def _preflight(
     )
     if operational.status is not OperationalStatus.SUCCESS:
         raise _GateError("invalid_operational_initial_state")
-    if request.fault_type is not FaultType.THREE_PHASE or not request.branch_results:
+    if (
+        request.fault_type is not FaultType.THREE_PHASE
+        or not request.branch_results
+        or request.case not in {"max", "min"}
+    ):
         raise _GateError("unsupported_fault_study")
     if not any(e.id == request.canonical_bus_id and e.kind == "bus" for e in model.elements):
         raise _GateError("invalid_fault_bus")
@@ -234,7 +238,7 @@ def run_integrated_protection_loop(
     binding: BranchCurrentBinding,
     visio_bindings: Iterable[VisioShapeBinding],
     *,
-    logical_times_s: tuple[str, str] = ("0", "0.8"),
+    logical_times_s: tuple[str, str],
     validators: Iterable[OperationValidator] = (),
 ) -> IntegratedLoopResult:
     """Run a bounded *simulation*, with no physical breaker or Visio side effects.

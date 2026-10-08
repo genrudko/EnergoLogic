@@ -84,7 +84,8 @@ class IntegratedProtectionLoopTests(unittest.TestCase):
     def run_loop(self, **overrides):
         values = dict(model=self.model, study=self.study, sources=SOURCE,
                       solver=self.solver, request=FAULT, program=self.program,
-                      binding=self.binding, visio_bindings=self.shape)
+                      binding=self.binding, visio_bindings=self.shape,
+                      logical_times_s=("0","0.8"))
         values.update(overrides)
         return run_integrated_protection_loop(**values)
 
@@ -223,6 +224,11 @@ class IntegratedProtectionLoopTests(unittest.TestCase):
         r=self.run_loop(request=replace(FAULT, fault_type=FaultType.PHASE_TO_PHASE))
         self.assertEqual(r.code, "unsupported_fault_study")
         self.assertEqual(self.solver.calls,0)
+
+    def test_unknown_short_circuit_case_denied_before_solver(self):
+        r = self.run_loop(request=replace(FAULT, case="typical"))
+        self.assertEqual(r.code, "unsupported_fault_study")
+        self.assertEqual(self.solver.calls, 0)
 
     def test_invalid_measurement_binding_fails_before_solving(self):
         for b in (

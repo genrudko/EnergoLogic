@@ -134,6 +134,8 @@ class VisioViewportSpikeTests(unittest.TestCase):
              "Bypass", "-File", str(validator)],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=45,
             check=False,
         )

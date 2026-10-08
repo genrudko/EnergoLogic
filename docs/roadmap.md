@@ -14,7 +14,7 @@ Roadmap организован по зависимостям, а не как о�
 
 **Независимые P0-волны:** (B) Visio non-destructive overlay/Undo compatibility spike; (C) headless PresentationSnapshot/Delta & quality; (D) deterministic scenario/event store/replay. Только после них — (E) пользовательская индикация [Issue #39](https://github.com/genrudko/EnergoLogic/issues/39), (F) solver/RZA-to-UI integration. **АПВ** — отдельная headless state machine [Issue #40](https://github.com/genrudko/EnergoLogic/issues/40), UI не должен притворяться её наличием. Бланки WS-7 могут развиваться параллельно при наличии permission/earthing provenance.
 
-Текущий work: PR #32 (electrical domain), #34 (permission), #36 (headless integrated protection), **stacked** #38 (Visio gateway) остаются Draft/unmerged на момент документирования; их код **не содержится в `main`** и не должен изображаться как принятая возможность. Визуальный end-to-end, APV и бланки **ещё не готовы**. Не делаем промышленную SCADA, телеуправление или обязательный server historian.
+В `main` теперь **merged PR #32** (расчётная модель), **#34** (permission evidence), **#36** (headless КЗ→РЗА→отключение). **PR #38** (Visio gateway) остаётся **Draft, unmerged**, с незавершёнными постоянными тестами и live integration. Визуальный end-to-end, АПВ и бланки **ещё не готовы**. Не делаем промышленную SCADA, телеуправление или обязательный server historian.
 
 ## 0. Visio Editor V364 — принятый checkpoint
 
@@ -22,7 +22,7 @@ Roadmap организован по зависимостям, а не как о�
 
 ## 1. Ближайший главный milestone — Integrated Protection Loop
 
-Integration work item **уже создан**: Draft PR #36 содержит headless solver→РЗА→simulated breaker→Visio intent, Draft PR #38 развивает Visio projection gateway на branch #36. Ни один из них не merged. Нижеследующая цепочка остаётся **целевым полным acceptance**, а не заявлением о готовом пользовательском end-to-end.
+**PR #36 merged**: headless solver→РЗА→simulated breaker→Visio intent; это проверенный фундамент. **Draft PR #38** развивает Visio projection gateway, но ещё не прошёл собственный live сквозной тест. Нижеследующая цепочка остаётся **целевым пользовательским acceptance**, а не готовым оперативным интерфейсом.
 
 Целевая цепочка:
 

@@ -29,7 +29,7 @@ EnergoLogic — standalone/offline инженерно-оперативная п�
 - [x] Терминально-ориентированная раскраска, множественные источники, safety/earthing отдельно, условная палитра с legend.
 - [x] Контракт событий, времени, запрос vs подтверждение, учебного APV и replay.
 - [x] UI/Visio non-destructive compatibility spike установлен как gate, не подразумеваемый existing feature.
-- [x] Существующие Draft PR #32/#34/#36/#38 правильно обозначены, merge не выполняется.
+- [x] Фактический GitHub state обновлён: #32/#34/#36 merged; PR #38 Draft/unmerged. Слияния были отдельно разрешены владельцем, в рамках подготовки к P0-B.
 - [x] Headless independent work packages, изолированные fixture, cleanup/Undo, конкретная пользовательская приёмка.
 - [x] GitHub CI на начальном head `0f1d95f`: run #37760718835 — 6/6 SUCCESS; после evidence-only commit проверить latest head отдельно.
 - [ ] Owner acceptance архитектуры и продуктовых приоритетов — ожидается.

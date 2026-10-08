@@ -1,13 +1,13 @@
 # EnergoLogic — фактическое состояние проекта
 
 **Срез:** 2026-10-07
-**Исторический срез:** `genrudko/EnergoLogic@734f64a` (2026-10-07). **Текущий проверенный main:** `f92f89b` (2026-10-08; PR #12 merged). Runtime Visio V364 baseline — `genrudko/development-bridge@5695108`. Перечень Draft и архитектурных изменений ниже обновлён отдельно.
+**Исторический срез:** `genrudko/EnergoLogic@734f64a` (2026-10-07). **Текущий проверенный main:** `2759319` (2026-10-08; PR #12, #34, #36 и #32 merged). Runtime Visio V364 baseline — `genrudko/development-bridge@5695108`. Перечень Draft и архитектурных изменений ниже обновлён отдельно.
 
 ## Актуализация архитектурного направления от 2026-10-08 (без фиктивного изменения статусов)
 
 По решению владельца продукт окончательно определён как **локальный, автономный инженерно-оперативный помощник**, а **не промышленная SCADA**. Цель — схемы в Visio, расчёты, моделирование РЗА/оперативных переключений, бланки, разбор сценариев. Новый target UX: редактирование, оперативный просмотр, моделирование, ретроспектива; provenance/quality данных, динамическая мнемосхема и event replay. Это **план**, а не реализованные функции.
 
-На момент проверки GitHub (2026-10-08): **Draft/unmerged** PR #32 `ELECTRICAL-CALCULATION-DOMAIN-001`, PR #34 `OPERATION-PERMISSION-CONTRACT-001`, PR #36 `INTEGRATED-PROTECTION-LOOP-001` (headless tested, без live Visio), **stacked Draft PR #38** `VISIO-PROTECTION-PROJECTION-LIVE-001` (MCP gateway contract, без законченного автоматического live Python→Visio теста). **Issue #39** индикация и event replay и **Issue #40** АПВ пока не implemented. Их результаты нельзя приписывать `main` до owner-controlled merge. Строки исходной статусной таблицы ниже сохраняют исторический срез 2026-10-07.
+На момент повторной проверки GitHub (2026-10-08): **PR #34** (контракт permission), **PR #36** (headless КЗ→РЗА→модельное отключение) и **PR #32** (электрическая расчётная модель) **merged в `main`**, с подтверждёнными CI. **Draft PR #38** `VISIO-PROTECTION-PROJECTION-LIVE-001` остаётся незавершённым (непринятые тесты gateway, без сквозного Python→Visio); **Issue #39** индикация/replay и **Issue #40** АПВ остаются не реализованными. Слияние #32/#34/#36 не превращает headless расчёты в оперативную UI или реальное управление оборудованием. Исторический статус таблицы ниже скорректирован для принятых модулей.
 
 Стандарт: [Product Boundary](architecture/PRODUCT-BOUNDARY-AND-WORKSPACE-MODES.md), [Operational Presentation](architecture/OPERATIONAL-STATE-AND-PRESENTATION-CONTRACT.md), [Delivery Program](architecture/LOCAL-WORKBENCH-IMPLEMENTATION-PROGRAM.md).
 
@@ -25,16 +25,16 @@
 | Поток | Статус | Уже есть | Ещё требуется |
 |---|---|---|---|
 | WS-0 Visio Editor | **DONE / merged PR #12** | V364, QoL, topology-safe operations, native Undo/Redo architecture, Ribbon/context/panel, standalone package | live matrix Visio 2010+ ведётся в WS-3; динамический оперативный слой — отдельный этап |
-| WS-1 Canonical Domain & Contracts | **PARTIAL** | schema 0.1, stable canonical runtime, electrical-v1, switching-state-v1, transformer_2w | `electrical-calculation-v1`, phase/neutral/earthing domain, richer equipment/parameter model, Site Profile persistence |
+| WS-1 Canonical Domain & Contracts | **PARTIAL** | schema 0.1, electrical-v1, switching-state-v1, transformer_2w; **`electrical-calculation-v1` merged PR #32** | phase/neutral/earthing domain, расширение моделей, Site Profile persistence, site-golden acceptance |
 | WS-2 Terminology & Normative Foundations | **PARTIAL / CONTINUOUS** | Terminology Registry v1 + provenance | расширение словаря; Normative Source Registry; executable rule provenance contract |
 | WS-3 Compatibility & Packaging | **PARTIAL / CONTINUOUS** | Visio V364 offline prebuilt AnyCPU package; dual registry views; current Visio 16.x live pass | physical Visio 2010/2013/2016/2019/2021 x86/x64 qualification; bundled solver runtime host; product-wide installer/update strategy |
 | WS-4 Legacy Visio Migration | **PARTIAL** | deterministic read-only VSDX inspector, symbol fingerprinting, native Glue evidence | family classification/mapping, canonical importer, ambiguity review, topology fallback, end-to-end Kochubeevskaya migration |
 | WS-5 Scheme Generator | **NOT IMPLEMENTED** | editor/layout primitives usable as future backend | domain templates, bus/bay generation, deterministic layout, Glue generation, numbering, regeneration |
-| WS-6 Operational Simulation | **PARTIAL** | energized traversal, multiple-source attribution, switching operations, deterministic timeline | earthing semantics, interlocks, operation permission/safety validation, integration with protection and rules |
+| WS-6 Operational Simulation | **PARTIAL** | energized traversal, multiple-source attribution, switching operations, deterministic timeline; **permission evidence contract PR #34**, **headless protection operation PR #36** | earthing semantics, квалифицированные блокировки/interlocks, site permissions/rules, UI and actual Visio projection |
 | WS-7 Switching Forms & Training | **NOT IMPLEMENTED** | operational timeline can become execution backend | form/program schema, step validation, explanations, scoring/training workflow |
-| WS-8 Electrical Solver | **PARTIAL** | solver-neutral contracts; pandapower spike; balanced AC power flow; IEC 60909 3φ/2φ/1φ-E spike qualification | production electrical domain, bundled worker/IPC, site data/goldens, current attribution, optional OpenDSS after phase-neutral domain |
+| WS-8 Electrical Solver | **PARTIAL** | solver-neutral contracts; pandapower spike; balanced AC power flow; `electrical-calculation-v1` domain/materialization PR #32; 3φ КЗ → RZA current binding PR #36 | bundled worker/IPC, site references/goldens, production approval of additional fault types and advanced studies |
 | WS-9A Protection Settings | **DONE foundation** | versioned source-neutral setting card, JSON/tabular import, provenance, unit normalization | real site/vendor adapters and Kochubeevskaya cards |
-| WS-9B Protection Engine | **PARTIAL** | МТЗ, ТО, токовая ЗЗ definite-time; declarative outputs; explicit УРОВ foundation | solver/operational integration, inverse/directional/distance/differential/voltage/frequency etc., actual breaker execution adapter |
+| WS-9B Protection Engine | **PARTIAL** | МТЗ, ТО, токовая ЗЗ definite-time; declarative outputs; УРОВ; **headless integrated protection loop PR #36** | inverse/directional/distance/differential/voltage/frequency, site acceptance, live Visio integration, no physical dispatch |
 | WS-9C Arc-fault Protection | **NOT IMPLEMENTED** | target architecture defined | optical/current supervision, zones, trip matrices, clearing sequence |
 | WS-9D Advanced Protection | **NOT IMPLEMENTED** | generic engine boundary exists | directional, differential, distance, negative sequence, automation functions as bounded items |
 | WS-10 Russian Rules Engine | **NOT IMPLEMENTED** | terminology/provenance principles exist | Gate F schema, executable federal/site rules, source-attributed decisions/explanations |
@@ -57,6 +57,10 @@
 | SWITCHING-OPERATIONS-TIMELINE-001 | `36198a6` — 2026-10-04 |
 | PROTECTION-ENGINE-FOUNDATION-001 | `138f551` — 2026-10-04 |
 | BREAKER-FAILURE-FOUNDATION-001 | `734f64a` — 2026-10-04 |
+| VISIO-EDITOR-QOL-001 / PR #12 | `f92f89b` — 2026-10-08 |
+| OPERATION-PERMISSION-CONTRACT-001 / PR #34 | `a7f9171` — 2026-10-08 |
+| INTEGRATED-PROTECTION-LOOP-001 / PR #36 | `d20895a` — 2026-10-08 |
+| ELECTRICAL-CALCULATION-DOMAIN-001 / PR #32 | `2759319` — 2026-10-08 |
 
 ## Visio baseline / accepted into `main`
 

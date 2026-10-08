@@ -6,13 +6,11 @@
 
 Строим **не SCADA**, а автономный Visio-центричный engineering workbench для рисования схем, расчётов, проверки оперативных переключений, РЗА/АПВ и разбора ситуаций. Перенимаем *UX и дисциплину данных*, но не серверную АСУ ТП. Базовые инварианты: одна canonical электрическая модель, русская терминология, Windows 10/11 + Visio 2010—latest, offline standalone packaging, тестируемое headless ядро. Смотри [Product Boundary](PRODUCT-BOUNDARY-AND-WORKSPACE-MODES.md) и [Presentation Contract](OPERATIONAL-STATE-AND-PRESENTATION-CONTRACT.md).
 
-## Актуальные upstream boundaries (не считать merged)
+## Актуальные upstream boundaries (проверено 2026-10-08)
 
-- `main` на 2026-10-08: `f92f89b`, WS-0 V364, WS-6, WS-8, WS-9 foundation accepted; статус смотреть по GitHub и `PROJECT-STATUS`.
-- **Draft PR #32**: `ELECTRICAL-CALCULATION-DOMAIN-001` — производственный electrical domain, отдельная приёмка.
-- **Draft PR #34**: `OPERATION-PERMISSION-CONTRACT-001` — модель evidence/permission, но не реальные сертифицированные interlocks.
-- **Draft PR #36**: `INTEGRATED-PROTECTION-LOOP-001` — headless квалифицированный 3-фазный КЗ→MTЗ→simulated breaker→Visio intent; CI green, **не реальная Visio интеграция**.
-- **Stacked Draft PR #38**, base #36: native VTD read-verify-action-read Python callback boundary с разрешающими проверками; real VTD canary выполнялся **отдельно**, не via нового adapter; общая автоматическая live acceptance не пройдена.
+- `main@2759319` уже содержит Visio V364 и **merged PR #32** (`ELECTRICAL-CALCULATION-DOMAIN-001` — electrical-calculation-v1), **merged PR #34** (`OPERATION-PERMISSION-CONTRACT-001` — структурные permission evidence, не реальные interlocks), **merged PR #36** (`INTEGRATED-PROTECTION-LOOP-001` — 3φ КЗ→MTЗ→simulated breaker→Visio intent, без живого Visio-командования).
+- **Draft PR #38**: native VTD read-verify-act-read gateway-кандидат; canary на тестовом Visio выполнялся отдельно, не сквозным вызовом нового adapter; собственные постоянные adversarial тесты и автоматическая live acceptance не пройдены.
+- **Issue #39**: индикация/replay; **Issue #40**: АПВ. Оба не закрыты этой архитектурной программой.
 - **Issue #39**: индикация/события/replay; **Issue #40**: АПВ. Имеющиеся вопросы не автоматически «закрыты» этой архитектурной программой.
 
 Если контракт upstream не accepted/merged, новый downstream item работает против *явно версионированной fixture/mock*, фиксирует это в документации и не заявляет полную интеграцию. Не стартовать новые параллельные PR, дублирующие существующие #32/#34/#36/#38/#39/#40.
@@ -23,11 +21,11 @@
 |---|---|---|---|
 | **P0-A — Product/UX decision** (эта работа) | P0 | Назначение, 4 режима, source-of-data ось, contract, benchmark, roadmap | Независим, **docs-only** |
 | **P0-B — Visio non-destructive presentation spike** | P0 | Честное решение о технологии overlay/rendering и Undo, сравнение Visio 2010/16, offline feasibility | V364 + единственная disposable fixture; параллельно P0-C |
-| **P0-C — Presentation Data Contract v1** | P0 | `PresentationSnapshot/Delta`, value origin/quality, voltage class, terminal colors/unknown, deterministic pure Python tests | WS-6 accepted; PR #36 типизированный adapter/fixture пока не merged; без COM |
+| **P0-C — Presentation Data Contract v1** | P0 | `PresentationSnapshot/Delta`, value origin/quality, voltage class, terminal colors/unknown, deterministic pure Python tests | WS-6 и PR #36 merged; без COM |
 | **P0-D — Scenario/Event Store v1** | P0 | isolated scenario, deterministic time/event cursor/replay/Reset, provenance, snapshot persistence/export | WS-6 event timeline accepted; P0-C types согласованы; параллельно P0-B |
 | **P0-E — Operative UI v1** (#39) | P0 | Visio Ribbon/panel, выбор источника/режима/палитры, legenda, fault/energized overlay, device card, alarms/event list/replay | P0-B + P0-C + P0-D; визуализацию считать завершённой только live acceptance |
-| **P0-F — Calculation/protection → UI** | P0 | карты U/I/P/Q по qualified solver, protection pickup/trip/actual model change, timeline; stale/unsupported cases | PR #32/#36 contract acceptance + P0-C/D/E; gateway #38 integration, site mapping |
-| **P1-A — Switching Forms v1** (WS-7) | P1 | модель и печать бланка, проверки исходных условий, step outcomes/reasons, протокол | WS-6 accepted, permission/interlock contracts (#34 + earthing), P0-D; UI после P0-E |
+| **P0-F — Calculation/protection → UI** | P0 | карты U/I/P/Q по qualified solver, protection pickup/trip/actual model change, timeline; stale/unsupported cases | PR #32/#36 accepted в `main` + P0-C/D/E; gateway #38 интеграция и site mapping ещё нужны |
+| **P1-A — Switching Forms v1** (WS-7) | P1 | модель и печать бланка, проверки исходных условий, step outcomes/reasons, протокол | WS-6 и permission evidence #34 приняты; earthing/actual interlocks ещё нужны, P0-D; UI после P0-E |
 | **P1-B — АПВ v1** (#40) | P1 | deterministic state machine armed/blocked/deadtime/close requested/confirmed/success/fault persistent/lockout | WS-9B + breaker feedback + explicit settings/permission + P0-D; UI after P0-E |
 | **P1-C — Site acceptance** | P1 | квалифицированный профиль реального объекта/эталонные расчёты/зависимости, бланки и сценарии | WS-4 site model import, #32 site solver, P0-F + P1-A/B по применимости |
 | **P1-D — Offline packaging/compatibility** | P1 | bundled Windows runtime, Visio version/capability matrix, offline installer, project portability | способен идти отдельно от P0-B/C/D, final acceptance with P0-E/F |
@@ -106,7 +104,7 @@ Golden fixture v1: две секции 35 кВ с двумя источника�
 
 - Issue #39 — simulation indication + event replay (P0-E, P0-C/D staged separately to avoid monolith PR).
 - Issue #40 — APV state machine (P1-B).
-- PR #32 — electrical calculation domain; PR #34 — operation permission; PR #36 — integrated protection headless; PR #38 — stacked Visio gateway. **Ни один не считать merged без проверки GitHub.**
+- **Merged** PR #32 — electrical calculation domain; **merged** PR #34 — operation permission; **merged** PR #36 — integrated protection headless; **Draft/unmerged** PR #38 — Visio gateway. Текущий факт проверен по GitHub 2026-10-08.
 - Один bounded work item → Issue → branch → Draft PR → CI/live evidence → owner acceptance → merge **только по явной команде**.
 
 Решение owner по составу P0 волн и acceptance оформляется отдельно; сам план **не даёт права** менять рабочий Visio или автоматически управлять электрическими аппаратами.

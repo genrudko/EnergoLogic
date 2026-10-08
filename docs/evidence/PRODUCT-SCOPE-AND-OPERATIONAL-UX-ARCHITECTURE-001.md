@@ -27,7 +27,7 @@
 ## Проверено локально на ветке #41 (2026-10-08)
 
 - `main` зафиксирован как `f92f89b`. Проверка GitHub PR #12: **merged=true**, merge SHA `f92f89b`; старые противоречивые записи исправлены.
-- Проверка текущих PR: #32, #34, #36, stacked #38 — **Draft/unmerged**, статусы не объявлены accepted.
+- Первоначальный аудит: #32, #34, #36, stacked #38 находились в Draft. После команды владельца слияния выполнены и повторно проверены: **#34 merge `a7f9171`**, **#36 merge `d20895a`**, **#32 merge `2759319`**; **#38 остаётся Draft/unmerged**. Совместная headless suite на итоговом коде: **338 тестов (9 пропущены), 0 ошибок**.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -q`: **280 tests, 7 skipped, 0 failures** (код `main` не менялся).
 - Проверены **57 Markdown-файлов** `README.md` и `docs/**`: **0 отсутствующих относительных ссылок**.
 - `git diff --check`: PASS; изменения ограничены Markdown, runtime/Visio/solvers не затронуты.

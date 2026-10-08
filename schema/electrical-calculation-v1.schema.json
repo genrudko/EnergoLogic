@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://energologic.local/schema/electrical-calculation-v1.schema.json",
+  "title": "EnergoLogic electrical-calculation-v1 parameter profile",
+  "description": "Solver-neutral engineering facts keyed by canonical IDs. SI units are defined by field names; missing is distinct from unknown/not_applicable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "model_id",
+    "equipment"
+  ],
+  "properties": {
+    "version": {
+      "const": "electrical-calculation-v1"
+    },
+    "model_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inactive_equipment_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/equipment"
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "locator"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string"
+        }
+      }
+    },
+    "known": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "value",
+        "provenance"
+      ],
+      "properties": {
+        "state": {
+          "const": "known"
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "unknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "const": "unknown"
+        },
+        "provenance": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "not_applicable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "const": "not_applicable"
+        },
+        "provenance": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "fact": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/known"
+        },
+        {
+          "$ref": "#/$defs/unknown"
+        },
+        {
+          "$ref": "#/$defs/not_applicable"
+        }
+      ]
+    },
+    "equipment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonical_id",
+        "kind",
+        "parameters"
+      ],
+      "properties": {
+        "canonical_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "external_grid",
+            "line",
+            "load",
+            "transformer_2w"
+          ]
+        },
+        "parameters": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "voltage_pu",
+              "angle_deg",
+              "short_circuit_power_max_va",
+              "rx_max",
+              "zero_sequence_r_over_x_max",
+              "zero_sequence_x_over_x_max",
+              "construction",
+              "length_m",
+              "resistance_ohm_per_m",
+              "reactance_ohm_per_m",
+              "capacitance_f_per_m",
+              "max_current_a",
+              "end_temperature_c",
+              "zero_sequence_resistance_ohm_per_m",
+              "zero_sequence_reactance_ohm_per_m",
+              "zero_sequence_capacitance_f_per_m",
+              "active_power_w",
+              "reactive_power_var",
+              "rated_power_va",
+              "short_circuit_voltage_percent",
+              "short_circuit_resistance_percent",
+              "iron_loss_w",
+              "no_load_current_percent",
+              "phase_shift_deg",
+              "vector_group",
+              "zero_sequence_short_circuit_voltage_percent",
+              "zero_sequence_short_circuit_resistance_percent",
+              "zero_sequence_magnetizing_percent",
+              "zero_sequence_magnetizing_r_over_x",
+              "zero_sequence_hv_partition"
+            ]
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/fact"
+          }
+        }
+      }
+    }
+  }
+}

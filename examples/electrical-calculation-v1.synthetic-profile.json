@@ -1,0 +1,301 @@
+{
+  "version": "electrical-calculation-v1",
+  "model_id": "calculation-v1:synthetic-hv-lv-feeder",
+  "equipment": [
+    {
+      "canonical_id": "source:grid",
+      "kind": "external_grid",
+      "parameters": {
+        "voltage_pu": {
+          "state": "known",
+          "value": 1.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "source:grid/voltage_pu",
+            "revision": "1"
+          }
+        },
+        "angle_deg": {
+          "state": "known",
+          "value": 0.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "source:grid/angle_deg",
+            "revision": "1"
+          }
+        },
+        "short_circuit_power_max_va": {
+          "state": "known",
+          "value": 500000000.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "source:grid/short_circuit_power_max_va",
+            "revision": "1"
+          }
+        },
+        "rx_max": {
+          "state": "known",
+          "value": 0.1,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "source:grid/rx_max",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_r_over_x_max": {
+          "state": "known",
+          "value": 0.1,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "source:grid/zero_sequence_r_over_x_max",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_x_over_x_max": {
+          "state": "known",
+          "value": 1.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "source:grid/zero_sequence_x_over_x_max",
+            "revision": "1"
+          }
+        }
+      }
+    },
+    {
+      "canonical_id": "line:feed-a",
+      "kind": "line",
+      "parameters": {
+        "length_m": {
+          "state": "known",
+          "value": 100.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/length_m",
+            "revision": "1"
+          }
+        },
+        "resistance_ohm_per_m": {
+          "state": "known",
+          "value": 0.00012,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/resistance_ohm_per_m",
+            "revision": "1"
+          }
+        },
+        "reactance_ohm_per_m": {
+          "state": "known",
+          "value": 8e-05,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/reactance_ohm_per_m",
+            "revision": "1"
+          }
+        },
+        "capacitance_f_per_m": {
+          "state": "known",
+          "value": 1e-11,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/capacitance_f_per_m",
+            "revision": "1"
+          }
+        },
+        "max_current_a": {
+          "state": "known",
+          "value": 400.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/max_current_a",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_resistance_ohm_per_m": {
+          "state": "known",
+          "value": 0.00036,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/zero_sequence_resistance_ohm_per_m",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_reactance_ohm_per_m": {
+          "state": "known",
+          "value": 0.00024,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/zero_sequence_reactance_ohm_per_m",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_capacitance_f_per_m": {
+          "state": "known",
+          "value": 6e-12,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/zero_sequence_capacitance_f_per_m",
+            "revision": "1"
+          }
+        },
+        "end_temperature_c": {
+          "state": "known",
+          "value": 70.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/end_temperature_c",
+            "revision": "1"
+          }
+        },
+        "construction": {
+          "state": "known",
+          "value": "cable",
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "line:feed-a/construction",
+            "revision": "1"
+          }
+        }
+      }
+    },
+    {
+      "canonical_id": "transformer:t1",
+      "kind": "transformer_2w",
+      "parameters": {
+        "rated_power_va": {
+          "state": "known",
+          "value": 5000000.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/rated_power_va",
+            "revision": "1"
+          }
+        },
+        "short_circuit_voltage_percent": {
+          "state": "known",
+          "value": 6.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/short_circuit_voltage_percent",
+            "revision": "1"
+          }
+        },
+        "short_circuit_resistance_percent": {
+          "state": "known",
+          "value": 1.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/short_circuit_resistance_percent",
+            "revision": "1"
+          }
+        },
+        "iron_loss_w": {
+          "state": "known",
+          "value": 5000.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/iron_loss_w",
+            "revision": "1"
+          }
+        },
+        "no_load_current_percent": {
+          "state": "known",
+          "value": 0.5,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/no_load_current_percent",
+            "revision": "1"
+          }
+        },
+        "phase_shift_deg": {
+          "state": "known",
+          "value": 30.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/phase_shift_deg",
+            "revision": "1"
+          }
+        },
+        "vector_group": {
+          "state": "known",
+          "value": "Dyn",
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/vector_group",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_short_circuit_voltage_percent": {
+          "state": "known",
+          "value": 6.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/zero_sequence_short_circuit_voltage_percent",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_short_circuit_resistance_percent": {
+          "state": "known",
+          "value": 1.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/zero_sequence_short_circuit_resistance_percent",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_magnetizing_percent": {
+          "state": "known",
+          "value": 100.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/zero_sequence_magnetizing_percent",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_magnetizing_r_over_x": {
+          "state": "known",
+          "value": 0.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/zero_sequence_magnetizing_r_over_x",
+            "revision": "1"
+          }
+        },
+        "zero_sequence_hv_partition": {
+          "state": "known",
+          "value": 0.9,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "transformer:t1/zero_sequence_hv_partition",
+            "revision": "1"
+          }
+        }
+      }
+    },
+    {
+      "canonical_id": "load:lv",
+      "kind": "load",
+      "parameters": {
+        "active_power_w": {
+          "state": "known",
+          "value": 20000.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "load:lv/active_power_w",
+            "revision": "1"
+          }
+        },
+        "reactive_power_var": {
+          "state": "known",
+          "value": 6000.0,
+          "provenance": {
+            "source_id": "synthetic:calc-v1",
+            "locator": "load:lv/reactive_power_var",
+            "revision": "1"
+          }
+        }
+      }
+    }
+  ],
+  "inactive_equipment_ids": []
+}

@@ -53,3 +53,17 @@ __all__ = [
     "voltage_spec_for_terminal",
     "voltage_specs_compatible",
 ]
+
+from .calculation import (
+    PROFILE_VERSION, CalculationDecodeError, CalculationValidationError,
+    ElectricalCalculationProfile, EquipmentCalculation, ParameterFact, SourceLocator,
+    decode_calculation_profile, load_calculation_profile, calculation_profile_to_data,
+    validate_calculation,
+)
+
+__all__.extend([
+    "PROFILE_VERSION", "CalculationDecodeError", "CalculationValidationError",
+    "ElectricalCalculationProfile", "EquipmentCalculation", "ParameterFact",
+    "SourceLocator", "decode_calculation_profile", "load_calculation_profile",
+    "calculation_profile_to_data", "validate_calculation",
+])

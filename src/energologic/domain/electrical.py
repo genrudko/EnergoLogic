@@ -97,6 +97,30 @@ ELECTRICAL_V1 = ElectricalProfile(
     ),
 )
 
+# An explicit additive profile for solver-driven headless operational studies.
+# The original ELECTRICAL_V1 is intentionally unchanged: these three kinds
+# inherit an unambiguous voltage from a directly connected canonical bus,
+# never from shape text, solver output or assumed electrical parameters.
+ELECTRICAL_OPERATIONAL_SOLVER_V1_NAME = "electrical-operational-solver-v1"
+ELECTRICAL_OPERATIONAL_SOLVER_V1 = ElectricalProfile(
+    name=ELECTRICAL_OPERATIONAL_SOLVER_V1_NAME,
+    specs=MappingProxyType({
+        **ELECTRICAL_V1.specs,
+        "external_grid": ElectricalElementSpec(
+            "external_grid", ("node",),
+            MappingProxyType({"node": 1}), voltage_scope="connected_bus",
+        ),
+        "line": ElectricalElementSpec(
+            "line", ("from", "to"),
+            MappingProxyType({"from": 1, "to": 1}), voltage_scope="connected_bus",
+        ),
+        "load": ElectricalElementSpec(
+            "load", ("node",),
+            MappingProxyType({"node": 1}), voltage_scope="connected_bus",
+        ),
+    }),
+)
+
 
 def _path_value(value: str) -> str:
     return value.replace("\\", "\\\\").replace("'", "\\'")
@@ -319,6 +343,7 @@ def validate_electrical_model(
         if counts.get(element.id) == 1
     }
     voltage_by_endpoint: dict[Endpoint, VoltageSpec] = {}
+    connected_bus_endpoints: list[Endpoint] = []
 
     for element in model.elements:
         path = _element_path(element.id)
@@ -351,6 +376,18 @@ def validate_electrical_model(
                     ),
                 )
             )
+
+        if spec.voltage_scope == "connected_bus":
+            if "nominal_voltage_v" in element.attributes or "voltage_class" in element.attributes:
+                issues.append(ValidationIssue(
+                    "unexpected_inferred_voltage_spec",
+                    f"{path}/attributes",
+                    "this solver-operational kind inherits exact voltage only from an adjacent canonical bus",
+                ))
+            connected_bus_endpoints.extend(
+                Endpoint(element.id, terminal.id) for terminal in element.terminals
+            )
+            continue
 
         if spec.voltage_scope == "element":
             if "voltage_class" in element.attributes:
@@ -459,6 +496,44 @@ def validate_electrical_model(
                         ),
                     )
                 )
+
+    # Solver-neutral line/load/grid kinds can omit voltage at their own
+    # terminals only when each is connected DIRECTLY to one qualified bus.
+    # This is an explicit modeled topology rule, never a speculative inference.
+    for endpoint in connected_bus_endpoints:
+        neighbors = [
+            right if left == endpoint else left
+            for connection in model.connections
+            for left, right in (connection.endpoints,)
+            if endpoint == left or endpoint == right
+        ]
+        valid = (
+            len(neighbors) == 1
+            and neighbors[0].terminal_id == "node"
+            and neighbors[0].element_id in unique_elements
+            and unique_elements[neighbors[0].element_id].kind == "bus"
+            and neighbors[0] in voltage_by_endpoint
+        )
+        if not valid:
+            issues.append(ValidationIssue(
+                "unresolved_connected_bus_voltage",
+                _terminal_path(endpoint.element_id, endpoint.terminal_id),
+                "terminal requires one directly connected canonical bus with known voltage",
+            ))
+            continue
+        voltage_by_endpoint[endpoint] = voltage_by_endpoint[neighbors[0]]
+
+    for element in model.elements:
+        if element.kind != "line" or element.kind not in profile.specs:
+            continue
+        left = voltage_by_endpoint.get(Endpoint(element.id, "from"))
+        right = voltage_by_endpoint.get(Endpoint(element.id, "to"))
+        if left is not None and right is not None and not voltage_specs_compatible(left, right):
+            issues.append(ValidationIssue(
+                "line_terminal_voltage_mismatch",
+                f"{_element_path(element.id)}/terminals",
+                f"line connects incompatible bus voltages: {left.describe()} and {right.describe()}",
+            ))
 
     pair_to_connection_ids: dict[tuple[Endpoint, Endpoint], list[str]] = {}
     terminal_degree: dict[Endpoint, int] = {}

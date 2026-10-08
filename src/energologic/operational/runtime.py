@@ -6,6 +6,8 @@ from typing import Iterable
 
 from energologic.core import CanonicalModel, Endpoint, fingerprint
 from energologic.domain import (
+    ELECTRICAL_V1,
+    ElectricalProfile,
     SWITCHING_KINDS,
     switch_allows_primary_conduction,
     validate_switching_state_model,
@@ -27,14 +29,18 @@ def _endpoint_key(endpoint: Endpoint | SourceRef) -> tuple[str, str]:
     return (endpoint.element_id, endpoint.terminal_id)
 
 
-def _validation_messages(model: CanonicalModel) -> tuple[OperationalMessage, ...]:
+def _validation_messages(
+    model: CanonicalModel, *, electrical_profile: ElectricalProfile,
+) -> tuple[OperationalMessage, ...]:
     return tuple(
         OperationalMessage(
             issue.code,
             issue.message,
             path=issue.path,
         )
-        for issue in validate_switching_state_model(model)
+        for issue in validate_switching_state_model(
+            model, electrical_profile=electrical_profile,
+        )
     )
 
 
@@ -67,6 +73,10 @@ def _internal_conduction_edges(model: CanonicalModel) -> tuple[tuple[Endpoint, E
             first, second = "a", "b"
         elif element.kind == "current_transformer":
             first, second = "a", "b"
+        elif element.kind == "line":
+            # Continuous passive conductor; no solver or electrical parameters
+            # are inferred from a line here.
+            first, second = "from", "to"
         elif element.kind == "transformer_2w":
             first, second = "hv", "lv"
         else:
@@ -147,6 +157,8 @@ def _reachable_from(
 def simulate_operational_state(
     model: CanonicalModel,
     sources: Iterable[SourceRef] = (),
+    *,
+    electrical_profile: ElectricalProfile = ELECTRICAL_V1,
 ) -> OperationalResult:
     """Resolve terminal energization and source reachability.
 
@@ -154,7 +166,9 @@ def simulate_operational_state(
     inferred from element kind, text, voltage or geometry.
     """
 
-    validation_messages = _validation_messages(model)
+    validation_messages = _validation_messages(
+        model, electrical_profile=electrical_profile,
+    )
     if validation_messages:
         return OperationalResult(
             status=OperationalStatus.INVALID_MODEL,

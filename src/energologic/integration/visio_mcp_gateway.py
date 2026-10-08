@@ -37,6 +37,12 @@ class McpVtdVisioGateway:
                 raise VisioToolCallError("invalid MCP response JSON") from error
         if not isinstance(value, Mapping):
             raise VisioToolCallError("invalid MCP response shape")
+        if "text" in value and "data" not in value:
+            # The host connector can wrap a serialized Bridge envelope
+            # inside a single text field; decode only that known wrapper.
+            if not isinstance(value["text"], str):
+                raise VisioToolCallError("invalid outer MCP text field")
+            return McpVtdVisioGateway._decode(value["text"])
         if value.get("ok") is False or value.get("isError") is True or value.get("error"):
             raise VisioToolCallError("Visio MCP returned failure")
         # The normal production Master MCP exposes an outer bridge envelope;
